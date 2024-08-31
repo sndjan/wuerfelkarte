@@ -53,10 +53,8 @@ interface Player {
 
 const App: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([
-    { id: 1, name: "Test1", scores: {} },
-    { id: 2, name: "Test2", scores: {} },
-    { id: 3, name: "Test3", scores: {} },
-    { id: 4, name: "Test4", scores: {} },
+    { id: 1, name: "Player 1", scores: {} },
+    { id: 2, name: "Player 2", scores: {} },
   ]);
   const [openDialog, setOpenDialog] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState("");
