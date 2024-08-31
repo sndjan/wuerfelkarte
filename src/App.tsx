@@ -43,7 +43,6 @@ import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 
 interface Player {
   id: number;
@@ -58,6 +57,7 @@ const App: React.FC = () => {
   ]);
   const [openDialog, setOpenDialog] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState("");
+  const [showLowerRows, setShowLowerRows] = useState(false); // State to control row visibility
 
   const categories = [
     {
@@ -132,7 +132,7 @@ const App: React.FC = () => {
 
   const calculateUpperSum = (scores: { [key: string]: number | string }) => {
     return categories
-      .slice(0, 6) // Kategorien "Einsen" bis "Sechsen"
+      .slice(0, 6)
       .reduce(
         (sum, category) =>
           sum + (parseInt(scores[category.label] as string) || 0),
@@ -142,7 +142,7 @@ const App: React.FC = () => {
 
   const calculateLowerSum = (scores: { [key: string]: number | string }) => {
     return categories
-      .slice(6) // Restliche Kategorien
+      .slice(6)
       .reduce(
         (sum, category) =>
           sum + (parseInt(scores[category.label] as string) || 0),
@@ -170,11 +170,11 @@ const App: React.FC = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setNewPlayerName(""); // Zurücksetzen des Namens
+    setNewPlayerName("");
   };
 
   const handleAddPlayer = () => {
-    if (newPlayerName.trim() === "") return; // Kein leerer Name hinzufügen
+    if (newPlayerName.trim() === "") return;
 
     const newPlayer: Player = {
       id: players.length + 1,
@@ -212,7 +212,7 @@ const App: React.FC = () => {
                   left: 0,
                   background: "#fff",
                   zIndex: 1,
-                  width: "150px", // Oder eine andere feste Breite für die linke Spalte
+                  width: "150px",
                 }}
               ></TableCell>
               {players.map((player) => (
@@ -247,7 +247,7 @@ const App: React.FC = () => {
                     left: 0,
                     background: "#fff",
                     zIndex: 1,
-                    width: "150px", // Oder eine andere feste Breite für die linke Spalte
+                    width: "150px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
@@ -288,11 +288,13 @@ const App: React.FC = () => {
                   left: 0,
                   background: "#fff",
                   zIndex: 1,
-                  width: "150px", // Oder eine andere feste Breite für die linke Spalte
+                  width: "150px",
                 }}
               >
                 <Box sx={{ display: "flex", flexDirection: "row" }}>
-                  <FunctionsIcon />
+                  <Tooltip title={"Summe unten"} arrow placement="top">
+                    <FunctionsIcon />
+                  </Tooltip>
                   <ArrowCircleUpIcon />
                 </Box>
               </TableCell>
@@ -311,10 +313,12 @@ const App: React.FC = () => {
                   left: 0,
                   background: "#fff",
                   zIndex: 1,
-                  width: "150px", // Oder eine andere feste Breite für die linke Spalte
+                  width: "150px",
                 }}
               >
-                <AddCircleIcon />
+                <Tooltip title={"Bonus: 35"} arrow placement="top">
+                  <AddCircleIcon />
+                </Tooltip>
               </TableCell>
               {players.map((player) => (
                 <TableCell key={player.id} align="center">
@@ -334,7 +338,7 @@ const App: React.FC = () => {
                     left: 0,
                     background: "#fff",
                     zIndex: 1,
-                    width: "150px", // Oder eine andere feste Breite für die linke Spalte
+                    width: "150px",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center" }}>
@@ -368,57 +372,75 @@ const App: React.FC = () => {
                 ))}
               </TableRow>
             ))}
-            <TableRow>
-              <TableCell
-                style={{
-                  position: "sticky",
-                  left: 0,
-                  background: "#fff",
-                  zIndex: 1,
-                  width: "150px", // Oder eine andere feste Breite für die linke Spalte
-                }}
-              >
-                <Box sx={{ display: "flex", flexDirection: "row" }}>
-                  <FunctionsIcon />
-                  <ArrowCircleDownIcon />
-                </Box>
-              </TableCell>
-              {players.map((player) => (
-                <TableCell key={player.id} align="center">
-                  <Typography variant="h6">
-                    {calculateLowerSum(player.scores)}
-                  </Typography>
-                </TableCell>
-              ))}
-            </TableRow>
-            <TableRow>
-              <TableCell
-                style={{
-                  position: "sticky",
-                  left: 0,
-                  background: "#fff",
-                  zIndex: 1,
-                  width: "150px", // Oder eine andere feste Breite für die linke Spalte
-                }}
-              >
-                <FunctionsIcon />
-              </TableCell>
-              {players.map((player) => (
-                <TableCell key={player.id} align="center">
-                  <Typography variant="h6">
-                    {calculateUpperSum(player.scores) > 62
-                      ? calculateLowerSum(player.scores) +
-                        calculateUpperSum(player.scores) +
-                        35
-                      : calculateLowerSum(player.scores) +
-                        calculateUpperSum(player.scores)}
-                  </Typography>
-                </TableCell>
-              ))}
-            </TableRow>
+            {showLowerRows && ( // Conditionally render the following rows
+              <>
+                <TableRow>
+                  <TableCell
+                    style={{
+                      position: "sticky",
+                      left: 0,
+                      background: "#fff",
+                      zIndex: 1,
+                      width: "150px",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", flexDirection: "row" }}>
+                      <Tooltip title={"Summe unten"} arrow placement="top">
+                        <FunctionsIcon />
+                      </Tooltip>
+                      <ArrowCircleDownIcon />
+                    </Box>
+                  </TableCell>
+                  {players.map((player) => (
+                    <TableCell key={player.id} align="center">
+                      <Typography variant="h6">
+                        {calculateLowerSum(player.scores)}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell
+                    style={{
+                      position: "sticky",
+                      left: 0,
+                      background: "#fff",
+                      zIndex: 1,
+                      width: "150px",
+                    }}
+                  >
+                    <Tooltip title={"Summe gesamt"} arrow placement="top">
+                      <FunctionsIcon />
+                    </Tooltip>
+                  </TableCell>
+                  {players.map((player) => (
+                    <TableCell key={player.id} align="center">
+                      <Typography variant="h6">
+                        {calculateUpperSum(player.scores) > 62
+                          ? calculateLowerSum(player.scores) +
+                            calculateUpperSum(player.scores) +
+                            35
+                          : calculateLowerSum(player.scores) +
+                            calculateUpperSum(player.scores)}
+                      </Typography>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              </>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+      <Box sx={{ marginTop: "1rem", textAlign: "center" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ my: 3 }}
+          onClick={() => setShowLowerRows(!showLowerRows)}
+        >
+          Summe {showLowerRows ? "verstecken" : "anzeigen"}
+        </Button>
+      </Box>
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>Neuen Spieler hinzufügen</DialogTitle>
         <DialogContent>
