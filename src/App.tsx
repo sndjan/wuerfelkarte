@@ -63,70 +63,73 @@ const App: React.FC = () => {
     {
       label: "Einsen",
       icon: <LooksOneIcon />,
-      factor: 1,
-      options: [1, 2, 3, 4, 5, 6],
+      options: [1, 2, 3, 4, 5, 6, "✖"] as Array<number | string>,
     },
     {
       label: "Zweien",
       icon: <LooksTwoIcon />,
-      factor: 2,
-      options: [2, 4, 6, 8, 10, 12],
+      options: [2, 4, 6, 8, 10, 12, "✖"] as Array<number | string>,
     },
     {
       label: "Dreien",
       icon: <Looks3Icon />,
-      factor: 3,
-      options: [3, 6, 9, 12, 15, 18],
+      options: [3, 6, 9, 12, 15, 18, "✖"] as Array<number | string>,
     },
     {
       label: "Vieren",
       icon: <Looks4Icon />,
-      factor: 4,
-      options: [4, 8, 12, 16, 20, 24],
+      options: [4, 8, 12, 16, 20, 24, "✖"] as Array<number | string>,
     },
     {
       label: "Fünfen",
       icon: <Looks5Icon />,
-      factor: 5,
-      options: [5, 10, 15, 20, 25, 30],
+      options: [5, 10, 15, 20, 25, 30, "✖"] as Array<number | string>,
     },
     {
       label: "Sechsen",
       icon: <Looks6Icon />,
-      factor: 6,
-      options: [6, 12, 18, 24, 30, 36],
+      options: [6, 12, 18, 24, 30, 36, "✖"] as Array<number | string>,
     },
     {
       label: "Dreierpasch",
       icon: <Filter3Icon />,
-      factor: 3,
-      options: Array.from({ length: 31 }, (_, i) => i),
+      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+        number | string
+      >,
     },
     {
       label: "Viererpasch",
       icon: <Filter4Icon />,
-      factor: 4,
-      options: Array.from({ length: 31 }, (_, i) => i),
+      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+        number | string
+      >,
     },
-    { label: "Full House", icon: <HomeIcon />, factor: 1, options: [0, 25] },
+    {
+      label: "Full House",
+      icon: <HomeIcon />,
+      options: [0, 25, "✖"] as Array<number | string>,
+    },
     {
       label: "Kleine Straße",
       icon: <SignpostIcon />,
-      factor: 1,
-      options: [0, 30],
+      options: [0, 30, "✖"] as Array<number | string>,
     },
     {
       label: "Große Straße",
       icon: <TrafficIcon />,
-      factor: 1,
-      options: [0, 40],
+      options: [0, 40, "✖"] as Array<number | string>,
     },
-    { label: "Kniffel", icon: <StarIcon />, factor: 1, options: [0, 50] },
+    {
+      label: "Kniffel",
+      icon: <StarIcon />,
+      options: [0, 50, "✖"] as Array<number | string>,
+    },
     {
       label: "Chance",
       icon: <SecurityIcon />,
-      factor: 1,
-      options: Array.from({ length: 31 }, (_, i) => i),
+      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+        number | string
+      >,
     },
   ];
 
@@ -271,7 +274,7 @@ const App: React.FC = () => {
                         style={{ width: "80px" }}
                       >
                         {category.options.map((option) => (
-                          <MenuItem key={option} value={option}>
+                          <MenuItem key={option as string} value={option}>
                             {option}
                           </MenuItem>
                         ))}
