@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import JSConfetti from "js-confetti";
 import {
   Container,
   Typography,
@@ -22,7 +23,6 @@ import {
   DialogTitle,
   Box,
 } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LooksOneIcon from "@mui/icons-material/LooksOne";
@@ -51,6 +51,7 @@ interface Player {
 }
 
 const App: React.FC = () => {
+  const jsConfetti = new JSConfetti();
   const [players, setPlayers] = useState<Player[]>([
     { id: 1, name: "Player 1", scores: {} },
     { id: 2, name: "Player 2", scores: {} },
@@ -63,71 +64,71 @@ const App: React.FC = () => {
     {
       label: "Einsen",
       icon: <LooksOneIcon />,
-      options: [1, 2, 3, 4, 5, 6, "✖"] as Array<number | string>,
+      options: ["✖", 1, 2, 3, 4, 5, 6] as Array<number | string>,
     },
     {
       label: "Zweien",
       icon: <LooksTwoIcon />,
-      options: [2, 4, 6, 8, 10, 12, "✖"] as Array<number | string>,
+      options: ["✖", 2, 4, 6, 8, 10, 12] as Array<number | string>,
     },
     {
       label: "Dreien",
       icon: <Looks3Icon />,
-      options: [3, 6, 9, 12, 15, 18, "✖"] as Array<number | string>,
+      options: ["✖", 3, 6, 9, 12, 15, 18] as Array<number | string>,
     },
     {
       label: "Vieren",
       icon: <Looks4Icon />,
-      options: [4, 8, 12, 16, 20, 24, "✖"] as Array<number | string>,
+      options: ["✖", 4, 8, 12, 16, 20, 24] as Array<number | string>,
     },
     {
       label: "Fünfen",
       icon: <Looks5Icon />,
-      options: [5, 10, 15, 20, 25, 30, "✖"] as Array<number | string>,
+      options: ["✖", 5, 10, 15, 20, 25, 30] as Array<number | string>,
     },
     {
       label: "Sechsen",
       icon: <Looks6Icon />,
-      options: [6, 12, 18, 24, 30, 36, "✖"] as Array<number | string>,
+      options: ["✖", 6, 12, 18, 24, 30, 36] as Array<number | string>,
     },
     {
       label: "Dreierpasch",
       icon: <Filter3Icon />,
-      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+      options: ["✖", ...Array.from({ length: 26 }, (_, i) => i + 5)] as Array<
         number | string
       >,
     },
     {
       label: "Viererpasch",
       icon: <Filter4Icon />,
-      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+      options: ["✖", ...Array.from({ length: 26 }, (_, i) => i + 5)] as Array<
         number | string
       >,
     },
     {
       label: "Full House",
       icon: <HomeIcon />,
-      options: [0, 25, "✖"] as Array<number | string>,
+      options: ["✖", 0, 25] as Array<number | string>,
     },
     {
       label: "Kleine Straße",
       icon: <SignpostIcon />,
-      options: [0, 30, "✖"] as Array<number | string>,
+      options: ["✖", 0, 30] as Array<number | string>,
     },
     {
       label: "Große Straße",
       icon: <TrafficIcon />,
-      options: [0, 40, "✖"] as Array<number | string>,
+      options: ["✖", 0, 40] as Array<number | string>,
     },
     {
       label: "Kniffel",
       icon: <StarIcon />,
-      options: [0, 50, "✖"] as Array<number | string>,
+      options: ["✖", 0, 50] as Array<number | string>,
     },
     {
       label: "Chance",
       icon: <SecurityIcon />,
-      options: [...Array.from({ length: 31 }, (_, i) => i), "✖"] as Array<
+      options: ["✖", ...Array.from({ length: 26 }, (_, i) => i + 5)] as Array<
         number | string
       >,
     },
@@ -153,11 +154,20 @@ const App: React.FC = () => {
       );
   };
 
+  const calculateSum = (scores: { [key: string]: number | string }) => {
+    return calculateUpperSum(scores) > 62
+      ? calculateLowerSum(scores) + calculateUpperSum(scores) + 35
+      : calculateLowerSum(scores) + calculateUpperSum(scores);
+  };
+
   const handleScoreChange = (
     playerId: number,
     category: string,
     value: number
   ) => {
+    if (value === 50) {
+      jsConfetti.addConfetti({ emojis: ["⭐"] });
+    }
     setPlayers(
       players.map((player) =>
         player.id === playerId
@@ -192,6 +202,19 @@ const App: React.FC = () => {
     setPlayers(players.filter((player) => player.id !== id));
   };
 
+  const getRanking = (sum: number) => {
+    const sorted = [...players].sort(
+      (a, b) => calculateSum(b.scores) - calculateSum(a.scores)
+    );
+    if (sum === calculateSum(sorted[0].scores)) {
+      return "gold";
+    } else if (sum === calculateSum(sorted[1].scores)) {
+      return "silver";
+    } else if (sum === calculateSum(sorted[2].scores)) {
+      return "#cd7f32";
+    }
+  };
+
   return (
     <Container maxWidth="lg" style={{ marginTop: "2rem" }}>
       <Box
@@ -221,7 +244,6 @@ const App: React.FC = () => {
               {players.map((player) => (
                 <TableCell key={player.id} align="center">
                   <div style={{ display: "flex", alignItems: "center" }}>
-                    <PersonIcon />
                     <Typography
                       variant="h6"
                       style={{ marginLeft: "0.5rem", textAlign: "center" }}
@@ -418,14 +440,17 @@ const App: React.FC = () => {
                   </TableCell>
                   {players.map((player) => (
                     <TableCell key={player.id} align="center">
-                      <Typography variant="h6">
-                        {calculateUpperSum(player.scores) > 62
-                          ? calculateLowerSum(player.scores) +
-                            calculateUpperSum(player.scores) +
-                            35
-                          : calculateLowerSum(player.scores) +
-                            calculateUpperSum(player.scores)}
-                      </Typography>
+                      <Box
+                        sx={{
+                          backgroundColor: getRanking(
+                            calculateSum(player.scores)
+                          ),
+                        }}
+                      >
+                        <Typography variant="h6">
+                          {calculateSum(player.scores)}
+                        </Typography>
+                      </Box>
                     </TableCell>
                   ))}
                 </TableRow>
