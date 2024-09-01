@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import JSConfetti from "js-confetti";
+import { MouseEvent } from "react";
 import {
   Container,
   Typography,
@@ -22,6 +23,7 @@ import {
   DialogContent,
   DialogTitle,
   Box,
+  Menu,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -43,6 +45,8 @@ import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { useCookies } from "react-cookie";
 
 interface Player {
   id: number;
@@ -51,6 +55,7 @@ interface Player {
 }
 
 const App: React.FC = () => {
+  const [cookies, setCookie, removeCookie] = useCookies(["players"]);
   const jsConfetti = new JSConfetti();
   const [players, setPlayers] = useState<Player[]>([
     { id: 1, name: "Player 1", scores: {} },
@@ -58,38 +63,39 @@ const App: React.FC = () => {
   ]);
   const [openDialog, setOpenDialog] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState("");
-  const [showLowerRows, setShowLowerRows] = useState(false); // State to control row visibility
+  const [showLowerRows, setShowLowerRows] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const categories = [
     {
       label: "Einsen",
       icon: <LooksOneIcon />,
-      options: ["✖", 1, 2, 3, 4, 5, 6] as Array<number | string>,
+      options: ["✖", 0, 1, 2, 3, 4, 5] as Array<number | string>,
     },
     {
       label: "Zweien",
       icon: <LooksTwoIcon />,
-      options: ["✖", 2, 4, 6, 8, 10, 12] as Array<number | string>,
+      options: ["✖", 0, 2, 4, 6, 8, 10] as Array<number | string>,
     },
     {
       label: "Dreien",
       icon: <Looks3Icon />,
-      options: ["✖", 3, 6, 9, 12, 15, 18] as Array<number | string>,
+      options: ["✖", 0, 3, 6, 9, 12, 15] as Array<number | string>,
     },
     {
       label: "Vieren",
       icon: <Looks4Icon />,
-      options: ["✖", 4, 8, 12, 16, 20, 24] as Array<number | string>,
+      options: ["✖", 0, 4, 8, 12, 16, 20] as Array<number | string>,
     },
     {
       label: "Fünfen",
       icon: <Looks5Icon />,
-      options: ["✖", 5, 10, 15, 20, 25, 30] as Array<number | string>,
+      options: ["✖", 0, 5, 10, 15, 20, 25] as Array<number | string>,
     },
     {
       label: "Sechsen",
       icon: <Looks6Icon />,
-      options: ["✖", 6, 12, 18, 24, 30, 36] as Array<number | string>,
+      options: ["✖", 0, 6, 12, 18, 24, 30] as Array<number | string>,
     },
     {
       label: "Dreierpasch",
@@ -190,7 +196,7 @@ const App: React.FC = () => {
     if (newPlayerName.trim() === "") return;
 
     const newPlayer: Player = {
-      id: players.length + 1,
+      id: players.length > 0 ? players[players.length - 1].id + 1 : 1,
       name: newPlayerName,
       scores: {},
     };
@@ -215,19 +221,59 @@ const App: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    setCookie("players", players, { maxAge: 31536000 });
+  }, [players]);
+
+  useEffect(() => {
+    if (cookies.players) {
+      setPlayers(cookies.players);
+    }
+  }, []);
+
+  function handleViewScoreboard(event: MouseEvent<HTMLLIElement>): void {
+    throw new Error("Function not implemented.");
+  }
+
+  function handleClearAllScores(event: MouseEvent<HTMLLIElement>): void {
+    removeCookie("players");
+    window.location.reload();
+  }
+
+  function handleMenuOpen(event: MouseEvent<HTMLButtonElement>): void {
+    setAnchorEl(event.currentTarget);
+  }
+
+  function handleMenuClose(
+    event: {},
+    reason: "backdropClick" | "escapeKeyDown"
+  ): void {
+    setAnchorEl(null);
+  }
+
   return (
     <Container maxWidth="lg" style={{ marginTop: "2rem" }}>
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-evenly",
+          position: "absolute",
+          right: "1rem",
         }}
       >
-        <Typography variant="h4" gutterBottom align="center">
-          Würfelkarte
-        </Typography>
+        <IconButton onClick={handleMenuOpen}>
+          <MoreVertIcon />
+        </IconButton>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          {/*<MenuItem onClick={handleViewScoreboard}>Scoreboard ansehen</MenuItem>*/}
+          <MenuItem onClick={handleClearAllScores}>Alles zurücksetzen</MenuItem>
+        </Menu>
       </Box>
+      <Typography variant="h4" gutterBottom align="center">
+        Würfelkarte
+      </Typography>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
