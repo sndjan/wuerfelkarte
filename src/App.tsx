@@ -55,7 +55,7 @@ interface Player {
 }
 
 const App: React.FC = () => {
-  const [cookies, setCookie, removeCookie] = useCookies(["players"]);
+  const [cookies, setCookie, removeCookie] = useCookies(["scores", "names"]);
   const jsConfetti = new JSConfetti();
   const [players, setPlayers] = useState<Player[]>([
     { id: 1, name: "Player 1", scores: {} },
@@ -222,12 +222,35 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    setCookie("players", players, { maxAge: 31536000 });
+    setCookie(
+      "scores",
+      players.map((player) => player.scores),
+      { maxAge: 31536000 }
+    );
+    setCookie(
+      "names",
+      players.map((player) => player.name),
+      { maxAge: 31536000 }
+    );
   }, [players]);
 
   useEffect(() => {
-    if (cookies.players) {
-      setPlayers(cookies.players);
+    if (cookies.names && cookies.scores) {
+      setPlayers(
+        cookies.names.map((name: string, index: number) => ({
+          id: index + 1,
+          name,
+          scores: cookies.scores[index],
+        }))
+      );
+    } else if (cookies.names) {
+      setPlayers(
+        cookies.names.map((name: string, index: number) => ({
+          id: index + 1,
+          name,
+          scores: {},
+        }))
+      );
     }
   }, []);
 
@@ -236,7 +259,7 @@ const App: React.FC = () => {
   }
 
   function handleClearAllScores(event: MouseEvent<HTMLLIElement>): void {
-    removeCookie("players");
+    removeCookie("scores");
     window.location.reload();
   }
 
@@ -249,6 +272,12 @@ const App: React.FC = () => {
     reason: "backdropClick" | "escapeKeyDown"
   ): void {
     setAnchorEl(null);
+  }
+
+  function handleClearAll(event: MouseEvent<HTMLLIElement>): void {
+    removeCookie("scores");
+    removeCookie("names");
+    window.location.reload();
   }
 
   return (
@@ -268,7 +297,8 @@ const App: React.FC = () => {
           onClose={handleMenuClose}
         >
           {/*<MenuItem onClick={handleViewScoreboard}>Scoreboard ansehen</MenuItem>*/}
-          <MenuItem onClick={handleClearAllScores}>Alles zurücksetzen</MenuItem>
+          <MenuItem onClick={handleClearAllScores}>Werte zurücksetzen</MenuItem>
+          <MenuItem onClick={handleClearAll}>Alles zurücksetzen</MenuItem>
         </Menu>
       </Box>
       <Typography variant="h4" gutterBottom align="center">
