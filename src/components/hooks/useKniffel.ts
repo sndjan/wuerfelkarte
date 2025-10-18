@@ -31,12 +31,21 @@ const initialPlayers = [
   },
 ];
 
-const STORAGE_KEY = "kniffel-players";
+const STORAGE_KEY = "kniffel-player-names";
 
 const loadPlayersFromStorage = (): Player[] | null => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : null;
+    if (stored) {
+      const playerNames: string[] = JSON.parse(stored);
+      return playerNames.map((name, index) => ({
+        id: Date.now() + index,
+        name,
+        points: { ...initialPoints },
+        score: 0,
+      }));
+    }
+    return null;
   } catch {
     return null;
   }
@@ -44,7 +53,8 @@ const loadPlayersFromStorage = (): Player[] | null => {
 
 const savePlayersToStorage = (players: Player[]) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+    const playerNames = players.map((player) => player.name);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(playerNames));
   } catch {
     // Handle storage errors silently
   }
