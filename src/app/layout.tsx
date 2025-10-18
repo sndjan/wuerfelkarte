@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { template: "%s | Würfelkarte", default: "Würfelkarte" },
   description:
-    "Würfelkarte – Das digitale Würfel-Erlebnis. Spiele verschiedene Würfelspiel-Varianten, verwalte Punkte und genieße spannende Runden mit Freunden!",
+    "Würfelkarte – Das digitale Würfel-Erlebnis. Spiele verschiedene Würfelspiel-Varianten, tracke Punkte und genieße spannende Runden mit Freunden!",
 };
 
 export default function RootLayout({

@@ -18,9 +18,11 @@ import {
   Trash2,
   Trophy,
   UserRound,
+  UserRoundPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { AddPlayer } from "./AddPlayer";
 import { Player } from "./hooks/types";
 import { Scoring } from "./Scoring";
 
@@ -32,6 +34,7 @@ interface MenuProps {
   resetAllPoints?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  addPlayer?: (name: string) => void;
   gamemode?: string;
 }
 
@@ -41,6 +44,7 @@ export function Menu({
   resetAllPoints,
   open,
   onOpenChange,
+  addPlayer,
   gamemode,
 }: MenuProps) {
   const { theme, setTheme } = useTheme();
@@ -57,6 +61,16 @@ export function Menu({
           <DropdownMenuLabel>Optionen</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
+            {addPlayer && (
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <AddPlayer addPlayer={addPlayer}>
+                  <div className="flex items-center gap-2 w-full">
+                    <UserRoundPlus />
+                    <span>Spieler hinzufügen</span>
+                  </div>
+                </AddPlayer>
+              </DropdownMenuItem>
+            )}
             {resetAllPoints && (
               <DropdownMenuItem onSelect={resetAllPoints}>
                 <RotateCcw />

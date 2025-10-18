@@ -1,4 +1,3 @@
-import { UserRoundPlus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "./ui/button";
@@ -15,9 +14,10 @@ import { Input } from "./ui/input";
 
 interface AddPlayerProps {
   addPlayer: (name: string) => void;
+  children: React.ReactNode;
 }
 
-export function AddPlayer({ addPlayer }: AddPlayerProps) {
+export function AddPlayer({ addPlayer, children }: AddPlayerProps) {
   const [playerName, setPlayerName] = useState("");
 
   const handleAddPlayer = () => {
@@ -29,11 +29,7 @@ export function AddPlayer({ addPlayer }: AddPlayerProps) {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <UserRoundPlus />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px] top-50">
         <DialogHeader>
           <DialogTitle>Spieler hinzufügen</DialogTitle>

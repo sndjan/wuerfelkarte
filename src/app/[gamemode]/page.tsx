@@ -10,10 +10,10 @@ import PlayerCard from "@/components/PlayerCard";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Library } from "lucide-react";
+import { Library, Trophy, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Home() {
   const params = useParams();
@@ -96,6 +96,14 @@ export default function Home() {
     }, 100);
   };
 
+  const gameFinished = useMemo(
+    () =>
+      players.every((player) =>
+        Object.values(player.points).every((point) => point !== 0)
+      ),
+    [players]
+  );
+
   if (purchased === null) {
     return null;
   }
@@ -118,10 +126,15 @@ export default function Home() {
         <div className="flex flex-row">
           <Button
             variant="outline"
-            className="mr-4 hidden sm:block"
+            className={`mr-4  ${
+              gameFinished
+                ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
+                : ""
+            }`}
             onClick={() => setShowScoring(true)}
           >
-            Punkteauswertung
+            <Trophy />
+            <span className="hidden sm:block">Punkteauswertung</span>
             <Scoring
               players={players}
               open={showScoring}
@@ -129,8 +142,12 @@ export default function Home() {
               gamemode={gamemode}
             />
           </Button>
-          <div className="mr-4">
-            <AddPlayer addPlayer={addPlayer} />
+          <div className="mr-4 hidden sm:block">
+            <AddPlayer addPlayer={addPlayer}>
+              <Button variant="outline">
+                <UserRoundPlus />
+              </Button>
+            </AddPlayer>
           </div>
           {gamemodes[gamemode].information && (
             <div className="mr-4 hidden sm:block">
@@ -146,6 +163,7 @@ export default function Home() {
             resetAllPoints={resetAllPoints}
             open={showScoring}
             onOpenChange={setShowScoring}
+            addPlayer={addPlayer}
             gamemode={gamemode}
           />
         </div>
