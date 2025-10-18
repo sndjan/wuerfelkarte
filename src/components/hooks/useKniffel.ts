@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { gamemodes } from "../gamemodes/gamemodes";
 import { Player, Points } from "./types";
 
@@ -30,6 +30,25 @@ const initialPlayers = [
     points: initialPoints,
   },
 ];
+
+const STORAGE_KEY = "kniffel-players";
+
+const loadPlayersFromStorage = (): Player[] | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+};
+
+const savePlayersToStorage = (players: Player[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+  } catch {
+    // Handle storage errors silently
+  }
+};
 
 function calculateScore(
   points: Points,
@@ -64,12 +83,23 @@ function calculateScore(
 }
 
 export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
-  const [players, setPlayers] = useState<Player[]>(
-    initialPlayers.map((p) => ({
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const storedPlayers = loadPlayersFromStorage();
+    if (storedPlayers) {
+      return storedPlayers.map((p) => ({
+        ...p,
+        score: calculateScore(p.points, gamemode),
+      }));
+    }
+    return initialPlayers.map((p) => ({
       ...p,
       score: calculateScore(p.points, gamemode),
-    }))
-  );
+    }));
+  });
+
+  useEffect(() => {
+    savePlayersToStorage(players);
+  }, [players]);
 
   const addPlayer = (name: string) => {
     setPlayers((prevPlayers) => [
