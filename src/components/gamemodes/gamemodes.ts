@@ -33,8 +33,8 @@ const allKniffelPlus = [
 ];
 
 export const gamemodes: Record<string, GamemodeConfig> = {
-  Klassiker: {
-    name: "Klassiker",
+  Wunder: {
+    name: "Wunder",
     description: "Der Klassiker mit 5 Würfeln und allen bekannten Kategorien.",
     fields: [
       { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
@@ -67,12 +67,12 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     },
     price: 0,
   },
-  Mini: {
-    name: "Mini",
+  MiniWunder: {
+    name: "Mini Wunder",
     description:
       "Kompakte Version mit nur 3 Würfeln. Für schnelle und spannende Runden.",
     information: [
-      "Mini ist eine vereinfachte Version des Klassikers mit folgenden Änderungen:",
+      "Mini Wunder ist eine vereinfachte Version des Klassikers mit folgenden Änderungen:",
       "• Es werden nur 3 Würfel statt 5 verwendet.",
       "• Die Kategorien sind reduziert und passen zu den 3 Würfeln.",
       "• Die Punktewerte sind niedriger, um die schnelle Spielweise zu unterstützen.",
@@ -96,12 +96,12 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     },
     price: 0,
   },
-  SuperWurf: {
-    name: "SuperWurf",
+  SuperWunder: {
+    name: "Super Wunder",
     description:
       "Erweiterter Modus mit 6 Würfeln, spannenden Kategorien und viel mehr Punkten.",
     information: [
-      "SuperWurf unterscheidet sich vom Klassiker in folgenden Punkten:",
+      "Super Wunder unterscheidet sich vom Klassiker in folgenden Punkten:",
       "• Es werden 6 Würfel statt 5 verwendet.",
       "• Die Zahlenfelder (Einser bis Sechser) können höhere Summen erreichen.",
       "• Neue Kategorien wie 'Fünferpasch', 'Dreifach-Paar', 'Full Villa' (zwei mal drei gleiche) und 'Riesige Straße' kommen hinzu.",

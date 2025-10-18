@@ -48,33 +48,23 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     }
   }, []);
 
-  useEffect(() => {
+  const onValueChange = (value: string, key: string) => {
+    // Trigger confetti for special achievements
     if (
-      (playerPoints["Wunder"] === 50 ||
-        playerPoints["Mini Wunder"] === 100 ||
-        playerPoints["Super Wunder"] === 30) &&
-      jsConfetti
+      (key.includes("Wunder") && ["30", "50", "100"].includes(value)) ||
+      (key === "Große Straße" && value === "40" && playerName === "Mama")
     ) {
-      jsConfetti.addConfetti({ emojis: ["⭐", "🎲"] });
+      jsConfetti?.addConfetti({ emojis: ["⭐", "🎲"] });
     }
-    return () => {
-      jsConfetti?.clearCanvas();
-    };
-  }, [jsConfetti, playerPoints]);
 
-  useEffect(() => {
-    if (
-      playerPoints["Große Straße"] === 40 &&
-      playerName === "Mama" &&
-      jsConfetti
-    ) {
-      jsConfetti.addConfetti({ emojis: ["🌟", "🎉"] });
+    if (value === "reset") {
+      updatePoints({ [key]: 0 });
+    } else if (value === "X") {
+      updatePoints({ [key]: "X" });
+    } else {
+      updatePoints({ [key]: parseInt(value, 10) });
     }
-    return () => {
-      jsConfetti?.clearCanvas();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerPoints["Große Straße"], jsConfetti]);
+  };
 
   return (
     <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full">
@@ -106,15 +96,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   ? playerPoints[key].toString()
                   : ""
               }
-              onValueChange={(value) => {
-                if (value === "reset") {
-                  updatePoints({ [key]: 0 });
-                } else if (value === "X") {
-                  updatePoints({ [key]: "X" });
-                } else {
-                  updatePoints({ [key]: parseInt(value, 10) });
-                }
-              }}
+              onValueChange={(value) => onValueChange(value, key)}
             >
               <SelectTrigger
                 className={`w-full h-2 ${
