@@ -74,7 +74,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     information: [
       "Mini Wunder ist eine vereinfachte Version des Klassikers mit folgenden Änderungen:",
       "• Es werden nur 3 Würfel statt 5 verwendet.",
-      "• Die Kategorien sind reduziert und passen zu den 3 Würfeln.",
+      "• Weniger und neue Kategorien wie 'Zweierpasch' (zwei gleiche Würfel + beliebiger Würfel), 'Tiny House' (zwei gleiche Würfel + beliebiger Würfel) und 'Mini Straße' (drei Würfel in Folge).",
       "• Die Punktewerte sind niedriger, um die schnelle Spielweise zu unterstützen.",
       "• Der Bonus für die oberen Felder ist auf 15 Punkte (also jeweils zwei pro Zahl) festgelegt.",
     ],
@@ -90,7 +90,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     ],
     bonus: {
       label: "",
-      fields: ["Dreier", "Vierer", "Fünfer", "Sechser"],
+      fields: ["Vierer", "Fünfer", "Sechser"],
       minSum: 30,
       bonus: 15,
     },
@@ -104,9 +104,9 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       "Super Wunder unterscheidet sich vom Klassiker in folgenden Punkten:",
       "• Es werden 6 Würfel statt 5 verwendet.",
       "• Die Zahlenfelder (Einser bis Sechser) können höhere Summen erreichen.",
-      "• Neue Kategorien wie 'Fünferpasch', 'Dreifach-Paar', 'Full Villa' (zwei mal drei gleiche) und 'Riesige Straße' kommen hinzu.",
-      "• Der SuperWurf ist mit 100 Punkten deutlich höher bewertet.",
-      "• Die Anforderungen für den Bonus steigen (mindestens 84 Punkte in den oberen Feldern, also jeweils vier pro Zahl).",
+      "• Neue Kategorien wie 'Fünferpasch', 'Dreifach-Paar' (drei mal zwei gleiche), 'Full Villa' (zwei mal drei gleiche) und 'Riesige Straße' kommen hinzu.",
+      "• Das Super Wunder ist mit 100 Punkten deutlich höher bewertet.",
+      "• Die Anforderungen für den Bonus steigen (mindestens 72 Punkte in den oberen Feldern, also jeweils vier pro Zahl).",
     ],
     fields: [
       { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5, 6] },
@@ -139,7 +139,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     bonus: {
       label: "",
       fields: ["Einser", "Zweier", "Dreier", "Vierer", "Fünfer", "Sechser"],
-      minSum: 84,
+      minSum: 72,
       bonus: 50,
     },
     price: 0,
