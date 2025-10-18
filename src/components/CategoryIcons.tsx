@@ -11,9 +11,11 @@ import {
   Sigma,
   Star,
   TrafficCone,
+  UserRoundPlus,
 } from "lucide-react";
 import AddPlayer from "./AddPlayer";
 import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 interface CategoryIconsProps {
   addPlayer: (name: string) => void;
 }
@@ -21,7 +23,11 @@ interface CategoryIconsProps {
 export function CategoryIcons({ addPlayer }: CategoryIconsProps) {
   return (
     <Card className="p-4 mr-4 flex-col justify-between items-center space-y-[-15px] hidden sm:flex">
-      <AddPlayer addPlayer={addPlayer}></AddPlayer>
+      <AddPlayer addPlayer={addPlayer}>
+        <Button variant="outline">
+          <UserRoundPlus />
+        </Button>
+      </AddPlayer>
       <Dice1 />
       <Dice2 />
       <Dice3 />
