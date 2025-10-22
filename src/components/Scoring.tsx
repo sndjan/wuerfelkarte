@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { Share2 } from "lucide-react";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
@@ -98,7 +99,6 @@ export function Scoring({
     null | "success" | "error" | "saving"
   >(null);
   const [sharing, setSharing] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   async function handleSaveMatch() {
     setSaveStatus("saving");
@@ -134,7 +134,6 @@ export function Scoring({
   const onShare = async () => {
     if (sharing) return;
     setSharing(true);
-    setCopied(false);
 
     const text = buildScoreText(players);
 
@@ -188,24 +187,7 @@ export function Scoring({
             variant="secondary"
             size="sm"
           >
-            {sharing ? "Teilen…" : "Teilen"}
-          </Button>
-          <Button
-            asChild={false}
-            variant={copied ? "default" : "outline"}
-            size="sm"
-            onClick={async () => {
-              const text = buildScoreText(players);
-              try {
-                await navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2500);
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-          >
-            {copied ? "Kopiert" : "In Zwischenablage"}
+            <Share2 /> {sharing ? "Teilen…" : "Teilen"}
           </Button>
         </div>
         {PROFILE_ACTIVE && (
