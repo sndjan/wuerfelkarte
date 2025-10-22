@@ -4,7 +4,7 @@ import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Menu } from "@/components/Menu";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dices, UserRound } from "lucide-react";
+import { Dices, Mail, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -85,6 +85,28 @@ export default function GamemodeSelect() {
             </div>
           );
         })}
+        <div key="feature-request" className="mx-4 w-full sm:w-64">
+          <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
+            <h2 className="text-xl font-bold mb-2">Idee vorschlagen</h2>
+            <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
+              Hast du eine Idee oder einen Wunsch für neue Funktionen oder Modi?
+              Schick mir eine kurze Beschreibung per E‑Mail.
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() =>
+                (window.location.href = `mailto:sander.jan@gmx.net?subject=${encodeURIComponent(
+                  "Feature-Anfrage: Würfelkarte"
+                )}`)
+              }
+              aria-label="Feature anfragen per E-Mail"
+            >
+              <Mail size={20} className="mr-2" />
+              Mail schicken
+            </Button>
+          </Card>
+        </div>
       </div>
     </>
   );
