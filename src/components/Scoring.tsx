@@ -42,7 +42,9 @@ function buildScoreText(
       0
     );
 
-    const bonus = firstSixSum >= 63 ? 35 : 0;
+    const minSum = gamemodes[gamemode].bonus?.minSum ?? 63;
+    const bonus =
+      firstSixSum >= minSum ? gamemodes[gamemode].bonus?.bonus ?? 0 : 0;
 
     const total =
       Object.values(player.points).reduce<number>((sum, value) => {
