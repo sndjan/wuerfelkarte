@@ -64,7 +64,13 @@ export function EditPlayer({
   return (
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
-        <EllipsisVertical size={16} />
+        <Button
+          variant="outline"
+          size="icon"
+          className="z-20 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
+        >
+          <EllipsisVertical />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56">
         <DropdownMenuLabel>Optionen</DropdownMenuLabel>

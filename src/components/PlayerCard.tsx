@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import HalloweenTheme from "./HalloweenTheme";
 
 interface PlayerCardProps {
   playerName: string;
@@ -26,6 +27,7 @@ interface PlayerCardProps {
   moveToRight: () => void;
   moveToLeft: () => void;
   gamemode: keyof typeof gamemodes;
+  theme?: "none" | "Halloween";
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -38,9 +40,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   moveToRight,
   moveToLeft,
   gamemode,
+  theme = "none",
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
+  const confettiEmojis =
+    theme === "Halloween" ? ["🎃", "👻", "🍬"] : ["⭐", "🎲"];
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -54,7 +59,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       (key.includes("Wunder") && ["30", "50", "100"].includes(value)) ||
       (key === "Große Straße" && value === "40" && playerName === "Mama")
     ) {
-      jsConfetti?.addConfetti({ emojis: ["⭐", "🎲"] });
+      jsConfetti?.addConfetti({ emojis: confettiEmojis });
     }
 
     if (value === "reset") {
@@ -67,9 +72,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   };
 
   return (
-    <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full">
+    <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
       <div className="flex flex-row justify-between w-full items-center mb-1">
-        <div>{playerName}</div>
+        <div className="z-20 font-bold">{playerName}</div>
         <EditPlayer
           playerName={playerName}
           resetPoints={resetPoints}
@@ -79,6 +84,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           moveToLeft={moveToLeft}
         />
       </div>
+
+      {theme === "Halloween" && <HalloweenTheme />}
+
       {config.fields.map(
         (field: {
           key: string;
@@ -89,46 +97,49 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           const selectOptions =
             options ?? pointsJson[key as keyof typeof pointsJson];
           const fieldElement = (
-            <Select
-              key={key}
-              value={
-                playerPoints[key] !== 0 && playerPoints[key] !== undefined
-                  ? playerPoints[key].toString()
-                  : ""
-              }
-              onValueChange={(value) => onValueChange(value, key)}
-            >
-              <SelectTrigger
-                className={`w-full h-2 ${
-                  playerPoints[key] === "X"
-                    ? "bg-red-100"
-                    : playerPoints[key] === 0 || playerPoints[key] === undefined
-                    ? "bg-white"
-                    : "bg-gray-100"
-                }`}
+            <div key={key} className="w-full flex flex-col items-center z-10">
+              <Select
+                key={key}
+                value={
+                  playerPoints[key] !== 0 && playerPoints[key] !== undefined
+                    ? playerPoints[key].toString()
+                    : ""
+                }
+                onValueChange={(value) => onValueChange(value, key)}
               >
-                <SelectValue placeholder={label} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {selectOptions?.map?.(
-                    (value: number | string, idx: number) => (
-                      <SelectItem key={idx} value={value.toString()}>
-                        {value}
-                      </SelectItem>
-                    )
-                  )}
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectItem value="reset" className="font-bold">
-                    Zurücksetzen
-                  </SelectItem>
-                  <SelectItem value="X" className="font-bold">
-                    ❌
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                <SelectTrigger
+                  className={`w-full h-2 transition-colors ${
+                    playerPoints[key] === "X"
+                      ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
+                      : playerPoints[key] === 0 ||
+                        playerPoints[key] === undefined
+                      ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
+                      : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
+                  }`}
+                >
+                  <SelectValue placeholder={label} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {selectOptions?.map?.(
+                      (value: number | string, idx: number) => (
+                        <SelectItem key={idx} value={value.toString()}>
+                          {value}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectItem value="reset" className="font-bold">
+                      Zurücksetzen
+                    </SelectItem>
+                    <SelectItem value="X" className="font-bold">
+                      ❌
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           );
           // Show bonus after the last bonus field
           const isBonusField =
@@ -139,7 +150,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           if (isLastBonusField && config.bonus) {
             // Calculate sum of bonus fields
             const sum = config.bonus.fields.reduce(
-              (acc, bonusKey) =>
+              (acc: number, bonusKey: string | number) =>
                 acc +
                 (typeof playerPoints[bonusKey] === "number"
                   ? (playerPoints[bonusKey] as number)
@@ -153,7 +164,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 className="w-full flex flex-col items-center"
               >
                 {fieldElement}
-                <div className="my-3 font-bold">
+                <div className="my-3 font-bold z-20">
                   {config.bonus.label}
                   {bonusReached ? (
                     <>
