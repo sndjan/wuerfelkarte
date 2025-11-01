@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import pointsJson from "../../public/points.json";
 import { EditPlayer } from "./EditPlayer";
 import { gamemodes } from "./gamemodes/gamemodes";
+import HalloweenTheme from "./HalloweenTheme";
 import { Badge } from "./ui/badge";
 import {
   Select,
@@ -15,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import HalloweenTheme from "./HalloweenTheme";
 
 interface PlayerCardProps {
   playerName: string;
@@ -85,7 +85,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         />
       </div>
 
-      {theme === "Halloween" && <HalloweenTheme />}
+      {theme === "Halloween" && <HalloweenTheme gamemode={gamemode} />}
 
       {config.fields.map(
         (field: {

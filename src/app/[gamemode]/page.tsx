@@ -28,7 +28,8 @@ export default function Home() {
 
   const now = new Date();
   const isHalloween =
-    now.getMonth() === 9 && now.getDate() >= 27 && now.getDate() <= 31;
+    (now.getMonth() === 9 && now.getDate() >= 27) ||
+    (now.getMonth() === 10 && now.getDate() <= 2);
   const theme: "Halloween" | "none" = isHalloween ? "Halloween" : "none";
 
   // Always call hooks at the top
