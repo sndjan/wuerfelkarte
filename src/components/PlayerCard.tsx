@@ -74,7 +74,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   return (
     <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
       <div className="flex flex-row justify-between w-full items-center mb-1">
-        <div className="z-20 font-bold">{playerName}</div>
+        <div className="z-20 font-bold bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md">
+          {playerName}
+        </div>
         <EditPlayer
           playerName={playerName}
           resetPoints={resetPoints}
@@ -97,7 +99,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           const selectOptions =
             options ?? pointsJson[key as keyof typeof pointsJson];
           const fieldElement = (
-            <div key={key} className="w-full flex flex-col items-center z-10">
+            <div key={key} className="w-full flex flex-col items-center z-10 ">
               <Select
                 key={key}
                 value={
@@ -164,7 +166,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 className="w-full flex flex-col items-center"
               >
                 {fieldElement}
-                <div className="my-3 font-bold z-20">
+                <div className="my-3 font-bold z-20 bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md">
                   {config.bonus.label}
                   {bonusReached ? (
                     <>

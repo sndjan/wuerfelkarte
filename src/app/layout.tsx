@@ -18,6 +18,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       style={{ overflow: "hidden", width: "100%" }}
+      className="h-full"
     >
       <body
         style={{

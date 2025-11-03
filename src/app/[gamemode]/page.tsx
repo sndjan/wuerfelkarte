@@ -122,7 +122,7 @@ export default function Home() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center sticky top-4 z-10 bg-background">
+      <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10 bg-background">
         <Link href="/" className="flex flex-row ">
           <Library size={32} />
           <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl mr-4">
