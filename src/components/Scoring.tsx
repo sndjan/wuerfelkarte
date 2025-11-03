@@ -137,7 +137,7 @@ export function Scoring({
     if (sharing) return;
     setSharing(true);
 
-    const text = buildScoreText(players);
+    const text = buildScoreText(players, new Date(), gamemode);
 
     // Try Web Share API first
     try {
