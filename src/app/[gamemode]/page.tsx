@@ -10,10 +10,11 @@ import PlayerCard from "@/components/PlayerCard";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Library, Trophy, UserRoundPlus } from "lucide-react";
+import { Trophy, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 
 export default function Home() {
   const params = useParams();
@@ -125,7 +126,13 @@ export default function Home() {
     <>
       <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10 bg-background">
         <Link href="/" className="flex flex-row ">
-          <Library size={32} />
+          <Image
+            src="/images/dice.png"
+            alt="Dice"
+            width={512}
+            height={512}
+            className="w-8 h-8"
+          />
           <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl mr-4">
             {gamemodes[gamemode].name}
           </h1>

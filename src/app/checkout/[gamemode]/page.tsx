@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { convertToSubcurrency } from "@/lib/utils";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { Dices } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 if (process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY === undefined) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not defined");
@@ -50,7 +50,13 @@ export default function CheckoutPage() {
   return (
     <div className="flex flex-col  items-center justify-center m-8 ">
       <div className="flex flex-col items-center">
-        <Dices size={40} className="mb-2" />
+        <Image
+          src="/images/dice.png"
+          alt="Dice"
+          width={512}
+          height={512}
+          className="w-8 h-8"
+        />
         <h2 className="text-2xl font-bold mb-1">
           {gamemode.name} freischalten
         </h2>

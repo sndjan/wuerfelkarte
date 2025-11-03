@@ -5,6 +5,7 @@ import { Menu } from "@/components/Menu";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dices, Mail, UserRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -36,8 +37,14 @@ export default function GamemodeSelect() {
   return (
     <>
       <Card className="m-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30">
-        <Link href="/" className="flex flex-row ">
-          <Dices size={32} strokeWidth={2.5} />
+        <Link href="/" className="flex flex-row items-center">
+          <Image
+            src="/images/dice.png"
+            alt="Dice"
+            width={512}
+            height={512}
+            className="w-8 h-8"
+          />
           <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
             Würfelkarte
           </h1>
