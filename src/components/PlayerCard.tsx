@@ -28,6 +28,7 @@ interface PlayerCardProps {
   moveToLeft: () => void;
   gamemode: keyof typeof gamemodes;
   theme?: "none" | "Halloween";
+  isThemeActive?: boolean;
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -41,6 +42,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   moveToLeft,
   gamemode,
   theme = "none",
+  isThemeActive = false,
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
@@ -87,7 +89,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         />
       </div>
 
-      {theme === "Halloween" && <HalloweenTheme gamemode={gamemode} />}
+      {theme === "Halloween" && isThemeActive && (
+        <HalloweenTheme gamemode={gamemode} />
+      )}
 
       {config.fields.map(
         (field: {

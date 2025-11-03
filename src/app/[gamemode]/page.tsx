@@ -26,6 +26,7 @@ export default function Home() {
         param.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
     ) as keyof typeof gamemodes) || "SuperWurf";
 
+  const [isThemeActive, setIsThemeActive] = useState(false);
   const now = new Date();
   const isHalloween =
     (now.getMonth() === 9 && now.getDate() >= 27) ||
@@ -170,6 +171,9 @@ export default function Home() {
             open={showScoring}
             onOpenChange={setShowScoring}
             addPlayer={addPlayer}
+            specialTheme={theme}
+            isThemeActive={isThemeActive}
+            setIsThemeActive={setIsThemeActive}
             gamemode={gamemode}
           />
         </div>
@@ -207,6 +211,7 @@ export default function Home() {
                   moveToLeft={() => moveToLeft(player.id)}
                   gamemode={gamemode}
                   theme={theme}
+                  isThemeActive={isThemeActive}
                 />
               </div>
             );

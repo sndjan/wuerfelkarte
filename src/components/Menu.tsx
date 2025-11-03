@@ -13,6 +13,7 @@ import {
 import {
   EllipsisVertical,
   Moon,
+  Palette,
   RotateCcw,
   Sun,
   Trash2,
@@ -35,6 +36,9 @@ interface MenuProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   addPlayer?: (name: string) => void;
+  specialTheme?: "none" | "Halloween";
+  isThemeActive?: boolean;
+  setIsThemeActive?: (active: boolean) => void;
   gamemode?: string;
 }
 
@@ -45,6 +49,9 @@ export function Menu({
   open,
   onOpenChange,
   addPlayer,
+  specialTheme,
+  isThemeActive,
+  setIsThemeActive,
   gamemode,
 }: MenuProps) {
   const { theme, setTheme } = useTheme();
@@ -98,6 +105,22 @@ export function Menu({
                   <UserRound />
                   <span>Profil</span>
                 </Link>
+              </DropdownMenuItem>
+            )}
+            {specialTheme !== "none" && (
+              <DropdownMenuItem
+                onSelect={() => {
+                  if (setIsThemeActive) {
+                    setIsThemeActive(!isThemeActive);
+                  }
+                }}
+              >
+                <Palette />
+                {isThemeActive ? (
+                  <span>Design deaktivieren</span>
+                ) : (
+                  <span>Design aktivieren</span>
+                )}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
