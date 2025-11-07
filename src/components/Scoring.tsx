@@ -1,4 +1,5 @@
 import { createGameClient } from "@/lib/supabase/client-game";
+import { Share2 } from "lucide-react";
 import { useState } from "react";
 import AnimatedScoreDiagram from "./AnimatedScoreDiagram";
 import { gamemodes } from "./gamemodes/gamemodes";
@@ -11,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { Share2 } from "lucide-react";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
@@ -65,6 +65,13 @@ function buildScoreText(
     if (rank === 1) return "🥇 ";
     if (rank === 2) return "🥈 ";
     if (rank === 3) return "🥉 ";
+    if (rank === 4) return "4️⃣ ";
+    if (rank === 5) return "5️⃣ ";
+    if (rank === 6) return "6️⃣ ";
+    if (rank === 7) return "7️⃣ ";
+    if (rank === 8) return "8️⃣ ";
+    if (rank === 9) return "9️⃣ ";
+    if (rank === 10) return "🔟 ";
     return ` ${rank}. `;
   };
 
@@ -85,7 +92,7 @@ function buildScoreText(
     minute: "2-digit",
   });
   const header = `🎲 Würfelkarte - Ergebnis`;
-  const dateLine = `🗓️ ${dateStr}`;
+  const dateLine = `📆 ${dateStr}`;
   const gamemodeLine = `⭐ Modus: ${gamemode}`;
   const footer = `\nGespielt mit www.würfelkarte.com`;
   return [header, dateLine, gamemodeLine, "", ...lines, footer].join("\n");
