@@ -7,14 +7,15 @@ import { Points } from "@/components/hooks/types";
 import { useKniffel } from "@/components/hooks/useKniffel";
 import { Menu } from "@/components/Menu";
 import PlayerCard from "@/components/PlayerCard";
+import ResetGame from "@/components/ResetGame";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Trophy, UserRoundPlus } from "lucide-react";
+import { RotateCcw, Trophy, UserRoundPlus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 
 export default function Home() {
   const params = useParams();
@@ -162,6 +163,13 @@ export default function Home() {
                 <UserRoundPlus />
               </Button>
             </AddPlayer>
+          </div>
+          <div className="mr-4 hidden sm:block">
+            <ResetGame resetAllPoints={resetAllPoints}>
+              <Button variant="outline">
+                <RotateCcw />
+              </Button>
+            </ResetGame>
           </div>
           {gamemodes[gamemode].information && (
             <div className="mr-4 hidden sm:block">
