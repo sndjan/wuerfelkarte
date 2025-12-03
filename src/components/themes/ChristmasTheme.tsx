@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Snowfall from "react-snowfall";
 
 type ChristmasThemeProps = {
   gamemode?: string;
@@ -34,6 +35,10 @@ export default function ChristmasTheme({ gamemode }: ChristmasThemeProps) {
           width={300}
           height={300}
         />
+      </div>
+
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <Snowfall snowflakeCount={20} radius={[1, 4]} />
       </div>
     </>
   );

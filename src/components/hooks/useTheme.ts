@@ -28,10 +28,29 @@ const getTheme = () => {
 
 export const useTheme = () => {
   const [theme] = useState<Theme>(getTheme());
-  const [isThemeActive, setIsThemeActive] = useState(false);
+  const [isThemeActive, setIsThemeActive] = useState<boolean>();
+
+  // load persisted value on mount (safe for SSR)
   useEffect(() => {
-    console.log(theme);
-  }, [theme]);
+    try {
+      const raw = localStorage.getItem("kniffel:isThemeActive");
+      if (raw !== null) setIsThemeActive(JSON.parse(raw));
+    } catch {
+      console.warn("Could not load theme preference");
+    }
+  }, []);
+
+  // persist changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "kniffel:isThemeActive",
+        JSON.stringify(isThemeActive)
+      );
+    } catch {
+      console.warn("Could not persist theme preference");
+    }
+  }, [isThemeActive]);
 
   return { theme, isThemeActive, setIsThemeActive };
 };

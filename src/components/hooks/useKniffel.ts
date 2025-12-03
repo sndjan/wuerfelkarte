@@ -31,7 +31,7 @@ const initialPlayers = [
   },
 ];
 
-const STORAGE_KEY = "kniffel-player-names";
+const STORAGE_KEY = "kniffel:player-names";
 
 const loadPlayersFromStorage = (): Player[] | null => {
   try {
