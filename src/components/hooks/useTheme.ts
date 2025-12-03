@@ -34,7 +34,11 @@ export const useTheme = () => {
   useEffect(() => {
     try {
       const raw = localStorage.getItem("kniffel:isThemeActive");
-      if (raw !== null) setIsThemeActive(JSON.parse(raw));
+      if (raw !== null) {
+        setIsThemeActive(JSON.parse(raw));
+      } else {
+        setIsThemeActive(true);
+      }
     } catch {
       console.warn("Could not load theme preference");
     }
