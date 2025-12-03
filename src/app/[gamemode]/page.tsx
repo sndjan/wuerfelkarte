@@ -15,6 +15,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { useTheme } from "@/components/hooks/useTheme";
+
+export type Theme = "none" | "Halloween" | "Christmas";
 
 export default function Home() {
   const params = useParams();
@@ -27,14 +30,6 @@ export default function Home() {
         param.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()
     ) as keyof typeof gamemodes) || "SuperWurf";
 
-  const [isThemeActive, setIsThemeActive] = useState(false);
-  const now = new Date();
-  const isHalloween =
-    (now.getMonth() === 9 && now.getDate() >= 27) ||
-    (now.getMonth() === 10 && now.getDate() <= 2);
-  const theme: "Halloween" | "none" = isHalloween ? "Halloween" : "none";
-
-  // Always call hooks at the top
   const [purchased, setPurchased] = useState<string[] | null>(null);
   const [showScoring, setShowScoring] = useState(false);
   const {
@@ -49,6 +44,7 @@ export default function Home() {
     resetAll,
     resetAllPoints,
   } = useKniffel(gamemode);
+  const { theme, isThemeActive, setIsThemeActive } = useTheme();
 
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
 

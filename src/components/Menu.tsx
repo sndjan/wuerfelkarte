@@ -26,6 +26,7 @@ import Link from "next/link";
 import { AddPlayer } from "./AddPlayer";
 import { Player } from "./hooks/types";
 import { Scoring } from "./Scoring";
+import { Theme } from "@/app/[gamemode]/page";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
@@ -36,7 +37,7 @@ interface MenuProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   addPlayer?: (name: string) => void;
-  specialTheme?: "none" | "Halloween";
+  specialTheme?: Theme;
   isThemeActive?: boolean;
   setIsThemeActive?: (active: boolean) => void;
   gamemode?: string;

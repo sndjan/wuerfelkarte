@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import pointsJson from "../../public/points.json";
 import { EditPlayer } from "./EditPlayer";
 import { gamemodes } from "./gamemodes/gamemodes";
-import HalloweenTheme from "./HalloweenTheme";
 import { Badge } from "./ui/badge";
 import {
   Select,
@@ -16,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Theme } from "@/app/[gamemode]/page";
+import ThemeManager from "./themes/ThemeManager";
+
+const THEME_EMOJIS: Record<Theme, string[]> = {
+  Halloween: ["🎃", "👻", "🍬"],
+  Christmas: ["🎄", "🎁", "⛄"],
+  none: ["⭐", "🎲"],
+};
 
 interface PlayerCardProps {
   playerName: string;
@@ -27,7 +34,7 @@ interface PlayerCardProps {
   moveToRight: () => void;
   moveToLeft: () => void;
   gamemode: keyof typeof gamemodes;
-  theme?: "none" | "Halloween";
+  theme?: Theme;
   isThemeActive?: boolean;
 }
 
@@ -46,8 +53,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
-  const confettiEmojis =
-    theme === "Halloween" ? ["🎃", "👻", "🍬"] : ["⭐", "🎲"];
+
+  const confettiEmojis = THEME_EMOJIS[theme];
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -89,9 +96,11 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         />
       </div>
 
-      {theme === "Halloween" && isThemeActive && (
-        <HalloweenTheme gamemode={gamemode} />
-      )}
+      <ThemeManager
+        gamemode={gamemode}
+        theme={theme}
+        isThemeActive={isThemeActive}
+      />
 
       {config.fields.map(
         (field: {
