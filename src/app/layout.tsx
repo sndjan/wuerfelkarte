@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "../../providers/providers";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: { template: "%s | Würfelkarte", default: "Würfelkarte" },
@@ -29,7 +30,10 @@ export default function RootLayout({
           WebkitOverflowScrolling: "touch",
         }}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

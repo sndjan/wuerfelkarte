@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { toast } from "sonner";
 
 interface AddPlayerProps {
   addPlayer: (name: string) => void;
@@ -24,6 +25,9 @@ export function AddPlayer({ addPlayer, children }: AddPlayerProps) {
     if (playerName.trim()) {
       addPlayer(playerName.trim());
       setPlayerName("");
+      toast.success("Spieler hinzugefügt", {
+        description: `${playerName.trim()} wurde zum Spiel hinzugefügt.`,
+      });
     }
   };
 
