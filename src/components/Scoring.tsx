@@ -1,5 +1,5 @@
 import { createGameClient } from "@/lib/supabase/client-game";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AnimatedScoreDiagram from "./AnimatedScoreDiagram";
 import { gamemodes } from "./gamemodes/gamemodes";
 import { Player } from "./hooks/types";
@@ -31,9 +31,42 @@ export function Scoring({
     null | "success" | "error" | "saving"
   >(null);
 
+  const saveMatchLocally = () => {
+    // Check if any player has a non-zero score
+    const hasValidScores = players.some(p => p.score > 0);
+    if (!hasValidScores) {
+      return;
+    }
+
+    const lastMatches = localStorage.getItem("lastMatches");
+    const lastMatchesData = lastMatches ? JSON.parse(lastMatches) : [];
+    const lastMatchTime = lastMatchesData[lastMatchesData.length - 1]?.timestamp 
+      ? new Date(lastMatchesData[lastMatchesData.length - 1].timestamp).getTime() 
+      : 0;
+    const now = Date.now();
+    const timeDiffInSeconds = (now - lastMatchTime) / 1000;
+
+    // Don't save if last match was saved within the last 2 minutes
+    if (timeDiffInSeconds < 120) {
+      return;
+    }
+
+    const newMatch = { players, gamemode, timestamp: new Date().toISOString() };
+    lastMatchesData.push(newMatch);
+  
+    localStorage.setItem("lastMatches", JSON.stringify(lastMatchesData));
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      saveMatchLocally();
+    }
+  };
+
   async function handleSaveMatch() {
     setSaveStatus("saving");
-    const supabase = createGameClient();
+    
+     const supabase = createGameClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -63,7 +96,7 @@ export function Scoring({
   }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

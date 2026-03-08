@@ -15,6 +15,18 @@ const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 export default function GamemodeSelect() {
   const router = useRouter();
   const [purchased, setPurchased] = useState<string[]>([]);
+  const [lastGames, setLastGames] = useState<{ gamemode: string; players: string[]; timestamp: string }[]>([]);
+
+  useEffect(() => {
+    const lastGamesData = localStorage.getItem("lastMatches");
+    console.log("Last matches data from localStorage:", lastGamesData);
+    if (lastGamesData) {
+      const parsed = JSON.parse(lastGamesData);
+      setLastGames(Array.isArray(parsed) ? parsed : []);
+    } else {
+      setLastGames([]);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -63,13 +75,49 @@ export default function GamemodeSelect() {
           <Menu />
         </div>
       </Card>
-      <div className="flex flex-wrap justify-center gap-6 my-4">
+        <div className="flex flex-wrap justify-center gap-4 my-4 px-4">
+      <div key="top-10-games" className=" w-full sm:w-64">
+          <Card className="h-64 w-full p-6 flex flex-col items-center justify-start overflow-hidden">
+        <h2 className="text-xl font-bold">Highscores</h2>
+        {lastGames.length === 0 ? (
+          <div className="text-gray-500 text-sm">Keine Spiele gefunden.</div>
+        ) : (
+          <div className="w-full flex-1 overflow-y-auto text-gray-500">
+            {lastGames
+              .map((game: any) => {
+                const highestPlayer = game.players?.reduce((max: any, player: any) => 
+                  (player.score > (max?.score || 0)) ? player : max, null);
+                return {
+                  ...game,
+                  highestPlayer,
+                  highestScore: highestPlayer?.score || 0
+                };
+              })
+              .sort((a, b) => b.highestScore - a.highestScore)
+              .map((game: any, index) => {
+                const date = new Date(game.timestamp).toLocaleDateString("de-DE", {
+                  month: "2-digit",
+                  day: "2-digit"
+                });
+                
+                return (
+                  <div key={index} className="w-full flex justify-between items-center mb-1 text-sm">
+                    <div>{date}</div>
+                    <div>{game.highestPlayer?.name || "?"}</div>
+                    <div>{game.highestScore}</div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </Card>
+      </div>
         {Object.entries(gamemodes).map(([key, mode]) => {
           const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
           const isUnlocked =
             mode.price === 0 || purchased.includes(normalizedKey);
           return (
-            <div key={key} className="mx-4 w-full sm:w-64">
+            <div key={key} className=" w-full sm:w-64">
               <Card
                 className={`h-64 w-full p-6 flex flex-col items-center justify-between`}
               >
@@ -96,7 +144,7 @@ export default function GamemodeSelect() {
           <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
             <h2 className="text-xl font-bold mb-2">Idee vorschlagen</h2>
             <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
-              Hast du eine Idee oder einen Wunsch für neue Funktionen oder Modi?
+              Hast du eine Idee oder einen Wunsch für neue Funktionen?
               Schick mir eine kurze Beschreibung per E‑Mail.
             </div>
             <Button
