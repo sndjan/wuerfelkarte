@@ -32,7 +32,6 @@ export default function Home() {
     ) as keyof typeof gamemodes) || "SuperWurf";
 
   const [purchased, setPurchased] = useState<string[] | null>(null);
-  const [showScoring, setShowScoring] = useState(false);
   const {
     players,
     addPlayer,
@@ -135,24 +134,22 @@ export default function Home() {
           </h1>
         </Link>
         <div className="flex flex-row">
-          <Button
-            variant="outline"
-            className={`mr-4  ${
-              gameFinished
-                ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
-                : ""
-            }`}
-            onClick={() => setShowScoring(true)}
+          <Scoring
+            players={players}
+            gamemode={gamemode}
           >
-            <Trophy />
-            <span className="hidden sm:block">Punkteauswertung</span>
-            <Scoring
-              players={players}
-              open={showScoring}
-              onOpenChange={(value) => setShowScoring(value)}
-              gamemode={gamemode}
-            />
-          </Button>
+            <Button
+              variant="outline"
+              className={`mr-4  ${
+                gameFinished
+                  ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
+                  : ""
+              }`}
+            >
+                <Trophy />
+                <span className="hidden sm:block">Punkteauswertung</span>
+            </Button>
+          </Scoring>
           <div className="mr-4 hidden sm:block">
             <AddPlayer addPlayer={addPlayer}>
               <Button variant="outline">
@@ -176,16 +173,12 @@ export default function Home() {
             <ModeToggle />
           </div> */}
           <Menu
-            players={players}
             resetAll={resetAll}
             resetAllPoints={resetAllPoints}
-            open={showScoring}
-            onOpenChange={setShowScoring}
             addPlayer={addPlayer}
             specialTheme={theme}
             isThemeActive={isThemeActive}
             setIsThemeActive={setIsThemeActive}
-            gamemode={gamemode}
           />
         </div>
       </Card>

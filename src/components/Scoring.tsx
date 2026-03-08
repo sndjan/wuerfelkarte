@@ -10,6 +10,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "./ui/dialog";
 import { Share } from "./Share";
 
@@ -17,16 +18,14 @@ const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
 interface ScoringProps {
   players: Player[];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   gamemode: keyof typeof gamemodes;
+  children: React.ReactNode;
 }
 
 export function Scoring({
   players,
-  open,
-  onOpenChange,
   gamemode,
+  children,
 }: ScoringProps) {
   const [saveStatus, setSaveStatus] = useState<
     null | "success" | "error" | "saving"
@@ -64,7 +63,8 @@ export function Scoring({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Punkteauswertung</DialogTitle>

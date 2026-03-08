@@ -31,29 +31,21 @@ import { Theme } from "@/app/[gamemode]/page";
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
 interface MenuProps {
-  players?: Player[];
   resetAll?: () => void;
   resetAllPoints?: () => void;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   addPlayer?: (name: string) => void;
   specialTheme?: Theme;
   isThemeActive?: boolean;
   setIsThemeActive?: (active: boolean) => void;
-  gamemode?: string;
 }
 
 export function Menu({
-  players,
   resetAll,
   resetAllPoints,
-  open,
-  onOpenChange,
   addPlayer,
   specialTheme,
   isThemeActive,
   setIsThemeActive,
-  gamemode,
 }: MenuProps) {
   const { theme, setTheme } = useTheme();
 
@@ -89,12 +81,6 @@ export function Menu({
               <DropdownMenuItem onSelect={resetAll}>
                 <Trash2 />
                 <span>Alles zurücksetzen</span>
-              </DropdownMenuItem>
-            )}
-            {onOpenChange && (
-              <DropdownMenuItem onSelect={() => onOpenChange(true)}>
-                <Trophy />
-                <span>Punkteauswertung</span>
               </DropdownMenuItem>
             )}
             {PROFILE_ACTIVE && (
@@ -142,15 +128,6 @@ export function Menu({
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {gamemode && players && open && onOpenChange && (
-        <Scoring
-          players={players}
-          open={open}
-          onOpenChange={onOpenChange}
-          gamemode={gamemode}
-        />
-      )}
     </>
   );
 }
