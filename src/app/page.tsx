@@ -12,17 +12,51 @@ import { useEffect, useState } from "react";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
+type LastGamePlayer = {
+  name: string;
+  score: number;
+};
+
+type LastGame = {
+  gamemode: string;
+  players: LastGamePlayer[];
+  timestamp: string;
+};
+
+function isLastGamePlayer(value: unknown): value is LastGamePlayer {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const player = value as Record<string, unknown>;
+  return typeof player.name === "string" && typeof player.score === "number";
+}
+
+function isLastGame(value: unknown): value is LastGame {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const game = value as Record<string, unknown>;
+  return (
+    typeof game.gamemode === "string" &&
+    typeof game.timestamp === "string" &&
+    Array.isArray(game.players) &&
+    game.players.every(isLastGamePlayer)
+  );
+}
+
 export default function GamemodeSelect() {
   const router = useRouter();
   const [purchased, setPurchased] = useState<string[]>([]);
-  const [lastGames, setLastGames] = useState<{ gamemode: string; players: string[]; timestamp: string }[]>([]);
+  const [lastGames, setLastGames] = useState<LastGame[]>([]);
 
   useEffect(() => {
     const lastGamesData = localStorage.getItem("lastMatches");
     console.log("Last matches data from localStorage:", lastGamesData);
     if (lastGamesData) {
-      const parsed = JSON.parse(lastGamesData);
-      setLastGames(Array.isArray(parsed) ? parsed : []);
+      const parsed: unknown = JSON.parse(lastGamesData);
+      setLastGames(Array.isArray(parsed) ? parsed.filter(isLastGame) : []);
     } else {
       setLastGames([]);
     }
@@ -84,17 +118,19 @@ export default function GamemodeSelect() {
         ) : (
           <div className="w-full flex-1 overflow-y-auto text-gray-500">
             {lastGames
-              .map((game: any) => {
-                const highestPlayer = game.players?.reduce((max: any, player: any) => 
-                  (player.score > (max?.score || 0)) ? player : max, null);
+              .map((game) => {
+                const highestPlayer = game.players.reduce<LastGamePlayer | null>(
+                  (max, player) => (player.score > (max?.score ?? 0) ? player : max),
+                  null
+                );
                 return {
                   ...game,
                   highestPlayer,
-                  highestScore: highestPlayer?.score || 0
+                  highestScore: highestPlayer?.score ?? 0,
                 };
               })
               .sort((a, b) => b.highestScore - a.highestScore)
-              .map((game: any, index) => {
+              .map((game, index) => {
                 const date = new Date(game.timestamp).toLocaleDateString("de-DE", {
                   month: "2-digit",
                   day: "2-digit"

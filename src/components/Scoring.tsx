@@ -1,5 +1,5 @@
 import { createGameClient } from "@/lib/supabase/client-game";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AnimatedScoreDiagram from "./AnimatedScoreDiagram";
 import { gamemodes } from "./gamemodes/gamemodes";
 import { Player } from "./hooks/types";

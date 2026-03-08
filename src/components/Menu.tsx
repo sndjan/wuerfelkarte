@@ -17,15 +17,12 @@ import {
   RotateCcw,
   Sun,
   Trash2,
-  Trophy,
   UserRound,
   UserRoundPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { AddPlayer } from "./AddPlayer";
-import { Player } from "./hooks/types";
-import { Scoring } from "./Scoring";
 import { Theme } from "@/app/[gamemode]/page";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
