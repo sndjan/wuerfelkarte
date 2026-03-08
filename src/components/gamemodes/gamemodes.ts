@@ -67,6 +67,40 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     },
     price: 0,
   },
+  Chaoswunder: {
+    name: "Chaoswunder",
+    description: "Ein chaotischer Twist auf den Klassiker mit 5 Würfeln und allen bekannten Kategorien.",
+    fields: [
+      { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
+      { key: "Zweier", label: "Zweier", options: [2, 4, 6, 8, 10] },
+      { key: "Dreier", label: "Dreier", options: [3, 6, 9, 12, 15] },
+      { key: "Vierer", label: "Vierer", options: [4, 8, 12, 16, 20] },
+      { key: "Fünfer", label: "Fünfer", options: [5, 10, 15, 20, 25] },
+      { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
+      {
+        key: "Dreierpasch",
+        label: "Dreierpasch",
+        options: allKniffel,
+      },
+      {
+        key: "Viererpasch",
+        label: "Viererpasch",
+        options: allKniffel,
+      },
+      { key: "Full House", label: "Full House", options: [25] },
+      { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
+      { key: "Große Straße", label: "Große Straße", options: [40] },
+      { key: "Wunder", label: "Wunder", options: [50] },
+      { key: "Chance", label: "Chance", options: allKniffel },
+    ],
+    bonus: {
+      label: "",
+      fields: ["Einser", "Zweier", "Dreier", "Vierer", "Fünfer", "Sechser"],
+      minSum: 63,
+      bonus: 35,
+    },
+    price: 0,
+  },
   MiniWunder: {
     name: "Mini Wunder",
     description:

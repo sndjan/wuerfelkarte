@@ -17,6 +17,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/components/hooks/useTheme";
+import {
+  Mission,
+  missions as chaosMissions,
+} from "@/components/gamemodes/chaoswunder";
 
 export type Theme = "none" | "Halloween" | "Christmas";
 
@@ -32,6 +36,8 @@ export default function Home() {
     ) as keyof typeof gamemodes) || "SuperWurf";
 
   const [purchased, setPurchased] = useState<string[] | null>(null);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [currentMissionIndex, setCurrentMissionIndex] = useState(0);
   const {
     players,
     addPlayer,
@@ -64,6 +70,35 @@ export default function Home() {
       setPurchased(bought ? JSON.parse(bought) : ["Klassiker"]);
     }
   }, []);
+
+  useEffect(() => {
+    if (gamemode === "Chaoswunder") {
+      setCurrentMissionIndex(0);
+      setMissions(
+        [...chaosMissions].sort(() => Math.random() - 0.5).slice(0, 5)
+      );
+      return;
+    }
+
+    setCurrentMissionIndex(0);
+    setMissions([]);
+  }, [gamemode]);
+
+  useEffect(() => {
+    if (gamemode !== "Chaoswunder" || missions.length === 0 || players.length === 0) {
+      return;
+    }
+
+    const roundsPlayed = Math.min(
+      ...players.map((player) =>
+        Object.values(player.points).filter((point) => point !== 0).length
+      )
+    );
+
+    setCurrentMissionIndex(
+      Math.min(Math.floor(roundsPlayed / 3), missions.length - 1)
+    );
+  }, [gamemode, missions.length, players]);
 
   useEffect(() => {
     if (purchased === null) return;
@@ -187,6 +222,25 @@ export default function Home() {
         style={{ scrollbarWidth: "none" }}
         id="player-container"
       >
+        {
+          gamemode === "Chaoswunder" && missions.length > 0 && (
+            <Card className="p-4 mb-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
+              <h2 className="text-lg font-bold">Mission {currentMissionIndex + 1}/{missions.length}</h2>
+              <div className="flex flex-col items-center">
+                <p className="text-sm"><span className="font-bold">Würfelart:</span> {missions[currentMissionIndex].diceRule}</p>
+                <p className="text-sm"><span className="font-bold">Beschränkung:</span> {missions[currentMissionIndex].restriction}</p>
+              </div>
+              {/*<div flex-row className="bottom-2 flex gap-2">
+                <Button variant="outline" onClick={() => setCurrentMissionIndex(Math.max(0, currentMissionIndex - 1))}>
+                <ArrowRight className="rotate-180" />
+                </Button>
+                <Button variant="outline" onClick={() => setCurrentMissionIndex(Math.min(missions.length - 1, currentMissionIndex + 1))}>
+                <ArrowRight />
+                </Button>
+              </div>*/}
+            </Card>
+          )
+        }
         <div
           className={`flex flex-row gap-4 ${
             players.length > 2 ? "min-w-max" : ""
