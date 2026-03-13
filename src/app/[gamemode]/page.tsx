@@ -23,6 +23,7 @@ import {
 } from "@/components/gamemodes/chaoswunder";
 
 export type Theme = "none" | "Halloween" | "Christmas";
+const CHAOS_ROUND_INTERVAL = 2; 
 
 export default function Home() {
   const params = useParams();
@@ -75,7 +76,7 @@ export default function Home() {
     if (gamemode === "Chaoswunder") {
       setCurrentMissionIndex(0);
       setMissions(
-        [...chaosMissions].sort(() => Math.random() - 0.5).slice(0, 5)
+        [...chaosMissions].sort(() => Math.random() - 0.5).slice(0, 14/CHAOS_ROUND_INTERVAL)
       );
       return;
     }
@@ -96,7 +97,7 @@ export default function Home() {
     );
 
     setCurrentMissionIndex(
-      Math.min(Math.floor(roundsPlayed / 3), missions.length - 1)
+      Math.min(Math.floor(roundsPlayed / CHAOS_ROUND_INTERVAL), missions.length - 1)
     );
   }, [gamemode, missions.length, players]);
 

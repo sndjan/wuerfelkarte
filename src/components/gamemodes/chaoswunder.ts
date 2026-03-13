@@ -46,10 +46,6 @@ export const missions: Mission[] = [
 
   // Alle Würfel müssen gleichzeitig geworfen werden
   {
-    diceRule: "Maximal 1 Würfe.",
-    restriction: "Alle Würfel müssen gleichzeitig geworfen werden. ",
-  },
-  {
     diceRule: "Maximal 2 Würfe.",
     restriction: "Alle Würfel müssen gleichzeitig geworfen werden. ",
   },
@@ -61,37 +57,54 @@ export const missions: Mission[] = [
     diceRule: "Maximal 4 Würfe.",
     restriction: "Alle Würfel müssen gleichzeitig geworfen werden. ",
   },
-  {
-    diceRule: "Maximal 5 Würfe.",
-    restriction: "Alle Würfel müssen gleichzeitig geworfen werden. ",
-  },
-
-  {
-    diceRule: "Maximal 4 Würfe.",
-    restriction: "Alle Würfel müssen gleichzeitig geworfen werden. ",
-  },
 
   // Es dürfen nur bestimmte Augenzahlen abgelegt werden
   {
-    diceRule: "Maximal 3 Würfe",
-    restriction: "Es dürfen nur gerade Zahlen (2,4,6) abgelegt werden",
+    diceRule: "Maximal 3 Würfe.",
+    restriction: "Es dürfen nur gerade Zahlen (2,4,6) abgelegt werden. Jedoch dürfen alle Würfel zum Eintragen genutzt werden.",
   },
     {
-    diceRule: "Maximal 4 Würfe",
-    restriction: "Es dürfen nur gerade Zahlen (2,4,6) abgelegt werden",
+    diceRule: "Maximal 4 Würfe.",
+    restriction: "Es dürfen nur gerade Zahlen (2,4,6) abgelegt werden. Jedoch dürfen alle Würfel zum Eintragen genutzt werden.",
   },
   {
-    diceRule: "Maximal 3 Würfe",
-    restriction: "Es dürfen nur ungerade Zahlen (1,3,5) abgelegt werden",
+    diceRule: "Maximal 3 Würfe.",
+    restriction: "Es dürfen nur ungerade Zahlen (1,3,5) abgelegt werden. Jedoch dürfen alle Würfel zum Eintragen genutzt werden.",
   },
   {
-    diceRule: "Maximal 4 Würfe",
-    restriction: "Es dürfen nur ungerade Zahlen (1,3,5) abgelegt werden",
+    diceRule: "Maximal 4 Würfe.",
+    restriction: "Es dürfen nur ungerade Zahlen (1,3,5) abgelegt werden. Jedoch dürfen alle Würfel zum Eintragen genutzt werden.",
+  },
+
+  // Normale Würfelregeln
+  {
+    diceRule: "Maximal 3 Würfe.",
+    restriction: "Keine zusätzlichen Einschränkungen.",
+  },
+  {
+    diceRule: "Maximal 4 Würfe.",
+    restriction: "Keine zusätzlichen Einschränkungen.",
+  },
+  {
+    diceRule: "Maximal 5 Würfe.",
+    restriction: "Keine zusätzlichen Einschränkungen.",
   },
 
   // Spezielle Würfelregeln
   {
     diceRule: "Maximal 3 Würfe.",
-    restriction: "Ein zusätzlicher Wurf bei mindestens einer 6 im letzten Wurf. ",
+    restriction: "Ein zusätzlicher Wurf bei mindestens einer 6 im letzten Wurf.",
+  },
+  {
+    diceRule: "Maximal 2 Würfe.",
+    restriction: "Bevor gewürfelt wird dürfen zwei Würfel mit beliebigen Augenzahlen abgelegt werden.",
+  },
+  {
+    diceRule: "Maximal 3 Würfe.",
+    restriction: "Ein freiwilliger vierter Wurf darf gemacht werden, jedoch müssen alle Würfel neu geworfen werden.",
+  },
+  {
+    diceRule: "Maximal 3 Würfe.",
+    restriction: "Die Augenzahl 6 zählt als Joker und kann für jede Augenzahl verwendet werden.",
   },
 ];
