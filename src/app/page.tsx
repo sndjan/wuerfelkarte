@@ -53,7 +53,6 @@ export default function GamemodeSelect() {
 
   useEffect(() => {
     const lastGamesData = localStorage.getItem("lastMatches");
-    console.log("Last matches data from localStorage:", lastGamesData);
     if (lastGamesData) {
       const parsed: unknown = JSON.parse(lastGamesData);
       setLastGames(Array.isArray(parsed) ? parsed.filter(isLastGame) : []);
@@ -82,81 +81,104 @@ export default function GamemodeSelect() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30">
-        <Link href="/" className="flex flex-row items-center">
-          <Image
-            src="/images/dice.png"
-            alt="Dice"
-            width={512}
-            height={512}
-            className="w-8 h-8"
-          />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
-            Würfelkarte
-          </h1>
-        </Link>
-        <div className="flex flex-row gap-4">
-          {PROFILE_ACTIVE && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => router.push("/profile")}
-              aria-label="Profil"
-            >
-              <UserRound />
-            </Button>
-          )}
-          <Menu />
-        </div>
-      </Card>
-        <div className="flex flex-wrap justify-center gap-4 my-4 px-4">
-      <div key="top-10-games" className=" w-full sm:w-64">
-          <Card className="h-64 w-full p-6 flex flex-col items-center justify-start overflow-hidden">
-        <h2 className="text-xl font-bold">Highscores</h2>
-        {lastGames.length === 0 ? (
-          <div className="text-gray-500 text-sm">Keine Spiele gefunden.</div>
-        ) : (
-          <div className="w-full flex-1 overflow-y-auto text-gray-500">
-            {lastGames
-              .map((game) => {
-                const highestPlayer = game.players.reduce<LastGamePlayer | null>(
-                  (max, player) => (player.score > (max?.score ?? 0) ? player : max),
-                  null
-                );
-                return {
-                  ...game,
-                  highestPlayer,
-                  highestScore: highestPlayer?.score ?? 0,
-                };
-              })
-              .sort((a, b) => b.highestScore - a.highestScore)
-              .map((game, index) => {
-                const date = new Date(game.timestamp).toLocaleDateString("de-DE", {
-                  month: "2-digit",
-                  day: "2-digit"
-                });
-                
-                return (
-                  <div key={index} className="w-full flex justify-between items-center mb-1 text-sm">
-                    <div>{date}</div>
-                    <div>{game.highestPlayer?.name || "?"}</div>
-                    <div>{game.highestScore}</div>
-                  </div>
-                );
-              })}
+      <div className="w-full sticky dark:bg-[#0a0a0a] bg-white h-25 right-0 top-0">
+        <Card className="mx-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30 dark:bg-[#0a0a0a]">
+          <Link href="/" className="flex flex-row items-center">
+            <Image
+              src="/images/dice.png"
+              alt="Dice"
+              width={512}
+              height={512}
+              className="w-8 h-8"
+            />
+            <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
+              Würfelkarte
+            </h1>
+          </Link>
+          <div className="flex flex-row gap-4">
+            {PROFILE_ACTIVE && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => router.push("/profile")}
+                aria-label="Profil"
+              >
+                <UserRound />
+              </Button>
+            )}
+            <Menu />
           </div>
-        )}
-      </Card>
+        </Card>
       </div>
+      <div className="flex flex-wrap justify-center gap-4 mb-4 px-4 ">
+        <div key="top-10-games" className=" w-full sm:w-64">
+          <Card className="h-64 w-full p-6 flex flex-col items-center justify-start overflow-hidden">
+            <h2 className="text-xl font-bold">Highscores</h2>
+            {lastGames.length === 0 ? (
+              <div className="text-gray-500 text-sm">
+                Keine Spiele gefunden.
+              </div>
+            ) : (
+              <div className="w-full flex-1 overflow-y-auto">
+                <table className="w-full text-sm text-gray-500">
+                  <thead>
+                    <tr>
+                      <th className="text-left pr-2">Datum</th>
+                      <th className="text-left pr-2">Modus</th>
+                      <th className="text-left pr-2">Name</th>
+                      <th className="text-right">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lastGames
+                      .map((game) => {
+                        const highestPlayer =
+                          game.players.reduce<LastGamePlayer | null>(
+                            (max, player) =>
+                              player.score > (max?.score ?? 0) ? player : max,
+                            null,
+                          );
+                        return {
+                          ...game,
+                          highestPlayer,
+                          highestScore: highestPlayer?.score ?? 0,
+                        };
+                      })
+                      .sort((a, b) => b.highestScore - a.highestScore)
+                      .map((game, index) => {
+                        const date = new Date(
+                          game.timestamp,
+                        ).toLocaleDateString("de-DE", {
+                          month: "2-digit",
+                          day: "2-digit",
+                        });
+                        const gamemodeChar = game.gamemode
+                          .charAt(0)
+                          .toUpperCase();
+                        return (
+                          <tr key={index}>
+                            <td className="pr-2">{date}</td>
+                            <td className="pr-2">{gamemodeChar}</td>
+                            <td className="pr-2">
+                              {game.highestPlayer?.name || "?"}
+                            </td>
+                            <td className="text-right">{game.highestScore}</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
         {Object.entries(gamemodes).map(([key, mode]) => {
           const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
           const isUnlocked =
             mode.price === 0 || purchased.includes(normalizedKey);
           return (
-            <div key={key} className=" w-full sm:w-64">
-              <Card
-                className={`h-64 w-full p-6 flex flex-col items-center justify-between`}
-              >
+            <div key={key} className="w-full sm:w-64">
+              <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
                 <h2 className="text-xl font-bold mb-2">{mode.name}</h2>
                 <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
                   {mode.description}
@@ -176,19 +198,19 @@ export default function GamemodeSelect() {
             </div>
           );
         })}
-        <div key="feature-request" className="mx-4 w-full sm:w-64">
+        <div key="feature-request" className="w-full sm:w-64">
           <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
             <h2 className="text-xl font-bold mb-2">Idee vorschlagen</h2>
             <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
-              Hast du eine Idee oder einen Wunsch für neue Funktionen?
-              Schick mir eine kurze Beschreibung per E‑Mail.
+              Hast du eine Idee oder einen Wunsch für neue Funktionen? Schick
+              mir eine kurze Beschreibung per E‑Mail.
             </div>
             <Button
               variant="outline"
               className="w-full"
               onClick={() =>
                 (window.location.href = `mailto:sander.jan@gmx.net?subject=${encodeURIComponent(
-                  "Feature-Anfrage: Würfelkarte"
+                  "Feature-Anfrage: Würfelkarte",
                 )}`)
               }
               aria-label="Feature anfragen per E-Mail"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { gamemodes } from "../gamemodes/gamemodes";
 import { Player, Points } from "./types";
+import { toast } from "sonner";
 
 const initialPoints = {
   Einser: 0,
@@ -121,6 +122,9 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
         score: calculateScore(initialPoints, gamemode),
       },
     ]);
+    toast.success("Spieler hinzugefügt", {
+      description: `${name.trim()} wurde zum Spiel hinzugefügt.`,
+    });
   };
 
   const updatePoints = (playerId: number, points: Partial<Points>) => {
@@ -157,6 +161,9 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
     setPlayers((prevPlayers) =>
       prevPlayers.filter((player) => player.id !== playerId)
     );
+    toast.success("Spieler entfernt", {
+      description: `Ein Spieler wurde aus dem Spiel entfernt.`,
+    });
   };
 
   const changeName = (playerId: number, newName: string) => {
@@ -165,6 +172,9 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
         player.id === playerId ? { ...player, name: newName } : player
       )
     );
+    toast.success("Spielername geändert", {
+      description: `Der Spielername wurde zu ${newName.trim()} geändert.`,
+    });
   };
 
   const moveToRight = (playerId: number) => {

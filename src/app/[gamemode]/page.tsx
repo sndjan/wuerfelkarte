@@ -21,6 +21,7 @@ import {
   Mission,
   missions as chaosMissions,
 } from "@/components/gamemodes/chaoswunder";
+import { toast } from "sonner";
 
 export type Theme = "none" | "Halloween" | "Christmas";
 const CHAOS_ROUND_INTERVAL = 2; 
@@ -54,6 +55,7 @@ export default function Home() {
   const { theme, isThemeActive, setIsThemeActive } = useTheme();
 
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const prevMissionIndexRef = useRef<number>(-1);
 
   useEffect(() => {
     const container = document.getElementById("player-container");
@@ -75,12 +77,13 @@ export default function Home() {
   useEffect(() => {
     if (gamemode === "Chaoswunder") {
       setCurrentMissionIndex(0);
+      prevMissionIndexRef.current = -1;
       setMissions(
         [...chaosMissions].sort(() => Math.random() - 0.5).slice(0, 14/CHAOS_ROUND_INTERVAL)
       );
       return;
     }
-
+    
     setCurrentMissionIndex(0);
     setMissions([]);
   }, [gamemode]);
@@ -93,12 +96,15 @@ export default function Home() {
     const roundsPlayed = Math.min(
       ...players.map((player) =>
         Object.values(player.points).filter((point) => point !== 0).length
-      )
-    );
-
-    setCurrentMissionIndex(
-      Math.min(Math.floor(roundsPlayed / CHAOS_ROUND_INTERVAL), missions.length - 1)
-    );
+    )
+  );
+  
+  const newIndex = Math.min(Math.floor(roundsPlayed / CHAOS_ROUND_INTERVAL), missions.length - 1);
+  setCurrentMissionIndex(newIndex);
+  if (newIndex > prevMissionIndexRef.current && prevMissionIndexRef.current !== -1) {
+    toast.warning(`Mission ${newIndex + 1} ist aktiv!`);
+  }
+  prevMissionIndexRef.current = newIndex;
   }, [gamemode, missions.length, players]);
 
   useEffect(() => {
@@ -228,17 +234,9 @@ export default function Home() {
             <Card className="p-4 mb-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
               <h2 className="text-lg font-bold">Mission {currentMissionIndex + 1}/{missions.length}</h2>
               <div className="flex flex-col items-center">
-                <p className="text-sm"><span className="font-bold">Würfelart:</span> {missions[currentMissionIndex].diceRule}</p>
-                <p className="text-sm"><span className="font-bold">Beschränkung:</span> {missions[currentMissionIndex].restriction}</p>
+                <p className="text-sm text-center"><span className="font-bold">Würfelart:</span> {missions[currentMissionIndex].diceRule}</p>
+                <p className="text-sm text-center"><span className="font-bold">Beschränkung:</span> {missions[currentMissionIndex].restriction}</p>
               </div>
-              {/*<div flex-row className="bottom-2 flex gap-2">
-                <Button variant="outline" onClick={() => setCurrentMissionIndex(Math.max(0, currentMissionIndex - 1))}>
-                <ArrowRight className="rotate-180" />
-                </Button>
-                <Button variant="outline" onClick={() => setCurrentMissionIndex(Math.min(missions.length - 1, currentMissionIndex + 1))}>
-                <ArrowRight />
-                </Button>
-              </div>*/}
             </Card>
           )
         }
