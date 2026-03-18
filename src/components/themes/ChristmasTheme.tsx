@@ -9,7 +9,7 @@ export default function ChristmasTheme({ gamemode }: ChristmasThemeProps) {
   return (
     <>
       {gamemode !== "MiniWunder" && (
-        <div className="absolute right-[-80px] bottom-[-80px] transform rotate-330 z-0">
+        <div className="absolute -right-20 -bottom-20 transform rotate-330 z-0">
           <Image
             src="/images/santa.png"
             alt="Pumpkin background"
@@ -28,7 +28,7 @@ export default function ChristmasTheme({ gamemode }: ChristmasThemeProps) {
         />
       </div>
 
-      <div className="absolute right-[-80px] top-[-180px] transform rotate-330 z-0">
+      <div className="absolute -right-20 top-[-180px] transform rotate-330 z-0">
         <Image
           src="/images/tree.png"
           alt="Pumpkin background"

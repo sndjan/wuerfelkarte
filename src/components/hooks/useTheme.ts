@@ -1,11 +1,26 @@
 import { Theme } from "@/app/[gamemode]/page";
 import { useEffect, useState } from "react";
 
+const DATES = {
+  Halloween: {
+    start: { day: 27, month: 9 },
+    end: { day: 2, month: 10 },
+  },
+  Christmas: {
+    start: { day: 20, month: 11 },
+    end: { day: 10, month: 1 },
+  },
+  Easter: {
+    start: { day: 22, month: 3 },
+    end: { day: 12, month: 4 },
+  },
+};
+
 const isDateInRange = (
   startDay: number,
   startMonth: number,
   endDay: number,
-  endMonth: number
+  endMonth: number,
 ): boolean => {
   const now = new Date();
   const dateKey = (d: Date) => (d.getMonth() + 1) * 100 + d.getDate();
@@ -17,10 +32,33 @@ const isDateInRange = (
 };
 
 const getTheme = () => {
-  if (isDateInRange(27, 9, 2, 10)) {
+  if (
+    isDateInRange(
+      DATES.Halloween.start.day,
+      DATES.Halloween.start.month,
+      DATES.Halloween.end.day,
+      DATES.Halloween.end.month,
+    )
+  ) {
     return "Halloween";
-  } else if (isDateInRange(20, 11, 6, 0)) {
+  } else if (
+    isDateInRange(
+      DATES.Christmas.start.day,
+      DATES.Christmas.start.month,
+      DATES.Christmas.end.day,
+      DATES.Christmas.end.month,
+    )
+  ) {
     return "Christmas";
+  } else if (
+    isDateInRange(
+      DATES.Easter.start.day,
+      DATES.Easter.start.month,
+      DATES.Easter.end.day,
+      DATES.Easter.end.month,
+    )
+  ) {
+    return "Easter";
   } else {
     return "none";
   }
@@ -49,7 +87,7 @@ export const useTheme = () => {
     try {
       localStorage.setItem(
         "kniffel:isThemeActive",
-        JSON.stringify(isThemeActive)
+        JSON.stringify(isThemeActive),
       );
     } catch {
       console.warn("Could not persist theme preference");

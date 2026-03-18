@@ -1,4 +1,5 @@
 import ChristmasTheme from "./ChristmasTheme";
+import EasterTheme from "./EasterTheme";
 import HalloweenTheme from "./HalloweenTheme";
 import { Theme } from "@/app/[gamemode]/page";
 
@@ -21,6 +22,10 @@ export default function ThemeManager({
 
       {theme === "Christmas" && isThemeActive && (
         <ChristmasTheme gamemode={gamemode} />
+      )}
+
+      {theme === "Easter" && isThemeActive && (
+        <EasterTheme gamemode={gamemode} />
       )}
     </>
   );

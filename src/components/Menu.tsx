@@ -91,7 +91,7 @@ export function Menu({
                 </Link>
               </DropdownMenuItem>
             )}
-            {specialTheme !== "none" && (
+            {specialTheme !== "none" && specialTheme !== undefined && (
               <DropdownMenuItem
                 onSelect={() => {
                   if (setIsThemeActive) {
