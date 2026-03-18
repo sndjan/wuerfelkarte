@@ -82,7 +82,7 @@ export default function GamemodeSelect() {
   return (
     <>
       <div className="w-full sticky dark:bg-[#0a0a0a] bg-white h-25 right-0 top-0">
-        <Card className="mx-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30 dark:bg-[#0a0a0a]">
+        <Card className="mx-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30">
           <Link href="/" className="flex flex-row items-center">
             <Image
               src="/images/dice.png"

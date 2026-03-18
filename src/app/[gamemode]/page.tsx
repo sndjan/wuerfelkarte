@@ -175,7 +175,7 @@ export default function Home() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10 bg-background">
+      <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10">
         <Link href="/" className="flex flex-row ">
           <Image
             src="/images/dice.png"
