@@ -1,6 +1,13 @@
 import { Theme } from "@/app/[gamemode]/page";
 import { useEffect, useState } from "react";
 
+export const THEME_EMOJIS: Record<Theme, string[]> = {
+  Halloween: ["🎃", "👻", "🍬"],
+  Christmas: ["🎄", "🎁", "⛄"],
+  Easter: ["🐰", "🥚", "🌷"],
+  none: ["⭐", "🎲"],
+};
+
 const DATES = {
   Halloween: {
     start: { day: 27, month: 9 },

@@ -17,12 +17,7 @@ import {
 } from "./ui/select";
 import { Theme } from "@/app/[gamemode]/page";
 import ThemeManager from "./themes/ThemeManager";
-
-const THEME_EMOJIS: Record<Theme, string[]> = {
-  Halloween: ["🎃", "👻", "🍬"],
-  Christmas: ["🎄", "🎁", "⛄"],
-  none: ["⭐", "🎲"],
-};
+import { THEME_EMOJIS } from "./hooks/useTheme";
 
 interface PlayerCardProps {
   playerName: string;
@@ -127,9 +122,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     playerPoints[key] === "X"
                       ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
                       : playerPoints[key] === 0 ||
-                        playerPoints[key] === undefined
-                      ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
-                      : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
+                          playerPoints[key] === undefined
+                        ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
+                        : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
                   }`}
                 >
                   <SelectValue placeholder={label} />
@@ -141,7 +136,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                         <SelectItem key={idx} value={value.toString()}>
                           {value}
                         </SelectItem>
-                      )
+                      ),
                     )}
                   </SelectGroup>
                   <SelectGroup>
@@ -170,7 +165,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 (typeof playerPoints[bonusKey] === "number"
                   ? (playerPoints[bonusKey] as number)
                   : 0),
-              0
+              0,
             );
             const bonusReached = sum >= config.bonus.minSum;
             return (
@@ -196,7 +191,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
             );
           }
           return fieldElement;
-        }
+        },
       )}
     </Card>
   );
