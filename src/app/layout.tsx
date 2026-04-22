@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "../../providers/providers";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: { template: "%s | Würfelkarte", default: "Würfelkarte" },
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         <Providers>
           {children}
+          <Analytics />
           <Toaster />
         </Providers>
       </body>
