@@ -125,22 +125,58 @@ export async function generateScoreImageHtmlToImage(
     }))
     .sort((a, b) => b.total - a.total);
 
-  const volume = totals.reduce((a, b) => a + b.total, 0);
-  const records = totals.filter((t) => t.total > 0).length;
+  const maxTotal = totals.length > 0 ? Math.max(totals[0].total, 1) : 1;
+
+  const barColor = (index: number) =>
+    index === 0
+      ? "#ffd700"
+      : index === 1
+      ? "#c0c0c0"
+      : index === 2
+      ? "#cd7f32"
+      : "#e5e5e5";
+
+  const availableListHeight = 780;
+  const rowGap = 16;
+  const rowHeight = Math.min(
+    120,
+    Math.max(
+      60,
+      Math.floor(
+        (availableListHeight - (totals.length - 1) * rowGap) / totals.length
+      )
+    )
+  );
+  const scoreFontSize = Math.floor(rowHeight * 0.45);
+  const nameFontSize = Math.floor(rowHeight * 0.38);
+
+  const barsHTML = totals
+    .map((t, index) => {
+      const barWidth = (t.total / maxTotal) * 100;
+      const color = barColor(index);
+      return `
+        <div style="position:relative; width:100%; height:${rowHeight}px; border-radius:12px; margin-bottom:${rowGap}px; overflow:hidden;">
+          <div style="position:absolute; top:0; left:0; height:100%; width:100%; background:#2a2a2a; border-radius:12px;"></div>
+          <div style="position:absolute; top:0; left:0; height:100%; width:${barWidth}%; background:${color}; border-radius:12px;"></div>
+          <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px;">
+            <div style="font-weight:700; font-size:${scoreFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(String(t.total))}</div>
+            <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(t.name)}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 
   // Erstelle ein verstecktes Container-Element (off-screen)
   const wrapper = document.createElement("div");
   wrapper.setAttribute("aria-hidden", "true");
-  // wichtig: Position offscreen, aber im DOM, damit html-to-image alles rendern kann
   wrapper.style.position = "fixed";
   wrapper.style.left = "-99999px";
   wrapper.style.top = "0";
   wrapper.style.width = "1200px";
   wrapper.style.height = "1200px";
-  wrapper.style.zIndex = "999999"; // sicher gehen
+  wrapper.style.zIndex = "999999";
 
-  // Inline Styles für das Layout (vermeidet Abhängigkeiten von externen CSS)
-  // Wir erstellen HTML mit Inline-Styles, so ist Reproduktion zuverlässig.
   const cardHTML = `
     <div style="
       width: 1200px;
@@ -170,42 +206,9 @@ export async function generateScoreImageHtmlToImage(
           )}</div>
         </div>
 
-        <!-- Stats Row -->
-        <!-- <div style="display:flex; gap:0; margin-top:30px; margin-bottom:40px;">
-          <div style="flex:1; text-align:center;">
-            <div style="font-weight:700; font-size:48px; color:#fff">—</div>
-            <div style="font-size:32px; color:#c0c0c0; margin-top:8px;">Dauer</div>
-          </div>
-          <div style="flex:1; text-align:center;">
-            <div style="font-weight:700; font-size:48px; color:#fff">${escapeHtml(
-              volume.toLocaleString("de-DE")
-            )}</div>
-            <div style="font-size:32px; color:#c0c0c0; margin-top:8px;">Volumen</div>
-          </div>
-          <div style="flex:1; text-align:center;">
-            <div style="font-weight:700; font-size:48px; color:#fff">${escapeHtml(
-              String(records)
-            )}</div>
-            <div style="font-size:32px; color:#c0c0c0; margin-top:8px;">Rekorde</div>
-          </div>
-        </div> -->
-
-        <!-- List -->
+        <!-- Bars -->
         <div style="margin-top:20px;">
-          ${totals
-            .map(
-              (t) => `
-            <div style="display:flex; align-items:center; gap:32px; margin-bottom:18px;">
-              <div style="font-weight:700; font-size:70px; color:#fff; width:120px; margin-right:20px;">${escapeHtml(
-                String(t.total)
-              )}</div>
-              <div style="font-weight:500; font-size:56px; color:#d7e2ec;">${escapeHtml(
-                t.name
-              )}</div>
-            </div>
-          `
-            )
-            .join("")}
+          ${barsHTML}
         </div>
 
         <!-- Footer: logo left, date center, handle right -->
