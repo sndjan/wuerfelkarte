@@ -11,7 +11,21 @@ import ResetGame from "@/components/ResetGame";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RotateCcw, Trophy, UserRoundPlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Construction,
+  Dices,
+  RotateCcw,
+  Settings,
+  Trophy,
+  UserRoundPlus,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -24,7 +38,29 @@ import {
 import { toast } from "sonner";
 
 export type Theme = "none" | "Halloween" | "Christmas" | "Easter";
-const CHAOS_ROUND_INTERVAL = 2;
+
+function loadChaosSetting(key: string, defaultValue: boolean): boolean {
+  if (typeof window === "undefined") return defaultValue;
+  try {
+    const saved = localStorage.getItem("chaoswunderSettings");
+    return saved ? (JSON.parse(saved)[key] ?? defaultValue) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
+
+function saveChaosSetting(key: string, value: boolean) {
+  try {
+    const saved = localStorage.getItem("chaoswunderSettings");
+    const current = saved ? JSON.parse(saved) : {};
+    localStorage.setItem(
+      "chaoswunderSettings",
+      JSON.stringify({ ...current, [key]: value }),
+    );
+  } catch {
+    // ignore
+  }
+}
 
 export default function Home() {
   const params = useParams();
@@ -40,6 +76,15 @@ export default function Home() {
   const [purchased, setPurchased] = useState<string[] | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [currentMissionIndex, setCurrentMissionIndex] = useState(0);
+  const [missionEveryRound, setMissionEveryRound] = useState(() =>
+    loadChaosSetting("missionEveryRound", false),
+  );
+  const [balancedMode, setBalancedMode] = useState(() =>
+    loadChaosSetting("balancedMode", false),
+  );
+
+  const chaosRoundInterval = missionEveryRound ? 1 : 2;
+
   const {
     players,
     addPlayer,
@@ -75,20 +120,38 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (gamemode === "Chaoswunder") {
+    if (gamemode !== "Chaoswunder") {
       setCurrentMissionIndex(0);
-      prevMissionIndexRef.current = -1;
-      setMissions(
-        [...chaosMissions]
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 14 / CHAOS_ROUND_INTERVAL),
-      );
+      setMissions([]);
       return;
     }
 
     setCurrentMissionIndex(0);
-    setMissions([]);
-  }, [gamemode]);
+    prevMissionIndexRef.current = -1;
+
+    const missionCount = 14 / chaosRoundInterval;
+    const shuffle = <T,>(arr: T[]) => [...arr].sort(() => Math.random() - 0.5);
+
+    if (balancedMode) {
+      const hard = shuffle(chaosMissions.filter((m) => m.difficulty === 3));
+      const neutral = shuffle(chaosMissions.filter((m) => m.difficulty === 2));
+      const good = shuffle(chaosMissions.filter((m) => m.difficulty === 1));
+
+      const hardCount = missionCount === 7 ? 1 : 2;
+      const neutralCount = missionCount === 7 ? 3 : 6;
+      const goodCount = missionCount === 7 ? 3 : 6;
+
+      setMissions(
+        shuffle([
+          ...hard.slice(0, hardCount),
+          ...neutral.slice(0, neutralCount),
+          ...good.slice(0, goodCount),
+        ]),
+      );
+    } else {
+      setMissions(shuffle(chaosMissions).slice(0, missionCount));
+    }
+  }, [gamemode, missionEveryRound, balancedMode, chaosRoundInterval]);
 
   useEffect(() => {
     if (
@@ -107,7 +170,7 @@ export default function Home() {
     );
 
     const newIndex = Math.min(
-      Math.floor(roundsPlayed / CHAOS_ROUND_INTERVAL),
+      Math.floor(roundsPlayed / chaosRoundInterval),
       missions.length - 1,
     );
     setCurrentMissionIndex(newIndex);
@@ -118,7 +181,7 @@ export default function Home() {
       toast.warning(`Mission ${newIndex + 1} ist aktiv!`);
     }
     prevMissionIndexRef.current = newIndex;
-  }, [gamemode, missions.length, players]);
+  }, [gamemode, missions.length, players, chaosRoundInterval]);
 
   useEffect(() => {
     if (purchased === null) return;
@@ -154,6 +217,24 @@ export default function Home() {
       }
     }, 100);
   };
+
+  const chaosRoundsPlayed = useMemo(() => {
+    if (gamemode !== "Chaoswunder" || players.length === 0) return 0;
+    return Math.min(
+      ...players.map(
+        (player) =>
+          Object.values(player.points).filter((point) => point !== 0).length,
+      ),
+    );
+  }, [gamemode, players]);
+
+  const roundsUntilMissionChange = useMemo(() => {
+    if (gamemode !== "Chaoswunder" || players.length === 0) return null;
+    const remainder = chaosRoundsPlayed % chaosRoundInterval;
+    return remainder === 0
+      ? chaosRoundInterval
+      : chaosRoundInterval - remainder;
+  }, [gamemode, players.length, chaosRoundsPlayed, chaosRoundInterval]);
 
   const gameFinished = useMemo(
     () =>
@@ -234,28 +315,141 @@ export default function Home() {
           />
         </div>
       </Card>
+      <div>
+        {gamemode === "Chaoswunder" && missions.length > 0 && (
+          <Card className="p-4 mb-4 mx-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <Settings size={16} />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Einstellungen</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-5 pt-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium">
+                        Mission jede Runde wechseln
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Aus: alle 2 Runden · Ein: jede Runde
+                      </p>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={missionEveryRound}
+                      onClick={() => {
+                        const next = !missionEveryRound;
+                        setMissionEveryRound(next);
+                        saveChaosSetting("missionEveryRound", next);
+                      }}
+                      className={`relative shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                        missionEveryRound ? "bg-primary" : "bg-input"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                          missionEveryRound ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-medium">Ausgewogener Modus</p>
+                      <p className="text-xs text-muted-foreground">
+                        {chaosRoundInterval === 2
+                          ? "1 schwere · 3 neutrale · 3 gute Mission"
+                          : "2 schwere · 6 neutrale · 6 gute Missionen"}
+                      </p>
+                    </div>
+                    <button
+                      role="switch"
+                      aria-checked={balancedMode}
+                      onClick={() => {
+                        const next = !balancedMode;
+                        setBalancedMode(next);
+                        saveChaosSetting("balancedMode", next);
+                      }}
+                      className={`relative shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                        balancedMode ? "bg-primary" : "bg-input"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
+                          balancedMode ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <h2 className="text-lg font-bold">
+              Mission {currentMissionIndex + 1}
+            </h2>
+            <div className="flex flex-col items-center  w-full px-2">
+              <div className="flex items-start gap-2 rounded-lg  px-3 text-sm w-full">
+                <Dices className="size-4 shrink-0 mt-0.5" />
+                <span>{missions[currentMissionIndex].diceRule}</span>
+              </div>
+              <div className="flex items-start gap-2 rounded-lg  px-3 py-1.5 text-sm w-full">
+                <Construction className="size-4 shrink-0 mt-0.5" />
+                <span>{missions[currentMissionIndex].restriction}</span>
+              </div>
+            </div>
+            {roundsUntilMissionChange !== null && (
+              <div className="flex flex-row gap-1.5 pt-1 flex-wrap justify-center">
+                {missions.map((_, i) => {
+                  const missionRoundsPlayed =
+                    chaosRoundsPlayed - i * chaosRoundInterval;
+                  const isCurrent = i === currentMissionIndex;
+                  const isFull =
+                    missionRoundsPlayed >= chaosRoundInterval ||
+                    (isCurrent && chaosRoundInterval === 1);
+                  const isHalf =
+                    !isFull &&
+                    (missionRoundsPlayed > 0 ||
+                      (isCurrent && chaosRoundInterval > 1));
+                  if (isFull) {
+                    return (
+                      <div
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-foreground transition-colors"
+                      />
+                    );
+                  } else if (isHalf) {
+                    return (
+                      <div
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full overflow-hidden flex"
+                      >
+                        <div className="w-1/2 h-full bg-foreground" />
+                        <div className="w-1/2 h-full bg-muted-foreground/30" />
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div
+                        key={i}
+                        className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 transition-colors"
+                      />
+                    );
+                  }
+                })}
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
       <div
         className="px-4 pb-24 overflow-x-auto snap-x snap-mandatory no-scrollbar"
         style={{ scrollbarWidth: "none" }}
         id="player-container"
       >
-        {gamemode === "Chaoswunder" && missions.length > 0 && (
-          <Card className="p-4 mb-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
-            <h2 className="text-lg font-bold">
-              Mission {currentMissionIndex + 1}/{missions.length}
-            </h2>
-            <div className="flex flex-col items-center">
-              <p className="text-sm text-center">
-                <span className="font-bold">Würfelart:</span>{" "}
-                {missions[currentMissionIndex].diceRule}
-              </p>
-              <p className="text-sm text-center">
-                <span className="font-bold">Beschränkung:</span>{" "}
-                {missions[currentMissionIndex].restriction}
-              </p>
-            </div>
-          </Card>
-        )}
         <div
           className={`flex flex-row gap-4 ${
             players.length > 2 ? "min-w-max" : ""
