@@ -48,6 +48,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
 
   const confettiEmojis = THEME_EMOJIS[theme];
 
@@ -78,9 +79,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   return (
     <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
       <div className="flex flex-row justify-between w-full items-center mb-1">
-        <div className="z-20 font-bold bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md">
+        <button
+          className="z-20 font-bold bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-[#212121] transition-colors cursor-pointer"
+          onClick={() => setNameDialogOpen(true)}
+        >
           {playerName}
-        </div>
+        </button>
         <EditPlayer
           playerName={playerName}
           resetPoints={resetPoints}
@@ -88,6 +92,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           changeName={changeName}
           moveToRight={moveToRight}
           moveToLeft={moveToLeft}
+          nameDialogOpen={nameDialogOpen}
+          onNameDialogOpenChange={setNameDialogOpen}
         />
       </div>
 

@@ -320,11 +320,14 @@ export default function Home() {
           <Card className="p-4 mb-4 mx-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
             <Dialog>
               <DialogTrigger asChild>
-                <button className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors">
+                <Button
+                  variant="ghost"
+                  className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
                   <Settings size={16} />
-                </button>
+                </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] top-50">
                 <DialogHeader>
                   <DialogTitle>Einstellungen</DialogTitle>
                 </DialogHeader>
