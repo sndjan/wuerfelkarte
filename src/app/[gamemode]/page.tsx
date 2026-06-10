@@ -416,12 +416,12 @@ export default function Home() {
                     chaosRoundsPlayed - i * chaosRoundInterval;
                   const isCurrent = i === currentMissionIndex;
                   const isFull =
-                    missionRoundsPlayed >= chaosRoundInterval ||
-                    (isCurrent && chaosRoundInterval === 1);
+                    chaosRoundInterval === 2
+                      ? missionRoundsPlayed >= 1
+                      : missionRoundsPlayed >= chaosRoundInterval ||
+                        (isCurrent && chaosRoundInterval === 1);
                   const isHalf =
-                    !isFull &&
-                    (missionRoundsPlayed > 0 ||
-                      (isCurrent && chaosRoundInterval > 1));
+                    chaosRoundInterval === 2 ? missionRoundsPlayed === 0 : false;
                   if (isFull) {
                     return (
                       <div
