@@ -236,13 +236,18 @@ export default function Home() {
       : chaosRoundInterval - remainder;
   }, [gamemode, players.length, chaosRoundsPlayed, chaosRoundInterval]);
 
-  const gameFinished = useMemo(
-    () =>
+  const gameFinished = useMemo(() => {
+    const fields = gamemodes[gamemode]?.fields.map((f) => f.key) ?? [];
+    return (
+      players.length > 0 &&
       players.every((player) =>
-        Object.values(player.points).every((point) => point !== 0),
-      ),
-    [players],
-  );
+        fields.every((key) => {
+          const point = player.points[key as keyof typeof player.points];
+          return point !== undefined && point !== 0;
+        }),
+      )
+    );
+  }, [players, gamemode]);
 
   if (purchased === null) {
     return null;
