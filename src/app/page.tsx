@@ -4,7 +4,7 @@ import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Menu } from "@/components/Menu";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dices, Mail, UserRound } from "lucide-react";
+import { Dices, Mail, UserRound, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -111,6 +111,35 @@ export default function GamemodeSelect() {
         </Card>
       </div>
       <div className="flex flex-wrap justify-center gap-4 mb-4 px-4 ">
+        {/* Featured Multiplayer Banner */}
+        <div className="w-full">
+          <Card
+            className="relative w-full p-6 flex flex-row items-center justify-between overflow-hidden border-0 text-white cursor-pointer"
+            style={{ background: "linear-gradient(135deg, #7c3aed 0%, #4f46e5 60%, #2563eb 100%)" }}
+            onClick={() => router.push("/multiplayer")}
+          >
+            <span className="absolute top-3 right-3 bg-white text-violet-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+              Neu
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Users size={20} />
+                <h2 className="text-xl font-bold">Multiplayer</h2>
+              </div>
+              <p className="text-sm text-white/80 max-w-xs">
+                Spiele mit Freunden online. Erstelle einen Raum oder tritt einem bestehenden Raum bei.
+              </p>
+            </div>
+            <Button
+              className="bg-white text-violet-700 hover:bg-white/90 shrink-0 ml-4 hidden sm:flex"
+              onClick={(e) => { e.stopPropagation(); router.push("/multiplayer"); }}
+            >
+              <Users size={16} className="mr-2" />
+              Spielen
+            </Button>
+          </Card>
+        </div>
+
         <div key="top-10-games" className=" w-full sm:w-64">
           <Card className="h-64 w-full p-6 flex flex-col items-center justify-start overflow-hidden">
             <h2 className="text-xl font-bold">Highscores</h2>
@@ -198,6 +227,7 @@ export default function GamemodeSelect() {
             </div>
           );
         })}
+
         <div key="feature-request" className="w-full sm:w-64">
           <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
             <h2 className="text-xl font-bold mb-2">Idee vorschlagen</h2>

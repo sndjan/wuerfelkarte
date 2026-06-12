@@ -31,6 +31,8 @@ interface PlayerCardProps {
   gamemode: keyof typeof gamemodes;
   theme?: Theme;
   isThemeActive?: boolean;
+  readOnly?: boolean;
+  badge?: string;
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -45,6 +47,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   gamemode,
   theme = "none",
   isThemeActive = false,
+  readOnly = false,
+  badge,
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
@@ -81,20 +85,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       <div className="flex flex-row justify-between w-full items-center mb-1">
         <button
           className="z-20 font-bold bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-[#212121] transition-colors cursor-pointer"
-          onClick={() => setNameDialogOpen(true)}
+          onClick={() => !badge && setNameDialogOpen(true)}
+          style={badge ? { cursor: "default" } : undefined}
         >
           {playerName}
         </button>
-        <EditPlayer
-          playerName={playerName}
-          resetPoints={resetPoints}
-          removePlayer={removePlayer}
-          changeName={changeName}
-          moveToRight={moveToRight}
-          moveToLeft={moveToLeft}
-          nameDialogOpen={nameDialogOpen}
-          onNameDialogOpenChange={setNameDialogOpen}
-        />
+        {badge ? (
+          <Badge variant="secondary" className="text-xs z-20">{badge}</Badge>
+        ) : !readOnly ? (
+          <EditPlayer
+            playerName={playerName}
+            resetPoints={resetPoints}
+            removePlayer={removePlayer}
+            changeName={changeName}
+            moveToRight={moveToRight}
+            moveToLeft={moveToLeft}
+            nameDialogOpen={nameDialogOpen}
+            onNameDialogOpenChange={setNameDialogOpen}
+          />
+        ) : null}
       </div>
 
       <ThemeManager
@@ -122,6 +131,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     : ""
                 }
                 onValueChange={(value) => onValueChange(value, key)}
+                disabled={readOnly}
               >
                 <SelectTrigger
                   className={`w-full h-2 transition-colors ${

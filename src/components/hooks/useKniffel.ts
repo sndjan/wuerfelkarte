@@ -61,7 +61,7 @@ const savePlayersToStorage = (players: Player[]) => {
   }
 };
 
-function calculateScore(
+export function calculateScore(
   points: Points,
   gamemode: keyof typeof gamemodes
 ): number {
