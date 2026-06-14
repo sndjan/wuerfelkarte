@@ -317,6 +317,7 @@ export default function Home() {
             specialTheme={theme}
             isThemeActive={isThemeActive}
             setIsThemeActive={setIsThemeActive}
+            gamemodeInfo={gamemodes[gamemode].information}
           />
         </div>
       </Card>

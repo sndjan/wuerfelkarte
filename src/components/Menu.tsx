@@ -1,5 +1,6 @@
 "use client";
 
+import { Theme } from "@/app/[gamemode]/page";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   EllipsisVertical,
+  Info,
   Moon,
   Palette,
   RotateCcw,
@@ -23,7 +25,14 @@ import {
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { AddPlayer } from "./AddPlayer";
-import { Theme } from "@/app/[gamemode]/page";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
@@ -34,6 +43,7 @@ interface MenuProps {
   specialTheme?: Theme;
   isThemeActive?: boolean;
   setIsThemeActive?: (active: boolean) => void;
+  gamemodeInfo?: string[];
 }
 
 export function Menu({
@@ -43,6 +53,7 @@ export function Menu({
   specialTheme,
   isThemeActive,
   setIsThemeActive,
+  gamemodeInfo,
 }: MenuProps) {
   const { theme, setTheme } = useTheme();
 
@@ -66,6 +77,34 @@ export function Menu({
                     <span>Spieler hinzufügen</span>
                   </div>
                 </AddPlayer>
+              </DropdownMenuItem>
+            )}
+            
+            {gamemodeInfo && gamemodeInfo.length > 0 && (
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="flex items-center gap-2 w-full">
+                      <Info />
+                      <span>Regeln anzeigen</span>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Infos zum Spielmodus</DialogTitle>
+                    </DialogHeader>
+                    {gamemodeInfo.length > 0 && (
+                      <DialogDescription>{gamemodeInfo[0]}</DialogDescription>
+                    )}
+                    <div className="grid grid-cols-1 gap-4">
+                      {gamemodeInfo.slice(1).map((info, index) => (
+                        <p key={index} className="text-sm">
+                          {info}
+                        </p>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </DropdownMenuItem>
             )}
             {resetAllPoints && (
