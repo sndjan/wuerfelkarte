@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CODE_RE = /^[A-Z0-9]{6}$/;
-const MAX_PLAYERS = 6;
+const CODE_RE = /^[0-9]{5}$/;
+const MAX_PLAYERS = 12;
 
 export async function POST(
   req: NextRequest,

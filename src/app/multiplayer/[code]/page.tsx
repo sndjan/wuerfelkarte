@@ -8,14 +8,13 @@ import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Points } from "@/components/hooks/types";
 import { useMultiplayerGame } from "@/components/hooks/useMultiplayerGame";
 import { useTheme } from "@/components/hooks/useTheme";
+import { Menu } from "@/components/Menu";
 import PlayerCard from "@/components/PlayerCard";
 import { Scoring } from "@/components/Scoring";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
-  CheckCircle,
-  Circle,
   Construction,
   Dices,
   Loader2,
@@ -66,11 +65,12 @@ export default function MultiplayerGame() {
     isHost,
     isLoading,
     error,
-    updateMyPoints,
+    updatePlayerPoints,
+    resetAllPlayersPoints,
     startGame,
   } = useMultiplayerGame(code);
 
-  const { theme, isThemeActive } = useTheme();
+  const { theme, isThemeActive, setIsThemeActive } = useTheme();
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const gamemode = room?.gamemode as keyof typeof gamemodes | undefined;
@@ -127,7 +127,7 @@ export default function MultiplayerGame() {
   }, [room?.status]);
 
   function shareRoom() {
-    const url = `${window.location.origin}/multiplayer?code=${code}`;
+    const url = `https://www.würfelkarte.com/multiplayer?code=${code}`;
     if (navigator.share) {
       navigator
         .share({
@@ -184,6 +184,13 @@ export default function MultiplayerGame() {
                 room.gamemode}
             </h1>
           </Link>
+          <Menu
+            resetAllPoints={resetAllPlayersPoints}
+            specialTheme={theme}
+            isThemeActive={isThemeActive}
+            setIsThemeActive={setIsThemeActive}
+            gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
+          />
         </Card>
 
         <div className="px-4 flex flex-col gap-4 max-w-md mx-auto">
@@ -211,21 +218,14 @@ export default function MultiplayerGame() {
           {/* Player list */}
           <Card className="p-4 flex flex-col gap-2">
             <h2 className="font-semibold flex items-center gap-2">
-              <Users size={16} /> Spieler ({players.length}/6)
+              <Users size={16} /> Spieler ({players.length}/12)
             </h2>
-            {players.map((p) => (
+            {players.map((p, i) => (
               <div
                 key={p.player_key}
                 className="flex items-center gap-2 text-sm"
               >
-                {p.player_key === myPlayerKey ? (
-                  <CheckCircle size={14} className="text-green-500 shrink-0" />
-                ) : (
-                  <Circle
-                    size={14}
-                    className="text-muted-foreground shrink-0"
-                  />
-                )}
+                <span className="text-muted-foreground shrink-0 w-4 text-right">{i + 1}.</span>
                 <span>{p.name}</span>
                 {p.player_key === room.host_player_key && (
                   <Badge variant="secondary" className="text-xs ml-auto">
@@ -312,6 +312,13 @@ export default function MultiplayerGame() {
               <span className="hidden sm:block">Punkteauswertung</span>
             </Button>
           </Scoring>
+          <Menu
+            resetAllPoints={resetAllPlayersPoints}
+            specialTheme={theme}
+            isThemeActive={isThemeActive}
+            setIsThemeActive={setIsThemeActive}
+            gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
+          />
         </div>
       </Card>
 
@@ -372,7 +379,7 @@ export default function MultiplayerGame() {
                 <PlayerCard
                   playerName={player.name}
                   playerPoints={player.points}
-                  updatePoints={(points) => updateMyPoints(points)}
+                  updatePoints={(points) => updatePlayerPoints(player.player_key, points)}
                   resetPoints={() => {}}
                   removePlayer={() => {}}
                   changeName={() => {}}
@@ -381,8 +388,8 @@ export default function MultiplayerGame() {
                   gamemode={room.gamemode as keyof typeof gamemodes}
                   theme={theme}
                   isThemeActive={isThemeActive}
-                  readOnly={!isMe}
                   badge={badge}
+                  hideMenu
                 />
               </div>
             );

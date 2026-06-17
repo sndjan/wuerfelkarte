@@ -51,7 +51,7 @@ function MultiplayerLobby() {
   const [creating, setCreating] = useState(false);
 
   const [joinCode, setJoinCode] = useState(
-    (searchParams.get("code") ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6)
+    (searchParams.get("code") ?? "").replace(/[^0-9]/g, "").slice(0, 5)
   );
   const [joinName, setJoinName] = useState("");
   const [joining, setJoining] = useState(false);
@@ -86,14 +86,14 @@ function MultiplayerLobby() {
 
   async function handleJoin() {
     const name = joinName.trim().slice(0, 30);
-    const code = joinCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const code = joinCode.trim().replace(/[^0-9]/g, "");
 
     if (!name) {
       toast.error("Bitte Namen eingeben.");
       return;
     }
-    if (code.length !== 6) {
-      toast.error("Bitte gültigen 6-stelligen Raumcode eingeben.");
+    if (code.length !== 5) {
+      toast.error("Bitte gültigen 5-stelligen Raumcode eingeben.");
       return;
     }
 
@@ -158,16 +158,16 @@ function MultiplayerLobby() {
             <div>
               <label className="text-sm font-medium mb-1 block">Raumcode</label>
               <Input
-                placeholder="z.B. XQRT7A"
+                placeholder="z.B. 48291"
                 value={joinCode}
-                maxLength={6}
+                maxLength={5}
                 onChange={(e) =>
-                  setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                  setJoinCode(e.target.value.replace(/[^0-9]/g, ""))
                 }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleJoin();
                 }}
-                className="font-mono tracking-widest uppercase"
+                className="font-mono tracking-widest"
               />
             </div>
             <Button

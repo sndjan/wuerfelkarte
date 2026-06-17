@@ -147,14 +147,14 @@ export function useMultiplayerGame(roomCode: string) {
     };
   }, [room?.id, room?.gamemode]);
 
-  const updateMyPoints = useCallback(
-    async (newPartialPoints: Partial<Record<string, number | "X">>) => {
+  const updatePlayerPoints = useCallback(
+    async (targetPlayerKey: string, newPartialPoints: Partial<Record<string, number | "X">>) => {
       if (!room) return;
 
       // Optimistic update
       setPlayers((prev) =>
         prev.map((p) => {
-          if (p.player_key !== myPlayerKey) return p;
+          if (p.player_key !== targetPlayerKey) return p;
           const merged: Record<string, number | "X"> = Object.fromEntries(
             Object.entries({ ...p.points, ...newPartialPoints }).filter(
               (entry): entry is [string, number | "X"] => entry[1] !== undefined
@@ -172,15 +172,15 @@ export function useMultiplayerGame(roomCode: string) {
       );
 
       // Compute full merged points to send to server
-      const myPlayer = players.find((p) => p.player_key === myPlayerKey);
-      const fullPoints = { ...(myPlayer?.points ?? {}), ...newPartialPoints };
+      const targetPlayer = players.find((p) => p.player_key === targetPlayerKey);
+      const fullPoints = { ...(targetPlayer?.points ?? {}), ...newPartialPoints };
 
       const res = await fetch(
         `/api/multiplayer/rooms/${room.code}/score`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ playerKey: myPlayerKey, points: fullPoints }),
+          body: JSON.stringify({ playerKey: targetPlayerKey, points: fullPoints }),
         }
       );
 
@@ -189,7 +189,54 @@ export function useMultiplayerGame(roomCode: string) {
         await loadRoom();
       }
     },
-    [room, players, myPlayerKey, loadRoom]
+    [room, players, loadRoom]
+  );
+
+  const resetPlayerPoints = useCallback(
+    async (targetPlayerKey: string) => {
+      if (!room) return;
+
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.player_key === targetPlayerKey
+            ? { ...p, points: {} as Points, score: calculateScore({} as Points, room.gamemode as keyof typeof gamemodes) }
+            : p
+        )
+      );
+
+      const res = await fetch(`/api/multiplayer/rooms/${room.code}/score`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerKey: targetPlayerKey, points: {} }),
+      });
+
+      if (!res.ok) {
+        await loadRoom();
+      }
+    },
+    [room, loadRoom]
+  );
+
+  const resetAllPlayersPoints = useCallback(
+    async () => {
+      if (!room) return;
+
+      const emptyScore = calculateScore({} as Points, room.gamemode as keyof typeof gamemodes);
+      setPlayers((prev) =>
+        prev.map((p) => ({ ...p, points: {} as Points, score: emptyScore }))
+      );
+
+      await Promise.all(
+        players.map((p) =>
+          fetch(`/api/multiplayer/rooms/${room.code}/score`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ playerKey: p.player_key, points: {} }),
+          })
+        )
+      );
+    },
+    [room, players]
   );
 
   const startGame = useCallback(async () => {
@@ -208,7 +255,9 @@ export function useMultiplayerGame(roomCode: string) {
     isHost: room?.host_player_key === myPlayerKey,
     isLoading,
     error,
-    updateMyPoints,
+    updatePlayerPoints,
+    resetPlayerPoints,
+    resetAllPlayersPoints,
     startGame,
   };
 }

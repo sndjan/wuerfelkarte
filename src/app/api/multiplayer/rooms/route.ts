@@ -3,13 +3,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-// Unambiguous chars: no O/0, I/1, l
-const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
 function generateRoomCode(): string {
-  const bytes = new Uint8Array(6);
+  const bytes = new Uint8Array(5);
   crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => CODE_CHARS[b % CODE_CHARS.length]).join("");
+  return Array.from(bytes, (b) => (b % 10).toString()).join("");
 }
 
 export async function POST(req: NextRequest) {

@@ -32,6 +32,7 @@ interface PlayerCardProps {
   theme?: Theme;
   isThemeActive?: boolean;
   readOnly?: boolean;
+  hideMenu?: boolean;
   badge?: string;
 }
 
@@ -48,6 +49,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   theme = "none",
   isThemeActive = false,
   readOnly = false,
+  hideMenu = false,
   badge,
 }) => {
   const config = gamemodes[gamemode];
@@ -91,8 +93,10 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           {playerName}
         </button>
         {badge ? (
-          <Badge variant="secondary" className="text-xs z-20">{badge}</Badge>
-        ) : !readOnly ? (
+          <Badge variant="secondary" className="text-xs z-20">
+            {badge}
+          </Badge>
+        ) : !readOnly && !hideMenu ? (
           <EditPlayer
             playerName={playerName}
             resetPoints={resetPoints}
