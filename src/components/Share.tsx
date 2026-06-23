@@ -1,7 +1,7 @@
 import { Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { gamemodes } from "./gamemodes/gamemodes";
-import { Player } from "./hooks/types";
+import { Player, Points } from "./hooks/types";
 import { useState } from "react";
 import { toPng } from "html-to-image";
 
@@ -114,15 +114,23 @@ export async function generateScoreImageHtmlToImage(
   }
 
   // build totals like in deiner bisherigen Logik
+  const bonusConfig = gamemodes[gamemode].bonus;
   const totals = players
-    .map((p) => ({
-      id: p.id,
-      name: p.name,
-      total: Object.values(p.points).reduce<number>(
+    .map((p) => {
+      const baseTotal = Object.values(p.points).reduce<number>(
         (s, v) => s + (typeof v === "number" ? v : 0),
         0
-      ),
-    }))
+      );
+      let bonus = 0;
+      if (bonusConfig) {
+        const upperSum = bonusConfig.fields.reduce<number>(
+          (s, key) => s + (typeof p.points[key as keyof Points] === "number" ? (p.points[key as keyof Points] as number) : 0),
+          0
+        );
+        if (upperSum >= bonusConfig.minSum) bonus = bonusConfig.bonus;
+      }
+      return { id: p.id, name: p.name, total: baseTotal + bonus };
+    })
     .sort((a, b) => b.total - a.total);
 
   const maxTotal = totals.length > 0 ? Math.max(totals[0].total, 1) : 1;
