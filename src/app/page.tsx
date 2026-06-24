@@ -228,6 +228,23 @@ export default function GamemodeSelect() {
           );
         })}
 
+        <div key="freies-tracking" className="w-full sm:w-64">
+          <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
+            <h2 className="text-xl font-bold mb-2">Freies Tracking</h2>
+            <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
+              Verfolge Punkte für beliebige Spiele wie Flip7 oder Cabo. Jede Runde ein Eintrag pro Spieler.
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => router.push("/freiestracking")}
+            >
+              <Dices size={20} className="mr-2" />
+              Spielen
+            </Button>
+          </Card>
+        </div>
+
         <div key="feature-request" className="w-full sm:w-64">
           <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
             <h2 className="text-xl font-bold mb-2">Idee vorschlagen</h2>
