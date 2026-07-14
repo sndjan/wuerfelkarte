@@ -1,43 +1,49 @@
 "use client";
 
 import { gamemodes } from "@/components/gamemodes/gamemodes";
-import { Menu } from "@/components/Menu";
-import { Button } from "@/components/ui/button";
+import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Dices, UserRound } from "lucide-react";
+import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
+import { GamemodePillSelector } from "@/components/yatzy-lobby/GamemodePillSelector";
+import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
+import { RecentMatchesList } from "@/components/yatzy-lobby/RecentMatchesList";
+import { ArrowLeft, Dices } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
+const PLAYER_NAMES_STORAGE_KEY = "kniffel:player-names";
 
-export default function YatzyGamemodeSelect() {
+export default function YatzyLobby() {
   const router = useRouter();
-  const [purchased, setPurchased] = useState<string[]>([]);
+  const {
+    roster,
+    addPlayer,
+    toggleActive,
+    renamePlayer,
+    changeEmoji,
+    removePlayer,
+  } = usePlayerRoster();
+  const [selectedGamemode, setSelectedGamemode] = useState<
+    keyof typeof gamemodes
+  >(Object.keys(gamemodes)[0] as keyof typeof gamemodes);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const bought = localStorage.getItem("purchasedGamemodes");
-      setPurchased(bought ? JSON.parse(bought) : ["Klassiker"]);
-    }
-  }, []);
+  const activePlayers = roster.filter((player) => player.active);
 
-  const handlePlay = (key: string, price: number) => {
-    if (
-      price === 0 ||
-      purchased.includes(key.toLowerCase().replace(/[^a-z0-9]/g, ""))
-    ) {
-      router.push(`/${key.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
-    } else {
-      router.push(`/checkout/${key.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
-    }
+  const handleStart = () => {
+    if (activePlayers.length === 0) return;
+    localStorage.setItem(
+      PLAYER_NAMES_STORAGE_KEY,
+      JSON.stringify(activePlayers.map((player) => player.name)),
+    );
+    router.push(`/${selectedGamemode.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
   };
 
   return (
     <>
       <div className="w-full sticky dark:bg-[#0a0a0a] bg-white h-25 right-0 top-0">
-        <Card className="mx-4 p-4 flex flex-row justify-between items-center sticky top-4 z-30">
+        <Card className="mx-4 p-4 flex flex-row items-center sticky top-4 z-30">
           <Link href="/" className="flex flex-row items-center">
             <ArrowLeft className="mr-2" size={20} />
             <Image
@@ -51,48 +57,51 @@ export default function YatzyGamemodeSelect() {
               Yatzy
             </h1>
           </Link>
-          <div className="flex flex-row gap-4">
-            {PROFILE_ACTIVE && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => router.push("/profile")}
-                aria-label="Profil"
-              >
-                <UserRound />
-              </Button>
-            )}
-            <Menu />
-          </div>
         </Card>
       </div>
-      <div className="flex flex-wrap justify-center gap-4 mb-4 px-4">
-        {Object.entries(gamemodes).map(([key, mode]) => {
-          const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-          const isUnlocked =
-            mode.price === 0 || purchased.includes(normalizedKey);
-          return (
-            <div key={key} className="w-full sm:w-64">
-              <Card className="h-64 w-full p-6 flex flex-col items-center justify-between">
-                <h2 className="text-xl font-bold mb-2">{mode.name}</h2>
-                <div className="text-gray-500 text-sm mb-2 flex-1 flex items-center justify-center text-center">
-                  {mode.description}
-                </div>
-                <Button
-                  variant={isUnlocked ? "outline" : "default"}
-                  className="w-full"
-                  onClick={() => handlePlay(key, mode.price ?? 0)}
-                  disabled={false}
-                >
-                  <Dices size={20} className="mr-2" />
-                  {isUnlocked
-                    ? "Spielen"
-                    : `${mode.price?.toFixed(2) ?? ""} € freischalten`}
-                </Button>
-              </Card>
-            </div>
-          );
-        })}
+      <div className="flex flex-col gap-6 px-4 pb-8">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Spieler
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {roster.map((player) => (
+              <PlayerChip
+                key={player.id}
+                player={player}
+                onToggleActive={toggleActive}
+                onRename={renamePlayer}
+                onChangeEmoji={changeEmoji}
+                onRemove={removePlayer}
+              />
+            ))}
+            <AddPlayerDialog onAdd={addPlayer} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+            Spielmodus
+          </h2>
+          <GamemodePillSelector
+            value={selectedGamemode}
+            onChange={(key) =>
+              setSelectedGamemode(key as keyof typeof gamemodes)
+            }
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleStart}
+          disabled={activePlayers.length === 0}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Dices size={20} />
+          Spiel starten
+        </button>
+
+        <RecentMatchesList />
       </div>
     </>
   );
