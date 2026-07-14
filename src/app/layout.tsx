@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import { Baloo_2, Nunito } from "next/font/google";
 import { Providers } from "../../providers/providers";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+const baloo2 = Baloo_2({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-baloo",
+});
+
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800", "900"],
+  variable: "--font-nunito",
+});
 
 export const metadata: Metadata = {
   title: { template: "%s | Würfelkarte", default: "Würfelkarte" },
@@ -21,7 +34,7 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       style={{ overflow: "hidden", width: "100%" }}
-      className="h-full"
+      className={`h-full ${baloo2.variable} ${nunito.variable}`}
     >
       <body
         style={{
