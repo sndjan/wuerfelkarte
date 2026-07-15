@@ -5,6 +5,7 @@ import FreeTrackingCard from "@/components/FreeTrackingCard";
 import { FreeTrackingScoring } from "@/components/FreeTrackingScoring";
 import { useFreeTracking } from "@/components/hooks/useFreeTracking";
 import { Menu } from "@/components/Menu";
+import { PageHeader } from "@/components/PageHeader";
 import ResetGame from "@/components/ResetGame";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RotateCcw, Settings, Trophy, UserRoundPlus } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRef } from "react";
 
 function Toggle({
@@ -92,48 +91,39 @@ export default function FreeTrackingPage() {
 
   return (
     <>
-      {/* Header */}
-      <Card className="m-4 p-4 flex flex-row justify-between items-center sticky top-4 z-10">
-        <Link href="/" className="flex flex-row items-center">
-          <Image
-            src="/images/dice.png"
-            alt="Dice"
-            width={512}
-            height={512}
-            className="w-8 h-8"
-          />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl mr-4">
-            Freies Tracking
-          </h1>
-        </Link>
-        <div className="flex flex-row">
-          <FreeTrackingScoring players={players} settings={settings}>
-            <Button variant="outline" className="mr-4">
-              <Trophy />
-              <span className="hidden sm:block">Punkteauswertung</span>
-            </Button>
-          </FreeTrackingScoring>
-          <div className="mr-4 hidden sm:block">
-            <AddPlayer addPlayer={addPlayer}>
+      <PageHeader
+        backHref="/"
+        title="Freies Tracking"
+        right={
+          <>
+            <FreeTrackingScoring players={players} settings={settings}>
               <Button variant="outline">
-                <UserRoundPlus />
+                <Trophy />
+                <span className="hidden sm:block">Punkteauswertung</span>
               </Button>
-            </AddPlayer>
-          </div>
-          <div className="mr-4 hidden sm:block">
-            <ResetGame resetAllPoints={resetAllRounds}>
-              <Button variant="outline">
-                <RotateCcw />
-              </Button>
-            </ResetGame>
-          </div>
-          <Menu
-            resetAll={resetAll}
-            resetAllPoints={resetAllRounds}
-            addPlayer={addPlayer}
-          />
-        </div>
-      </Card>
+            </FreeTrackingScoring>
+            <div className="hidden sm:block">
+              <AddPlayer addPlayer={addPlayer}>
+                <Button variant="outline">
+                  <UserRoundPlus />
+                </Button>
+              </AddPlayer>
+            </div>
+            <div className="hidden sm:block">
+              <ResetGame resetAllPoints={resetAllRounds}>
+                <Button variant="outline">
+                  <RotateCcw />
+                </Button>
+              </ResetGame>
+            </div>
+            <Menu
+              resetAll={resetAll}
+              resetAllPoints={resetAllRounds}
+              addPlayer={addPlayer}
+            />
+          </>
+        }
+      />
 
       {/* Settings Card */}
       <Card className="p-3 mb-4 mx-4 flex flex-row items-center justify-between gap-2">
