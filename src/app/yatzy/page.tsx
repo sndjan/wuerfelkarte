@@ -7,7 +7,6 @@ import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { GamemodePillSelector } from "@/components/yatzy-lobby/GamemodePillSelector";
 import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
 import { RecentMatchesList } from "@/components/yatzy-lobby/RecentMatchesList";
-import { Dices } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -86,8 +85,7 @@ export default function YatzyLobby() {
           disabled={activePlayers.length === 0}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Dices size={20} />
-          Spiel starten
+          🎲 Spiel starten
         </button>
 
         <RecentMatchesList />
