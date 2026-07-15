@@ -34,7 +34,7 @@ function buildScoreText(
         return sum + (typeof value === "number" ? value : 0);
       }, 0) + bonus;
 
-    return { id: player.id, name: player.name, total };
+    return { id: player.id, name: player.name, emoji: player.emoji, total };
   });
 
   // Determine dense ranks (ties share the same rank) and assign medals for top 3
@@ -63,7 +63,8 @@ function buildScoreText(
   const lines = sortedTotals.map((t) => {
     const rank = totalToRank.get(t.total) ?? 0;
     const prefix = medalForRank(rank);
-    return `${prefix}${t.name}: ${t.total} Punkte`;
+    const namePrefix = t.emoji ? `${t.emoji} ` : "";
+    return `${prefix}${namePrefix}${t.name}: ${t.total} Punkte`;
   });
 
   // Format date without seconds (localized) and add emojis to header/footer
@@ -129,7 +130,7 @@ export async function generateScoreImageHtmlToImage(
         );
         if (upperSum >= bonusConfig.minSum) bonus = bonusConfig.bonus;
       }
-      return { id: p.id, name: p.name, total: baseTotal + bonus };
+      return { id: p.id, name: p.name, emoji: p.emoji, total: baseTotal + bonus };
     })
     .sort((a, b) => b.total - a.total);
 
@@ -162,13 +163,14 @@ export async function generateScoreImageHtmlToImage(
     .map((t, index) => {
       const barWidth = (t.total / maxTotal) * 100;
       const color = barColor(index);
+      const displayName = t.emoji ? `${t.emoji} ${t.name}` : t.name;
       return `
         <div style="position:relative; width:100%; height:${rowHeight}px; border-radius:12px; margin-bottom:${rowGap}px; overflow:hidden;">
           <div style="position:absolute; top:0; left:0; height:100%; width:100%; background:#2a2a2a; border-radius:12px;"></div>
           <div style="position:absolute; top:0; left:0; height:100%; width:${barWidth}%; background:${color}; border-radius:12px;"></div>
           <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px;">
             <div style="font-weight:700; font-size:${scoreFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(String(t.total))}</div>
-            <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(t.name)}</div>
+            <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(displayName)}</div>
           </div>
         </div>
       `;

@@ -17,7 +17,6 @@ export type GamemodeConfig = {
   bonus?: BonusConfig;
   description?: string;
   information?: string[];
-  price?: number;
 };
 
 const allKniffel = [
@@ -65,7 +64,6 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 63,
       bonus: 35,
     },
-    price: 0,
   },
   WunderPlus: {
     name: "Wunder+",
@@ -109,7 +107,6 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 63,
       bonus: 35,
     },
-    price: 0,
   },
   Chaoswunder: {
     name: "Chaoswunder",
@@ -143,7 +140,6 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 63,
       bonus: 35,
     },
-    price: 0,
   },
   MiniWunder: {
     name: "Mini Wunder",
@@ -172,7 +168,6 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 30,
       bonus: 15,
     },
-    price: 0,
   },
   SuperWunder: {
     name: "Super Wunder",
@@ -220,6 +215,5 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 72,
       bonus: 50,
     },
-    price: 0,
   },
 };

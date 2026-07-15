@@ -27,7 +27,7 @@ import {
   Trophy,
   UserRoundPlus,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/components/hooks/useTheme";
 import {
@@ -63,7 +63,6 @@ function saveChaosSetting(key: string, value: boolean) {
 
 export default function Home() {
   const params = useParams();
-  const router = useRouter();
   const param = (params.gamemode as string) || "";
   const gamemode =
     (Object.keys(gamemodes).find(
@@ -72,7 +71,6 @@ export default function Home() {
         param.replace(/[^a-zA-Z0-9]/g, "").toLowerCase(),
     ) as keyof typeof gamemodes) || "SuperWurf";
 
-  const [purchased, setPurchased] = useState<string[] | null>(null);
   const [missions, setMissions] = useState<Mission[]>([]);
   const [currentMissionIndex, setCurrentMissionIndex] = useState(0);
   const [missionEveryRound, setMissionEveryRound] = useState(() =>
@@ -108,13 +106,6 @@ export default function Home() {
         left: 0,
         behavior: "auto",
       });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const bought = localStorage.getItem("purchasedGamemodes");
-      setPurchased(bought ? JSON.parse(bought) : ["Klassiker"]);
     }
   }, []);
 
@@ -182,16 +173,6 @@ export default function Home() {
     prevMissionIndexRef.current = newIndex;
   }, [gamemode, missions.length, players, chaosRoundInterval]);
 
-  useEffect(() => {
-    if (purchased === null) return;
-    const normalizedKey = param.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-    const modePrice = gamemodes[gamemode]?.price ?? 0;
-    const isUnlocked = modePrice === 0 || purchased.includes(normalizedKey);
-    if (!isUnlocked) {
-      router.replace(`/checkout/${normalizedKey}`);
-    }
-  }, [purchased, param, gamemode, router]);
-
   const handleUpdatePoints = (playerId: number, points: Partial<Points>) => {
     const currentIndex = players.findIndex((player) => player.id === playerId);
     updatePoints(playerId, points);
@@ -248,20 +229,10 @@ export default function Home() {
     );
   }, [players, gamemode]);
 
-  if (purchased === null) {
-    return null;
-  }
-  const normalizedKey = param.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-  const modePrice = gamemodes[gamemode]?.price ?? 0;
-  const isUnlocked = modePrice === 0 || purchased.includes(normalizedKey);
-  if (!isUnlocked) {
-    return null;
-  }
-
   return (
     <>
       <PageHeader
-        backHref="/"
+        backHref="/yatzy"
         title={gamemodes[gamemode].name}
         right={
           <>
@@ -464,6 +435,7 @@ export default function Home() {
               >
                 <PlayerCard
                   playerName={player.name}
+                  playerEmoji={player.emoji}
                   playerPoints={player.points}
                   updatePoints={(points: Partial<Points>) =>
                     handleUpdatePoints(player.id, points)

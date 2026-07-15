@@ -34,17 +34,24 @@ const initialPlayers = [
 
 const STORAGE_KEY = "kniffel:player-names";
 
+type StoredPlayer = string | { name: string; emoji?: string };
+
 const loadPlayersFromStorage = (): Player[] | null => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      const playerNames: string[] = JSON.parse(stored);
-      return playerNames.map((name, index) => ({
-        id: Date.now() + index,
-        name,
-        points: { ...initialPoints },
-        score: 0,
-      }));
+      const storedPlayers: StoredPlayer[] = JSON.parse(stored);
+      return storedPlayers.map((entry, index) => {
+        const { name, emoji } =
+          typeof entry === "string" ? { name: entry, emoji: undefined } : entry;
+        return {
+          id: Date.now() + index,
+          name,
+          emoji,
+          points: { ...initialPoints },
+          score: 0,
+        };
+      });
     }
     return null;
   } catch {
@@ -54,8 +61,11 @@ const loadPlayersFromStorage = (): Player[] | null => {
 
 const savePlayersToStorage = (players: Player[]) => {
   try {
-    const playerNames = players.map((player) => player.name);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(playerNames));
+    const storedPlayers: StoredPlayer[] = players.map((player) => ({
+      name: player.name,
+      emoji: player.emoji,
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedPlayers));
   } catch {
     // Handle storage errors silently
   }

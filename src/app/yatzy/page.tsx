@@ -33,9 +33,16 @@ export default function YatzyLobby() {
     if (activePlayers.length === 0) return;
     localStorage.setItem(
       PLAYER_NAMES_STORAGE_KEY,
-      JSON.stringify(activePlayers.map((player) => player.name)),
+      JSON.stringify(
+        activePlayers.map((player) => ({
+          name: player.name,
+          emoji: player.emoji,
+        })),
+      ),
     );
-    router.push(`/${selectedGamemode.toLowerCase().replace(/[^a-z0-9]/g, "")}`);
+    router.push(
+      `/yatzy/${selectedGamemode.toLowerCase().replace(/[^a-z0-9]/g, "")}`,
+    );
   };
 
   return (

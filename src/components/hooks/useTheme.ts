@@ -1,4 +1,4 @@
-import { Theme } from "@/app/[gamemode]/page";
+import { Theme } from "@/app/yatzy/[gamemode]/page";
 import { useEffect, useState } from "react";
 
 export const THEME_EMOJIS: Record<Theme, string[]> = {

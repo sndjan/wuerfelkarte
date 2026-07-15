@@ -15,12 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Theme } from "@/app/[gamemode]/page";
+import { Theme } from "@/app/yatzy/[gamemode]/page";
 import ThemeManager from "./themes/ThemeManager";
 import { THEME_EMOJIS } from "./hooks/useTheme";
 
 interface PlayerCardProps {
   playerName: string;
+  playerEmoji?: string;
   playerPoints: Record<string, number | "X">;
   updatePoints: (points: Record<string, number | "X">) => void;
   resetPoints: () => void;
@@ -38,6 +39,7 @@ interface PlayerCardProps {
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
   playerName,
+  playerEmoji,
   playerPoints,
   updatePoints,
   resetPoints,
@@ -56,7 +58,9 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
 
-  const confettiEmojis = THEME_EMOJIS[theme];
+  const confettiEmojis = playerEmoji
+    ? [...THEME_EMOJIS[theme], playerEmoji]
+    : THEME_EMOJIS[theme];
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -90,6 +94,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           onClick={() => !badge && setNameDialogOpen(true)}
           style={badge ? { cursor: "default" } : undefined}
         >
+          {playerEmoji ? `${playerEmoji} ` : ""}
           {playerName}
         </button>
         {badge ? (

@@ -58,7 +58,10 @@ export function AnimatedScoreDiagram({ players }: AnimatedScoreDiagramProps) {
               <div>{animatedScore} Punkte</div>
               <div>
                 {animatedScore === score && (
-                  <span className="ml-2">{player.name}</span>
+                  <span className="ml-2">
+                    {player.emoji ? `${player.emoji} ` : ""}
+                    {player.name}
+                  </span>
                 )}
               </div>
             </div>

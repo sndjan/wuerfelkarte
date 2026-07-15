@@ -1,6 +1,6 @@
 "use client";
 
-import { Theme } from "@/app/[gamemode]/page";
+import { Theme } from "@/app/yatzy/[gamemode]/page";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
