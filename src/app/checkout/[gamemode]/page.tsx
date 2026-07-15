@@ -2,6 +2,7 @@
 
 import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Checkout } from "@/components/payment/Checkout";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { convertToSubcurrency } from "@/lib/utils";
 import { Elements } from "@stripe/react-stripe-js";
@@ -48,42 +49,45 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex flex-col  items-center justify-center m-8 ">
-      <div className="flex flex-col items-center">
-        <Image
-          src="/images/dice.png"
-          alt="Dice"
-          width={512}
-          height={512}
-          className="w-8 h-8"
-        />
-        <h2 className="text-2xl font-bold mb-1">
-          {gamemode.name} freischalten
-        </h2>
-        <div className="text-gray-500 mb-4 text-center">
-          {gamemode.description}
+    <>
+      <PageHeader backHref="/" title={gamemode.name} />
+      <div className="flex flex-col items-center justify-center m-8">
+        <div className="flex flex-col items-center">
+          <Image
+            src="/images/dice.png"
+            alt="Dice"
+            width={512}
+            height={512}
+            className="w-8 h-8"
+          />
+          <h2 className="text-2xl font-bold mb-1">
+            {gamemode.name} freischalten
+          </h2>
+          <div className="text-gray-500 mb-4 text-center">
+            {gamemode.description}
+          </div>
+          <div className="text-3xl font-extrabold mb-4">
+            {gamemode.price?.toFixed(2)} €
+          </div>
         </div>
-        <div className="text-3xl font-extrabold mb-4">
-          {gamemode.price?.toFixed(2)} €
-        </div>
+        <Elements
+          stripe={stripePromise}
+          options={{
+            mode: "payment",
+            amount: convertToSubcurrency(gamemode.price || 0),
+            currency: "eur",
+          }}
+        >
+          <Checkout amount={gamemode.price || 0} onSuccess={handleSuccess} />
+        </Elements>
+        <Button
+          variant="outline"
+          className="w-full mt-4"
+          onClick={() => router.push("/")}
+        >
+          Abbrechen
+        </Button>
       </div>
-      <Elements
-        stripe={stripePromise}
-        options={{
-          mode: "payment",
-          amount: convertToSubcurrency(gamemode.price || 0),
-          currency: "eur",
-        }}
-      >
-        <Checkout amount={gamemode.price || 0} onSuccess={handleSuccess} />
-      </Elements>
-      <Button
-        variant="outline"
-        className="w-full mt-4"
-        onClick={() => router.push("/")}
-      >
-        Abbrechen
-      </Button>
-    </div>
+    </>
   );
 }
