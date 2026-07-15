@@ -1,6 +1,7 @@
 "use client";
 
 import { gamemodes } from "@/components/gamemodes/gamemodes";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dices, LogIn, Plus } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -118,20 +117,7 @@ function MultiplayerLobby() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center">
-        <Link href="/" className="flex flex-row items-center">
-          <Image
-            src="/images/dice.png"
-            alt="Dice"
-            width={512}
-            height={512}
-            className="w-8 h-8"
-          />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
-            Multiplayer
-          </h1>
-        </Link>
-      </Card>
+      <PageHeader backHref="/" title="Multiplayer" />
 
       <div className="flex flex-col sm:flex-row gap-4 px-4 pb-8">
         {/* Join room */}
