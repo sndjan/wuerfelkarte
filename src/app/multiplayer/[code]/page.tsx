@@ -9,6 +9,7 @@ import { Points } from "@/components/hooks/types";
 import { useMultiplayerGame } from "@/components/hooks/useMultiplayerGame";
 import { useTheme } from "@/components/hooks/useTheme";
 import { Menu } from "@/components/Menu";
+import { PageHeader } from "@/components/PageHeader";
 import PlayerCard from "@/components/PlayerCard";
 import { Scoring } from "@/components/Scoring";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,6 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef } from "react";
@@ -170,28 +170,22 @@ export default function MultiplayerGame() {
   if (room.status === "lobby") {
     return (
       <>
-        <Card className="m-4 p-4 flex flex-row justify-between items-center">
-          <Link href="/" className="flex flex-row items-center">
-            <Image
-              src="/images/dice.png"
-              alt="Dice"
-              width={512}
-              height={512}
-              className="w-8 h-8"
+        <PageHeader
+          backHref="/"
+          title={
+            gamemodes[room.gamemode as keyof typeof gamemodes]?.name ??
+            room.gamemode
+          }
+          right={
+            <Menu
+              resetAllPoints={resetAllPlayersPoints}
+              specialTheme={theme}
+              isThemeActive={isThemeActive}
+              setIsThemeActive={setIsThemeActive}
+              gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
             />
-            <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
-              {gamemodes[room.gamemode as keyof typeof gamemodes]?.name ??
-                room.gamemode}
-            </h1>
-          </Link>
-          <Menu
-            resetAllPoints={resetAllPlayersPoints}
-            specialTheme={theme}
-            isThemeActive={isThemeActive}
-            setIsThemeActive={setIsThemeActive}
-            gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
-          />
-        </Card>
+          }
+        />
 
         <div className="px-4 flex flex-col gap-4 max-w-md mx-auto">
           {/* Room code */}
@@ -273,54 +267,48 @@ export default function MultiplayerGame() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10">
-        <Link href="/" className="flex flex-row items-center">
-          <Image
-            src="/images/dice.png"
-            alt="Dice"
-            width={512}
-            height={512}
-            className="w-8 h-8"
-          />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl mr-4">
-            {gamemodes[room.gamemode as keyof typeof gamemodes]?.name ??
-              room.gamemode}
-          </h1>
-        </Link>
-        <div className="flex flex-row items-center gap-3">
-          <button
-            onClick={shareRoom}
-            className="text-xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-1"
-            aria-label="Raum teilen"
-          >
-            <Share2 size={12} />
-            {code}
-          </button>
-          <Scoring
-            players={scoringPlayers as Parameters<typeof Scoring>[0]["players"]}
-            gamemode={room.gamemode as keyof typeof gamemodes}
-          >
-            <Button
-              variant="outline"
-              className={
-                gameFinished
-                  ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
-                  : ""
-              }
+      <PageHeader
+        backHref="/"
+        title={
+          gamemodes[room.gamemode as keyof typeof gamemodes]?.name ??
+          room.gamemode
+        }
+        right={
+          <>
+            <button
+              onClick={shareRoom}
+              className="text-xs font-mono text-muted-foreground hover:text-foreground flex items-center gap-1"
+              aria-label="Raum teilen"
             >
-              <Trophy />
-              <span className="hidden sm:block">Punkteauswertung</span>
-            </Button>
-          </Scoring>
-          <Menu
-            resetAllPoints={resetAllPlayersPoints}
-            specialTheme={theme}
-            isThemeActive={isThemeActive}
-            setIsThemeActive={setIsThemeActive}
-            gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
-          />
-        </div>
-      </Card>
+              <Share2 size={12} />
+              {code}
+            </button>
+            <Scoring
+              players={scoringPlayers as Parameters<typeof Scoring>[0]["players"]}
+              gamemode={room.gamemode as keyof typeof gamemodes}
+            >
+              <Button
+                variant="outline"
+                className={
+                  gameFinished
+                    ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
+                    : ""
+                }
+              >
+                <Trophy />
+                <span className="hidden sm:block">Punkteauswertung</span>
+              </Button>
+            </Scoring>
+            <Menu
+              resetAllPoints={resetAllPlayersPoints}
+              specialTheme={theme}
+              isThemeActive={isThemeActive}
+              setIsThemeActive={setIsThemeActive}
+              gamemodeInfo={gamemode ? gamemodes[gamemode]?.information : undefined}
+            />
+          </>
+        }
+      />
 
       {/* Chaoswunder mission */}
       {room.gamemode === "Chaoswunder" && missions.length > 0 && (
