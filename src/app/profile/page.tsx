@@ -1,4 +1,5 @@
 import { Menu } from "@/components/Menu";
+import { PageHeader } from "@/components/PageHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,8 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { createClient } from "@/lib/supabase/server";
-import { Dices, LogOut } from "lucide-react";
-import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { DisplayNameEditor } from "./DisplayNameEditor";
 
@@ -59,17 +59,7 @@ export default async function PrivatePage() {
 
   return (
     <div>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center">
-        <Link href="/" className="flex flex-row ">
-          <Dices size={32} strokeWidth={2.5} />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl">
-            Würfelkarte
-          </h1>
-        </Link>
-        <div className="flex flex-row gap-2">
-          <Menu />
-        </div>
-      </Card>
+      <PageHeader backHref="/" title="Würfelkarte" right={<Menu />} />
       {/* Combined Profile and Matches Card */}
       <div className="flex flex-1 items-center justify-center px-4">
         <Card className="w-full max-w-2xl p-4 sm:p-8 flex flex-col gap-8 shadow-lg ">
