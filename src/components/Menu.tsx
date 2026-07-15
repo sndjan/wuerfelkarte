@@ -19,11 +19,9 @@ import {
   RotateCcw,
   Sun,
   Trash2,
-  UserRound,
   UserRoundPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import Link from "next/link";
 import { AddPlayer } from "./AddPlayer";
 import {
   Dialog,
@@ -33,8 +31,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const PROFILE_ACTIVE = process.env.NEXT_PUBLIC_PROFILE_ACTIVE === "true";
 
 interface MenuProps {
   resetAll?: () => void;
@@ -79,7 +75,7 @@ export function Menu({
                 </AddPlayer>
               </DropdownMenuItem>
             )}
-            
+
             {gamemodeInfo && gamemodeInfo.length > 0 && (
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <Dialog>
@@ -117,17 +113,6 @@ export function Menu({
               <DropdownMenuItem onSelect={resetAll}>
                 <Trash2 />
                 <span>Alles zurücksetzen</span>
-              </DropdownMenuItem>
-            )}
-            {PROFILE_ACTIVE && (
-              <DropdownMenuItem asChild>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 w-full"
-                >
-                  <UserRound />
-                  <span>Profil</span>
-                </Link>
               </DropdownMenuItem>
             )}
             {specialTheme !== "none" && specialTheme !== undefined && (
