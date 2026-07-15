@@ -3,6 +3,14 @@
 import { Theme } from "@/app/yatzy/[gamemode]/page";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -23,14 +31,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { AddPlayer } from "./AddPlayer";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 interface MenuProps {
   resetAll?: () => void;
@@ -57,7 +57,11 @@ export function Menu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="rounded-full">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full bg-white"
+          >
             <EllipsisVertical />
           </Button>
         </DropdownMenuTrigger>

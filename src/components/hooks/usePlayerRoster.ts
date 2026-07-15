@@ -3,11 +3,21 @@ import { RosterPlayer } from "@/components/yatzy-lobby/types";
 
 const STORAGE_KEY = "kniffel:roster";
 
+const backfillSelectionOrder = (roster: RosterPlayer[]): RosterPlayer[] => {
+  let nextOrder =
+    Math.max(0, ...roster.map((p) => p.selectionOrder ?? 0)) + 1;
+  return roster.map((p) =>
+    p.active && p.selectionOrder == null
+      ? { ...p, selectionOrder: nextOrder++ }
+      : p,
+  );
+};
+
 const loadRosterFromStorage = (): RosterPlayer[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return [];
-    return JSON.parse(stored) as RosterPlayer[];
+    return backfillSelectionOrder(JSON.parse(stored) as RosterPlayer[]);
   } catch {
     return [];
   }
@@ -39,16 +49,39 @@ export function usePlayerRoster() {
   }, [roster, loaded]);
 
   const addPlayer = (name: string, emoji: string) => {
-    setRoster((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), name, emoji, active: true },
-    ]);
+    setRoster((prev) => {
+      const nextOrder =
+        Math.max(0, ...prev.map((p) => p.selectionOrder ?? 0)) + 1;
+      return [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          name,
+          emoji,
+          active: true,
+          selectionOrder: nextOrder,
+        },
+      ];
+    });
   };
 
   const toggleActive = (id: string) => {
-    setRoster((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)),
-    );
+    setRoster((prev) => {
+      const player = prev.find((p) => p.id === id);
+      if (!player) return prev;
+      if (player.active) {
+        return prev.map((p) =>
+          p.id === id ? { ...p, active: false, selectionOrder: null } : p,
+        );
+      }
+      const nextOrder =
+        Math.max(0, ...prev.map((p) => p.selectionOrder ?? 0)) + 1;
+      return prev.map((p) =>
+        p.id === id
+          ? { ...p, active: true, selectionOrder: nextOrder }
+          : p,
+      );
+    });
   };
 
   const renamePlayer = (id: string, name: string) => {

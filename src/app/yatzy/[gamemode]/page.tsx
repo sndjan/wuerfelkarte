@@ -234,8 +234,8 @@ export default function Home() {
                 variant="outline"
                 className={
                   gameFinished
-                    ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
-                    : "rounded-full"
+                    ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-gray-500 dark:text-black"
+                    : "rounded-full bg-white"
                 }
               >
                 🏆
@@ -244,14 +244,14 @@ export default function Home() {
             </Scoring>
             <div className="hidden sm:block">
               <AddPlayer addPlayer={addPlayer}>
-                <Button variant="outline" className="rounded-full">
+                <Button variant="outline" className="rounded-full  bg-white">
                   <UserRoundPlus />
                 </Button>
               </AddPlayer>
             </div>
             <div className="hidden sm:block">
               <ResetGame resetAllPoints={resetAllPoints}>
-                <Button variant="outline" className="rounded-full">
+                <Button variant="outline" className="rounded-full  bg-white">
                   <RotateCcw />
                 </Button>
               </ResetGame>
@@ -323,7 +323,7 @@ export default function Home() {
                       <p className="text-sm font-medium">Ausgewogener Modus</p>
                       <p className="text-xs text-muted-foreground">
                         {chaosRoundInterval === 2
-                          ? "1 schwere · 3 neutrale · 3 gute Mission"
+                          ? "1 schwere · 3 neutrale · 3 gute Missionen"
                           : "2 schwere · 6 neutrale · 6 gute Missionen"}
                       </p>
                     </div>

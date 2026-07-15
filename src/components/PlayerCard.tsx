@@ -10,15 +10,8 @@ import { gamemodes } from "./gamemodes/gamemodes";
 import { THEME_EMOJIS } from "./hooks/useTheme";
 import ThemeManager from "./themes/ThemeManager";
 import { Badge } from "./ui/badge";
+import { GridSelect } from "./ui/grid-select";
 import { Progress } from "./ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 
 interface PlayerCardProps {
   playerName: string;
@@ -133,7 +126,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
             options ?? pointsJson[key as keyof typeof pointsJson];
           const fieldElement = (
             <div key={key} className="w-full flex flex-col items-center z-10 ">
-              <Select
+              <GridSelect
                 key={key}
                 value={
                   playerPoints[key] !== 0 && playerPoints[key] !== undefined
@@ -141,40 +134,18 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     : ""
                 }
                 onValueChange={(value) => onValueChange(value, key)}
+                options={selectOptions ?? []}
+                label={label}
                 disabled={readOnly}
-              >
-                <SelectTrigger
-                  className={`w-full h-2 transition-colors ${
-                    playerPoints[key] === "X"
-                      ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
-                      : playerPoints[key] === 0 ||
-                          playerPoints[key] === undefined
-                        ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
-                        : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
-                  }`}
-                >
-                  <SelectValue placeholder={label} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {selectOptions?.map?.(
-                      (value: number | string, idx: number) => (
-                        <SelectItem key={idx} value={value.toString()}>
-                          {value}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectItem value="reset" className="font-bold">
-                      Zurücksetzen
-                    </SelectItem>
-                    <SelectItem value="X" className="font-bold">
-                      ❌
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                className={`w-full h-2 transition-colors ${
+                  playerPoints[key] === "X"
+                    ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
+                    : playerPoints[key] === 0 ||
+                        playerPoints[key] === undefined
+                      ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
+                      : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
+                }`}
+              />
             </div>
           );
           // Show bonus after the last bonus field

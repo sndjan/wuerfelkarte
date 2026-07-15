@@ -8,6 +8,7 @@ const LONG_PRESS_MS = 500;
 
 interface PlayerChipProps {
   player: RosterPlayer;
+  selectionNumber?: number;
   onToggleActive: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onChangeEmoji: (id: string, emoji: string) => void;
@@ -16,6 +17,7 @@ interface PlayerChipProps {
 
 export function PlayerChip({
   player,
+  selectionNumber,
   onToggleActive,
   onRename,
   onChangeEmoji,
@@ -58,12 +60,17 @@ export function PlayerChip({
         onPointerLeave={clearPress}
         className={
           player.active
-            ? "flex select-none items-center gap-2 rounded-full bg-primary px-4 py-2 text-primary-foreground"
-            : "flex select-none items-center gap-2 rounded-full bg-card px-4 py-2 text-foreground"
+            ? "relative flex select-none items-center gap-2 rounded-full bg-primary px-4 py-2 text-primary-foreground"
+            : "relative flex select-none items-center gap-2 rounded-full bg-card px-4 py-2 text-foreground"
         }
       >
         <span className="text-lg">{player.emoji}</span>
         <span className="font-semibold">{player.name}</span>
+        {player.active && selectionNumber != null && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-green-800 text-xs font-bold text-white">
+            {selectionNumber}
+          </span>
+        )}
       </button>
       <PlayerEditMenu
         player={player}

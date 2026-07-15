@@ -3,6 +3,7 @@ export type RosterPlayer = {
   name: string;
   emoji: string;
   active: boolean;
+  selectionOrder: number | null;
 };
 
-export const EMOJI_OPTIONS = ["🦄", "🔥", "😎", "🐸", "🐼", "🦊", "🐧", "⚡"];
+export const EMOJI_OPTIONS = ["🦄", "🐶", "🦝", "🐸", "🐼", "🦊", "🐻", "😺"];

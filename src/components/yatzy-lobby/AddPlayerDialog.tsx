@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { EMOJI_OPTIONS } from "./types";
 
 interface AddPlayerDialogProps {
@@ -46,9 +45,6 @@ export function AddPlayerDialog({ onAdd }: AddPlayerDialogProps) {
         <DialogHeader>
           <DialogTitle>Neuer Spieler</DialogTitle>
         </DialogHeader>
-        <DialogDescription>
-          Gib einen Namen ein und wähle ein Emoji für den neuen Spieler.
-        </DialogDescription>
         <Input
           placeholder="Name eingeben..."
           value={name}
@@ -57,26 +53,21 @@ export function AddPlayerDialog({ onAdd }: AddPlayerDialogProps) {
             if (e.key === "Enter") handleAdd();
           }}
         />
-        <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Wähle ein Emoji
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {EMOJI_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setEmoji(option)}
-                className={
-                  option === emoji
-                    ? "flex h-14 items-center justify-center rounded-xl bg-primary text-2xl"
-                    : "flex h-14 items-center justify-center rounded-xl bg-secondary text-2xl"
-                }
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+        <div className="grid grid-cols-4 gap-2">
+          {EMOJI_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setEmoji(option)}
+              className={
+                option === emoji
+                  ? "flex h-14 items-center justify-center rounded-xl bg-primary text-2xl"
+                  : "flex h-14 items-center justify-center rounded-xl bg-secondary text-2xl"
+              }
+            >
+              {option}
+            </button>
+          ))}
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleAdd} disabled={!name.trim()}>

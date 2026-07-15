@@ -26,7 +26,13 @@ export default function YatzyLobby() {
     keyof typeof gamemodes
   >(Object.keys(gamemodes)[0] as keyof typeof gamemodes);
 
-  const activePlayers = roster.filter((player) => player.active);
+  const activePlayers = roster
+    .filter((player) => player.active)
+    .sort((a, b) => (a.selectionOrder ?? 0) - (b.selectionOrder ?? 0));
+
+  const selectionNumbers = new Map(
+    activePlayers.map((player, index) => [player.id, index + 1]),
+  );
 
   const handleStart = () => {
     if (activePlayers.length === 0) return;
@@ -57,6 +63,7 @@ export default function YatzyLobby() {
               <PlayerChip
                 key={player.id}
                 player={player}
+                selectionNumber={selectionNumbers.get(player.id)}
                 onToggleActive={toggleActive}
                 onRename={renamePlayer}
                 onChangeEmoji={changeEmoji}
