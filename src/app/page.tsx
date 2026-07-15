@@ -3,6 +3,7 @@
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { games } from "@/components/games/games";
 import { GameTile } from "@/components/games/GameTile";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -13,14 +14,19 @@ export default function GamesOverview() {
   const router = useRouter();
 
   return (
-    <div className="min-h-full bg-background px-4 py-6">
-      <div className="mx-auto flex max-w-md flex-col gap-6">
-        <header className="flex items-center justify-between">
-          <span className="text-2xl font-extrabold" style={{ fontFamily: "var(--font-baloo)" }}>
+    <div className="min-h-full bg-background">
+      <PageHeader
+        left={
+          <span
+            className="text-2xl font-extrabold"
+            style={{ fontFamily: "var(--font-baloo)" }}
+          >
             <span className="text-foreground">tracky</span>
             <span className="text-brand-accent">.fun</span>
           </span>
-          <div className="flex items-center gap-3">
+        }
+        right={
+          <>
             {PROFILE_ACTIVE && (
               <Button
                 variant="outline"
@@ -33,9 +39,10 @@ export default function GamesOverview() {
               </Button>
             )}
             <DarkModeToggle />
-          </div>
-        </header>
-
+          </>
+        }
+      />
+      <div className="mx-auto max-w-md px-4 py-6">
         <div className="grid grid-cols-2 gap-4">
           {games.map((game) => (
             <GameTile key={game.key} game={game} />
