@@ -6,6 +6,7 @@ import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Points } from "@/components/hooks/types";
 import { useKniffel } from "@/components/hooks/useKniffel";
 import { Menu } from "@/components/Menu";
+import { PageHeader } from "@/components/PageHeader";
 import PlayerCard from "@/components/PlayerCard";
 import ResetGame from "@/components/ResetGame";
 import { Scoring } from "@/components/Scoring";
@@ -26,8 +27,6 @@ import {
   Trophy,
   UserRoundPlus,
 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "@/components/hooks/useTheme";
@@ -261,66 +260,55 @@ export default function Home() {
 
   return (
     <>
-      <Card className="m-4 p-4 flex flex-row justify-between items-center top-4 z-10">
-        <Link href="/" className="flex flex-row ">
-          <Image
-            src="/images/dice.png"
-            alt="Dice"
-            width={512}
-            height={512}
-            className="w-8 h-8"
-          />
-          <h1 className="scroll-m-20 sm:text-2xl mb-1 ml-4 font-extrabold tracking-tight lg:text-3xl text-xl mr-4">
-            {gamemodes[gamemode].name}
-          </h1>
-        </Link>
-        <div className="flex flex-row">
-          <Scoring players={players} gamemode={gamemode}>
-            <Button
-              variant="outline"
-              className={`mr-4  ${
-                gameFinished
-                  ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
-                  : ""
-              }`}
-            >
-              <Trophy />
-              <span className="hidden sm:block">Punkteauswertung</span>
-            </Button>
-          </Scoring>
-          <div className="mr-4 hidden sm:block">
-            <AddPlayer addPlayer={addPlayer}>
-              <Button variant="outline">
-                <UserRoundPlus />
+      <PageHeader
+        backHref="/"
+        title={gamemodes[gamemode].name}
+        right={
+          <>
+            <Scoring players={players} gamemode={gamemode}>
+              <Button
+                variant="outline"
+                className={
+                  gameFinished
+                    ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
+                    : ""
+                }
+              >
+                <Trophy />
+                <span className="hidden sm:block">Punkteauswertung</span>
               </Button>
-            </AddPlayer>
-          </div>
-          <div className="mr-4 hidden sm:block">
-            <ResetGame resetAllPoints={resetAllPoints}>
-              <Button variant="outline">
-                <RotateCcw />
-              </Button>
-            </ResetGame>
-          </div>
-          {gamemodes[gamemode].information && (
-            <div className="mr-4 hidden sm:block">
-              <GamemodeInfo gamemodeInfo={gamemodes[gamemode].information} />
+            </Scoring>
+            <div className="hidden sm:block">
+              <AddPlayer addPlayer={addPlayer}>
+                <Button variant="outline">
+                  <UserRoundPlus />
+                </Button>
+              </AddPlayer>
             </div>
-          )}
-          {/* <div className="hidden sm:block flex-row mr-4">
-            <ModeToggle />
-          </div> */}
-          <Menu
-            resetAll={resetAll}
-            resetAllPoints={resetAllPoints}
-            addPlayer={addPlayer}
-            specialTheme={theme}
-            isThemeActive={isThemeActive}
-            setIsThemeActive={setIsThemeActive}
-            gamemodeInfo={gamemodes[gamemode].information}
-          />
-        </div>
-      </Card>
+            <div className="hidden sm:block">
+              <ResetGame resetAllPoints={resetAllPoints}>
+                <Button variant="outline">
+                  <RotateCcw />
+                </Button>
+              </ResetGame>
+            </div>
+            {gamemodes[gamemode].information && (
+              <div className="hidden sm:block">
+                <GamemodeInfo gamemodeInfo={gamemodes[gamemode].information} />
+              </div>
+            )}
+            <Menu
+              resetAll={resetAll}
+              resetAllPoints={resetAllPoints}
+              addPlayer={addPlayer}
+              specialTheme={theme}
+              isThemeActive={isThemeActive}
+              setIsThemeActive={setIsThemeActive}
+              gamemodeInfo={gamemodes[gamemode].information}
+            />
+          </>
+        }
+      />
       <div>
         {gamemode === "Chaoswunder" && missions.length > 0 && (
           <Card className="p-4 mb-4 mx-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
