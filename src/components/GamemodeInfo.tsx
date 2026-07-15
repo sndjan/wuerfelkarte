@@ -17,7 +17,7 @@ export function GamemodeInfo({ gamemodeInfo }: GamemodeInfoProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className="rounded-full">
           <Info />
         </Button>
       </DialogTrigger>

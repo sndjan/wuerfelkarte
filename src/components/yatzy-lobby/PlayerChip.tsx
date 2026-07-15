@@ -59,7 +59,7 @@ export function PlayerChip({
         className={
           player.active
             ? "flex select-none items-center gap-2 rounded-full bg-primary px-4 py-2 text-primary-foreground"
-            : "flex select-none items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-foreground"
+            : "flex select-none items-center gap-2 rounded-full bg-card px-4 py-2 text-foreground"
         }
       >
         <span className="text-lg">{player.emoji}</span>

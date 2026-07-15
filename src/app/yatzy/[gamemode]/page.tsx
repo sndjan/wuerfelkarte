@@ -2,9 +2,14 @@
 
 import AddPlayer from "@/components/AddPlayer";
 import GamemodeInfo from "@/components/GamemodeInfo";
+import {
+  Mission,
+  missions as chaosMissions,
+} from "@/components/gamemodes/chaoswunder";
 import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { Points } from "@/components/hooks/types";
 import { useKniffel } from "@/components/hooks/useKniffel";
+import { useTheme } from "@/components/hooks/useTheme";
 import { Menu } from "@/components/Menu";
 import { PageHeader } from "@/components/PageHeader";
 import PlayerCard from "@/components/PlayerCard";
@@ -19,21 +24,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Construction,
-  Dices,
-  RotateCcw,
-  Settings,
-  Trophy,
-  UserRoundPlus,
-} from "lucide-react";
+import { RotateCcw, Settings, UserRoundPlus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTheme } from "@/components/hooks/useTheme";
-import {
-  Mission,
-  missions as chaosMissions,
-} from "@/components/gamemodes/chaoswunder";
 import { toast } from "sonner";
 
 export type Theme = "none" | "Halloween" | "Christmas" | "Easter";
@@ -241,24 +234,24 @@ export default function Home() {
                 variant="outline"
                 className={
                   gameFinished
-                    ? "dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
-                    : ""
+                    ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-yellow-500 dark:text-black"
+                    : "rounded-full"
                 }
               >
-                <Trophy />
+                🏆
                 <span className="hidden sm:block">Punkteauswertung</span>
               </Button>
             </Scoring>
             <div className="hidden sm:block">
               <AddPlayer addPlayer={addPlayer}>
-                <Button variant="outline">
+                <Button variant="outline" className="rounded-full">
                   <UserRoundPlus />
                 </Button>
               </AddPlayer>
             </div>
             <div className="hidden sm:block">
               <ResetGame resetAllPoints={resetAllPoints}>
-                <Button variant="outline">
+                <Button variant="outline" className="rounded-full">
                   <RotateCcw />
                 </Button>
               </ResetGame>
@@ -361,11 +354,11 @@ export default function Home() {
             </h2>
             <div className="flex flex-col items-center  w-full px-2">
               <div className="flex items-start gap-2 rounded-lg  px-3 text-sm w-full">
-                <Dices className="size-4 shrink-0 mt-0.5" />
+                🎲
                 <span>{missions[currentMissionIndex].diceRule}</span>
               </div>
               <div className="flex items-start gap-2 rounded-lg  px-3 py-1.5 text-sm w-full">
-                <Construction className="size-4 shrink-0 mt-0.5" />
+                🚧
                 <span>{missions[currentMissionIndex].restriction}</span>
               </div>
             </div>
@@ -381,7 +374,9 @@ export default function Home() {
                       : missionRoundsPlayed >= chaosRoundInterval ||
                         (isCurrent && chaosRoundInterval === 1);
                   const isHalf =
-                    chaosRoundInterval === 2 ? missionRoundsPlayed === 0 : false;
+                    chaosRoundInterval === 2
+                      ? missionRoundsPlayed === 0
+                      : false;
                   if (isFull) {
                     return (
                       <div

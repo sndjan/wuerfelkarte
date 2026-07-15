@@ -57,7 +57,7 @@ export function Menu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" className="rounded-full">
             <EllipsisVertical />
           </Button>
         </DropdownMenuTrigger>

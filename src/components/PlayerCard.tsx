@@ -1,12 +1,16 @@
 "use client";
 
+import { Theme } from "@/app/yatzy/[gamemode]/page";
 import { Card } from "@/components/ui/card";
 import JSConfetti from "js-confetti";
 import { useEffect, useState } from "react";
 import pointsJson from "../../public/points.json";
 import { EditPlayer } from "./EditPlayer";
 import { gamemodes } from "./gamemodes/gamemodes";
+import { THEME_EMOJIS } from "./hooks/useTheme";
+import ThemeManager from "./themes/ThemeManager";
 import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
 import {
   Select,
   SelectContent,
@@ -15,9 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Theme } from "@/app/yatzy/[gamemode]/page";
-import ThemeManager from "./themes/ThemeManager";
-import { THEME_EMOJIS } from "./hooks/useTheme";
 
 interface PlayerCardProps {
   playerName: string;
@@ -193,24 +194,34 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
               0,
             );
             const bonusReached = sum >= config.bonus.minSum;
+            const progress = (sum / config.bonus.minSum) * 100;
             return (
               <div
                 key={key + "-with-bonus"}
                 className="w-full flex flex-col items-center"
               >
                 {fieldElement}
-                <div className="my-3 font-bold z-20 bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md">
-                  {config.bonus.label}
-                  {bonusReached ? (
-                    <>
-                      {sum}{" "}
-                      <Badge className="ml-2 bg-green-600 font-bold">
+                <div className="my-3 w-full z-20 bg-white dark:bg-[#171717] px-3 py-2 rounded-md">
+                  <div className="flex items-center justify-center gap-2 font-bold">
+                    <span>{sum}</span>
+                    {bonusReached && (
+                      <Badge className="bg-green-800 font-bold">
                         +{config.bonus.bonus}
                       </Badge>
-                    </>
-                  ) : (
-                    <>{sum} </>
-                  )}
+                    )}
+                  </div>
+                  <Progress
+                    value={progress}
+                    className="mt-2"
+                    indicatorClassName={
+                      bonusReached
+                        ? "bg-green-800 dark:bg-green-700"
+                        : "bg-green-700 dark:bg-green-400"
+                    }
+                  />
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {sum} / {config.bonus.minSum} für Bonus
+                  </div>
                 </div>
               </div>
             );
