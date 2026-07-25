@@ -5,7 +5,6 @@ import GamemodeInfo from "@/components/GamemodeInfo";
 import {
   battleTotalScore,
   getBattleFieldStatus,
-  getOpenForcedFields,
   isForcedSuccess,
   BattleFieldStatus,
 } from "@/components/gamemodes/battle";
@@ -283,11 +282,6 @@ export default function Home() {
       }),
     );
   }, [players, gamemode, isBattle]);
-
-  const forcedFields = useMemo(
-    () => (isBattle ? getOpenForcedFields(players, config) : []),
-    [isBattle, players, config],
-  );
 
   const scoringPlayers = useMemo(
     () =>
