@@ -14,8 +14,8 @@ export default function GamesOverview() {
             className="text-2xl font-extrabold"
             style={{ fontFamily: "var(--font-baloo)" }}
           >
-            <span className="text-foreground">tracky</span>
-            <span className="text-brand-accent">.fun</span>
+            <span className="text-foreground">würfelkarte</span>
+            <span className="text-brand-accent">.com</span>
           </span>
         }
         right={<DarkModeToggle />}

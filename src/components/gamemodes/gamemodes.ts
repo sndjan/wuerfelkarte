@@ -31,6 +31,33 @@ const allKniffelPlus = [
   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
 ];
 
+const wunderPlusFields: PointField[] = [
+  { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
+  { key: "Zweier", label: "Zweier", options: [2, 4, 6, 8, 10] },
+  { key: "Dreier", label: "Dreier", options: [3, 6, 9, 12, 15] },
+  { key: "Vierer", label: "Vierer", options: [4, 8, 12, 16, 20] },
+  { key: "Fünfer", label: "Fünfer", options: [5, 10, 15, 20, 25] },
+  { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
+  { key: "Dreierpasch", label: "Dreierpasch", options: [...allKniffel] },
+  { key: "Viererpasch", label: "Viererpasch", options: [...allKniffel] },
+  { key: "Full House", label: "Full House", options: [25] },
+  { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
+  { key: "Große Straße", label: "Große Straße", options: [40] },
+  {
+    key: "Wunder",
+    label: "Wunder",
+    options: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
+  },
+  { key: "Chance", label: "Chance", options: [...allKniffel] },
+];
+
+const wunderPlusBonus: BonusConfig = {
+  label: "",
+  fields: ["Einser", "Zweier", "Dreier", "Vierer", "Fünfer", "Sechser"],
+  minSum: 63,
+  bonus: 35,
+};
+
 export const gamemodes: Record<string, GamemodeConfig> = {
   Wunder: {
     name: "Wunder",
@@ -78,35 +105,25 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       "• Ist kein passendes Kästchen frei, muss ein Kästchen gestrichen werden.",
       "• Im Scoreblock: Wähle '50' im passenden Kästchen aus, um einen Zusatz-Wunder einzutragen.",
     ],
-    fields: [
-      { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
-      { key: "Zweier", label: "Zweier", options: [2, 4, 6, 8, 10] },
-      { key: "Dreier", label: "Dreier", options: [3, 6, 9, 12, 15] },
-      { key: "Vierer", label: "Vierer", options: [4, 8, 12, 16, 20] },
-      { key: "Fünfer", label: "Fünfer", options: [5, 10, 15, 20, 25] },
-      { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
-      {
-        key: "Dreierpasch",
-        label: "Dreierpasch",
-        options: [...allKniffel],
-      },
-      {
-        key: "Viererpasch",
-        label: "Viererpasch",
-        options: [...allKniffel],
-      },
-      { key: "Full House", label: "Full House", options: [25] },
-      { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
-      { key: "Große Straße", label: "Große Straße", options: [40] },
-      { key: "Wunder", label: "Wunder", options: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500] },
-      { key: "Chance", label: "Chance", options: [...allKniffel] },
+    fields: wunderPlusFields,
+    bonus: wunderPlusBonus,
+  },
+  Battle: {
+    name: "Battle",
+    description:
+      "Kompetitives Duell: Jedes Feld kann nur ein Spieler erfolgreich holen.",
+    information: [
+      "Battle macht Kniffel zum taktischen Duell – jede Entscheidung beeinflusst alle Mitspieler:",
+      "• Wer ein Feld einträgt, blockiert es automatisch in den Spalten aller anderen Spieler.",
+      "• Wer ein Feld streicht, zwingt alle anderen, dieses Pflichtfeld als Nächstes zu versuchen.",
+      "• Es gibt kein harmloses Streichen: Jedes Streichen bewaffnet die ×2-Wette für deine Gegner.",
+      "• Doppelte Punkte: Schafft ein anderer das ihm aufgezwungene Pflichtfeld, zählt dieses Feld doppelt (auch für den Bonus).",
+      "• Schafft ein anderer Spieler das Pflichtfeld, wird es bei den restlichen ebenfalls blockiert – nur der Erste kassiert die doppelten Punkte.",
+      "• Solange offene Pflichtfelder bestehen, versuchen die betroffenen Spieler zuerst dieses Feld.",
+      "• Basis sind die Wunder+ Regeln inklusive Bonus. Höchste Gesamtpunktzahl gewinnt.",
     ],
-    bonus: {
-      label: "",
-      fields: ["Einser", "Zweier", "Dreier", "Vierer", "Fünfer", "Sechser"],
-      minSum: 63,
-      bonus: 35,
-    },
+    fields: wunderPlusFields,
+    bonus: wunderPlusBonus,
   },
   Chaoswunder: {
     name: "Chaoswunder",

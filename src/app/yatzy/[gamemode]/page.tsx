@@ -3,6 +3,13 @@
 import AddPlayer from "@/components/AddPlayer";
 import GamemodeInfo from "@/components/GamemodeInfo";
 import {
+  battleTotalScore,
+  getBattleFieldStatus,
+  getOpenForcedFields,
+  isForcedSuccess,
+  BattleFieldStatus,
+} from "@/components/gamemodes/battle";
+import {
   Mission,
   missions as chaosMissions,
 } from "@/components/gamemodes/chaoswunder";
@@ -89,6 +96,33 @@ export default function Home() {
   } = useKniffel(gamemode);
   const { theme, isThemeActive, setIsThemeActive } = useTheme();
 
+  const isBattle = gamemode === "Battle";
+  const config = gamemodes[gamemode];
+  // Battle: composite keys `${playerId}::${fieldKey}` flagging doubled fields.
+  const [doubled, setDoubled] = useState<Set<string>>(new Set());
+  const dkey = (playerId: number, field: string) => `${playerId}::${field}`;
+  const playerDoubledSet = (playerId: number) =>
+    new Set(
+      config.fields
+        .filter((f) => doubled.has(dkey(playerId, f.key)))
+        .map((f) => f.key),
+    );
+  const clearPlayerDoubled = (playerId: number) =>
+    setDoubled((prev) => {
+      const next = new Set(prev);
+      config.fields.forEach((f) => next.delete(dkey(playerId, f.key)));
+      return next;
+    });
+
+  const handleResetAll = () => {
+    resetAll();
+    setDoubled(new Set());
+  };
+  const handleResetAllPoints = () => {
+    resetAllPoints();
+    setDoubled(new Set());
+  };
+
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const prevMissionIndexRef = useRef<number>(-1);
 
@@ -167,6 +201,23 @@ export default function Home() {
   }, [gamemode, missions.length, players, chaosRoundInterval]);
 
   const handleUpdatePoints = (playerId: number, points: Partial<Points>) => {
+    if (isBattle) {
+      setDoubled((prev) => {
+        const next = new Set(prev);
+        for (const [key, value] of Object.entries(points)) {
+          if (
+            typeof value === "number" &&
+            value > 0 &&
+            isForcedSuccess(players, key, playerId)
+          ) {
+            next.add(dkey(playerId, key));
+          } else {
+            next.delete(dkey(playerId, key));
+          }
+        }
+        return next;
+      });
+    }
     const currentIndex = players.findIndex((player) => player.id === playerId);
     updatePoints(playerId, points);
 
@@ -211,16 +262,44 @@ export default function Home() {
 
   const gameFinished = useMemo(() => {
     const fields = gamemodes[gamemode]?.fields.map((f) => f.key) ?? [];
-    return (
-      players.length > 0 &&
-      players.every((player) =>
-        fields.every((key) => {
-          const point = player.points[key as keyof typeof player.points];
-          return point !== undefined && point !== 0;
-        }),
-      )
+    if (players.length === 0) return false;
+    if (isBattle) {
+      // Each field is done when someone claimed it, or everyone crossed it.
+      return fields.every((key) => {
+        const claimed = players.some((p) => {
+          const v = p.points[key as keyof typeof p.points];
+          return typeof v === "number" && v !== 0;
+        });
+        if (claimed) return true;
+        return players.every(
+          (p) => p.points[key as keyof typeof p.points] === "X",
+        );
+      });
+    }
+    return players.every((player) =>
+      fields.every((key) => {
+        const point = player.points[key as keyof typeof player.points];
+        return point !== undefined && point !== 0;
+      }),
     );
-  }, [players, gamemode]);
+  }, [players, gamemode, isBattle]);
+
+  const forcedFields = useMemo(
+    () => (isBattle ? getOpenForcedFields(players, config) : []),
+    [isBattle, players, config],
+  );
+
+  const scoringPlayers = useMemo(
+    () =>
+      isBattle
+        ? players.map((p) => ({
+            ...p,
+            score: battleTotalScore(p.points, playerDoubledSet(p.id), config),
+          }))
+        : players,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isBattle, players, config, doubled],
+  );
 
   return (
     <>
@@ -229,7 +308,7 @@ export default function Home() {
         title={gamemodes[gamemode].name}
         right={
           <>
-            <Scoring players={players} gamemode={gamemode}>
+            <Scoring players={scoringPlayers} gamemode={gamemode}>
               <Button
                 variant="outline"
                 className={
@@ -250,7 +329,7 @@ export default function Home() {
               </AddPlayer>
             </div>
             <div className="hidden sm:block">
-              <ResetGame resetAllPoints={resetAllPoints}>
+              <ResetGame resetAllPoints={handleResetAllPoints}>
                 <Button variant="outline" className="rounded-full  bg-white">
                   <RotateCcw />
                 </Button>
@@ -262,8 +341,8 @@ export default function Home() {
               </div>
             )}
             <Menu
-              resetAll={resetAll}
-              resetAllPoints={resetAllPoints}
+              resetAll={handleResetAll}
+              resetAllPoints={handleResetAllPoints}
               addPlayer={addPlayer}
               specialTheme={theme}
               isThemeActive={isThemeActive}
@@ -419,6 +498,14 @@ export default function Home() {
           }`}
         >
           {players.map((player, index) => {
+            const battleFieldStatus = isBattle
+              ? (Object.fromEntries(
+                  config.fields.map((f) => [
+                    f.key,
+                    getBattleFieldStatus(players, f.key, player.id),
+                  ]),
+                ) as Record<string, BattleFieldStatus>)
+              : undefined;
             return (
               <div
                 className="snap-center"
@@ -435,14 +522,24 @@ export default function Home() {
                   updatePoints={(points: Partial<Points>) =>
                     handleUpdatePoints(player.id, points)
                   }
-                  resetPoints={() => resetPoints(player.id)}
-                  removePlayer={() => removePlayer(player.id)}
+                  resetPoints={() => {
+                    resetPoints(player.id);
+                    if (isBattle) clearPlayerDoubled(player.id);
+                  }}
+                  removePlayer={() => {
+                    removePlayer(player.id);
+                    if (isBattle) clearPlayerDoubled(player.id);
+                  }}
                   changeName={(name) => changeName(player.id, name)}
                   moveToRight={() => moveToRight(player.id)}
                   moveToLeft={() => moveToLeft(player.id)}
                   gamemode={gamemode}
                   theme={theme}
                   isThemeActive={isThemeActive}
+                  battleFieldStatus={battleFieldStatus}
+                  doubledFields={
+                    isBattle ? playerDoubledSet(player.id) : undefined
+                  }
                 />
               </div>
             );

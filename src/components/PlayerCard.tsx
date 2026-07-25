@@ -6,6 +6,7 @@ import JSConfetti from "js-confetti";
 import { useEffect, useState } from "react";
 import pointsJson from "../../public/points.json";
 import { EditPlayer } from "./EditPlayer";
+import { BattleFieldStatus } from "./gamemodes/battle";
 import { gamemodes } from "./gamemodes/gamemodes";
 import { THEME_EMOJIS } from "./hooks/useTheme";
 import ThemeManager from "./themes/ThemeManager";
@@ -29,6 +30,8 @@ interface PlayerCardProps {
   readOnly?: boolean;
   hideMenu?: boolean;
   badge?: string;
+  battleFieldStatus?: Record<string, BattleFieldStatus>;
+  doubledFields?: Set<string>;
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -47,6 +50,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   readOnly = false,
   hideMenu = false,
   badge,
+  battleFieldStatus,
+  doubledFields,
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
@@ -124,8 +129,25 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           const { key, label, options } = field;
           const selectOptions =
             options ?? pointsJson[key as keyof typeof pointsJson];
+          const own = playerPoints[key];
+          const isOpen = own === 0 || own === undefined;
+          const status = battleFieldStatus?.[key] ?? "open";
+          const isDoubled = doubledFields?.has(key) ?? false;
+          const cellClass =
+            own === "X"
+              ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
+              : !isOpen
+                ? "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
+                : status === "blocked"
+                  ? "bg-gray-200 text-muted-foreground opacity-60 ring-1 ring-inset ring-gray-300 dark:bg-[#1a1a1a] dark:ring-[#333]"
+                  : status === "forced"
+                    ? "bg-amber-100 hover:bg-amber-200 ring-2 ring-amber-400 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 dark:ring-amber-500"
+                    : "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
           const fieldElement = (
-            <div key={key} className="w-full flex flex-col items-center z-10 ">
+            <div
+              key={key}
+              className="w-full flex flex-col items-center z-10 relative"
+            >
               <GridSelect
                 key={key}
                 value={
@@ -137,15 +159,23 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 options={selectOptions ?? []}
                 label={label}
                 disabled={readOnly}
-                className={`w-full h-2 transition-colors ${
-                  playerPoints[key] === "X"
-                    ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
-                    : playerPoints[key] === 0 ||
-                        playerPoints[key] === undefined
-                      ? "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]"
-                      : "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
-                }`}
+                className={`w-full h-2 transition-colors pr-2 ${cellClass}`}
               />
+              {isDoubled && (
+                <Badge className="absolute right-8 top-1/2 -translate-y-1/2 z-20 bg-green-700 font-bold pointer-events-none">
+                  ×2
+                </Badge>
+              )}
+              {isOpen && !isDoubled && status === "forced" && (
+                <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs font-bold text-amber-600 dark:text-amber-400 pointer-events-none">
+                  Pflicht
+                </span>
+              )}
+              {isOpen && status === "blocked" && (
+                <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs pointer-events-none">
+                  🔒
+                </span>
+              )}
             </div>
           );
           // Show bonus after the last bonus field
@@ -157,11 +187,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           if (isLastBonusField && config.bonus) {
             // Calculate sum of bonus fields
             const sum = config.bonus.fields.reduce(
-              (acc: number, bonusKey: string | number) =>
-                acc +
-                (typeof playerPoints[bonusKey] === "number"
-                  ? (playerPoints[bonusKey] as number)
-                  : 0),
+              (acc: number, bonusKey: string | number) => {
+                const v =
+                  typeof playerPoints[bonusKey] === "number"
+                    ? (playerPoints[bonusKey] as number)
+                    : 0;
+                return acc + (doubledFields?.has(String(bonusKey)) ? v * 2 : v);
+              },
               0,
             );
             const bonusReached = sum >= config.bonus.minSum;
