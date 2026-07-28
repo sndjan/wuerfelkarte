@@ -1,35 +1,11 @@
 import { useEffect, useState } from "react";
 import { RosterPlayer } from "@/components/yatzy-lobby/types";
-
-const STORAGE_KEY = "kniffel:roster";
-
-const backfillSelectionOrder = (roster: RosterPlayer[]): RosterPlayer[] => {
-  let nextOrder =
-    Math.max(0, ...roster.map((p) => p.selectionOrder ?? 0)) + 1;
-  return roster.map((p) =>
-    p.active && p.selectionOrder == null
-      ? { ...p, selectionOrder: nextOrder++ }
-      : p,
-  );
-};
-
-const loadRosterFromStorage = (): RosterPlayer[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    return backfillSelectionOrder(JSON.parse(stored) as RosterPlayer[]);
-  } catch {
-    return [];
-  }
-};
-
-const saveRosterToStorage = (roster: RosterPlayer[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(roster));
-  } catch {
-    // Handle storage errors silently
-  }
-};
+import {
+  createRosterPlayer,
+  loadRoster,
+  nextSelectionOrder,
+  saveRoster,
+} from "./playerRosterStorage";
 
 export function usePlayerRoster() {
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
@@ -38,31 +14,18 @@ export function usePlayerRoster() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setRoster(loadRosterFromStorage());
+    setRoster(loadRoster());
     setLoaded(true);
   }, []);
 
   useEffect(() => {
     if (loaded) {
-      saveRosterToStorage(roster);
+      saveRoster(roster);
     }
   }, [roster, loaded]);
 
   const addPlayer = (name: string, emoji: string) => {
-    setRoster((prev) => {
-      const nextOrder =
-        Math.max(0, ...prev.map((p) => p.selectionOrder ?? 0)) + 1;
-      return [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          name,
-          emoji,
-          active: true,
-          selectionOrder: nextOrder,
-        },
-      ];
-    });
+    setRoster((prev) => [...prev, createRosterPlayer(name, emoji, prev)]);
   };
 
   const toggleActive = (id: string) => {
@@ -74,12 +37,9 @@ export function usePlayerRoster() {
           p.id === id ? { ...p, active: false, selectionOrder: null } : p,
         );
       }
-      const nextOrder =
-        Math.max(0, ...prev.map((p) => p.selectionOrder ?? 0)) + 1;
+      const nextOrder = nextSelectionOrder(prev);
       return prev.map((p) =>
-        p.id === id
-          ? { ...p, active: true, selectionOrder: nextOrder }
-          : p,
+        p.id === id ? { ...p, active: true, selectionOrder: nextOrder } : p,
       );
     });
   };

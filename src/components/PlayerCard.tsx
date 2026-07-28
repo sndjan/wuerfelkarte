@@ -21,7 +21,8 @@ interface PlayerCardProps {
   updatePoints: (points: Record<string, number | "X">) => void;
   resetPoints: () => void;
   removePlayer: () => void;
-  changeName: (name: string) => void;
+  changeName: (name: string, emoji?: string) => void;
+  takenNames?: string[];
   moveToRight: () => void;
   moveToLeft: () => void;
   gamemode: keyof typeof gamemodes;
@@ -42,6 +43,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   resetPoints,
   removePlayer,
   changeName,
+  takenNames,
   moveToRight,
   moveToLeft,
   gamemode,
@@ -103,6 +105,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         ) : !readOnly && !hideMenu ? (
           <EditPlayer
             playerName={playerName}
+            playerEmoji={playerEmoji}
+            takenNames={takenNames}
             resetPoints={resetPoints}
             removePlayer={removePlayer}
             changeName={changeName}

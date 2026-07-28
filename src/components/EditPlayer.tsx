@@ -16,24 +16,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { PlayerIdentityDialog } from "./PlayerIdentityDialog";
 import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
 
 interface EditPlayerProps {
   playerName: string;
+  playerEmoji?: string;
+  takenNames?: string[];
   resetPoints: () => void;
   removePlayer: () => void;
-  changeName: (name: string) => void;
+  changeName: (name: string, emoji?: string) => void;
   moveToRight: () => void;
   moveToLeft: () => void;
   nameDialogOpen?: boolean;
@@ -42,6 +35,8 @@ interface EditPlayerProps {
 
 export function EditPlayer({
   playerName,
+  playerEmoji,
+  takenNames,
   resetPoints,
   removePlayer,
   changeName,
@@ -50,7 +45,6 @@ export function EditPlayer({
   nameDialogOpen,
   onNameDialogOpenChange,
 }: EditPlayerProps) {
-  const [newPlayerName, setNewPlayerName] = useState<string>(playerName);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
 
@@ -61,16 +55,9 @@ export function EditPlayer({
     onNameDialogOpenChange?.(open);
   };
 
-  useEffect(() => {
-    setNewPlayerName(playerName);
-  }, [playerName]);
-
-  const handleNameChange = () => {
-    if (newPlayerName) {
-      changeName(newPlayerName);
-      setIsDialogOpen(false);
-      setDropdownOpen(false);
-    }
+  const handleApply = (name: string, emoji?: string) => {
+    changeName(name, emoji);
+    setDropdownOpen(false);
   };
 
   return (
@@ -93,7 +80,7 @@ export function EditPlayer({
               }}
             >
               <Pencil />
-              <span>Name bearbeiten</span>
+              <span>Spieler bearbeiten</span>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={resetPoints}>
               <RotateCcw />
@@ -115,39 +102,14 @@ export function EditPlayer({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] top-50">
-          <DialogHeader>
-            <DialogTitle>Name bearbeiten</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Gebe einen neuen Namen für den Spieler ein:
-          </DialogDescription>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="username" className="text-right col-span-1">
-              Name
-            </label>
-            <Input
-              id="username"
-              className="col-span-3"
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleNameChange()}
-            />
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleNameChange}
-              >
-                Speichern
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PlayerIdentityDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        playerName={playerName}
+        playerEmoji={playerEmoji}
+        takenNames={takenNames}
+        onApply={handleApply}
+      />
     </>
   );
 }

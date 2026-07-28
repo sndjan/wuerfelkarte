@@ -1,6 +1,5 @@
 "use client";
 
-import AddPlayer from "@/components/AddPlayer";
 import GamemodeInfo from "@/components/GamemodeInfo";
 import {
   battleTotalScore,
@@ -19,6 +18,7 @@ import { useTheme } from "@/components/hooks/useTheme";
 import { Menu } from "@/components/Menu";
 import { PageHeader } from "@/components/PageHeader";
 import PlayerCard from "@/components/PlayerCard";
+import { PlayerIdentityDialog } from "@/components/PlayerIdentityDialog";
 import ResetGame from "@/components/ResetGame";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,9 @@ export default function Home() {
     resetAllPoints,
   } = useKniffel(gamemode);
   const { theme, isThemeActive, setIsThemeActive } = useTheme();
+
+  // Shared by the header button and the menu entry — both open the same dialog.
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
 
   const isBattle = gamemode === "Battle";
   const config = gamemodes[gamemode];
@@ -316,11 +319,14 @@ export default function Home() {
               </Button>
             </Scoring>
             <div className="hidden sm:block">
-              <AddPlayer addPlayer={addPlayer}>
-                <Button variant="outline" className="rounded-full  bg-white">
-                  <UserRoundPlus />
-                </Button>
-              </AddPlayer>
+              <Button
+                variant="outline"
+                className="rounded-full  bg-white"
+                aria-label="Spieler hinzufügen"
+                onClick={() => setAddPlayerOpen(true)}
+              >
+                <UserRoundPlus />
+              </Button>
             </div>
             <div className="hidden sm:block">
               <ResetGame resetAllPoints={handleResetAllPoints}>
@@ -337,7 +343,7 @@ export default function Home() {
             <Menu
               resetAll={handleResetAll}
               resetAllPoints={handleResetAllPoints}
-              addPlayer={addPlayer}
+              onAddPlayer={() => setAddPlayerOpen(true)}
               specialTheme={theme}
               isThemeActive={isThemeActive}
               setIsThemeActive={setIsThemeActive}
@@ -524,7 +530,10 @@ export default function Home() {
                     removePlayer(player.id);
                     if (isBattle) clearPlayerDoubled(player.id);
                   }}
-                  changeName={(name) => changeName(player.id, name)}
+                  changeName={(name, emoji) =>
+                    changeName(player.id, name, emoji)
+                  }
+                  takenNames={players.map((p) => p.name)}
                   moveToRight={() => moveToRight(player.id)}
                   moveToLeft={() => moveToLeft(player.id)}
                   gamemode={gamemode}
@@ -540,6 +549,14 @@ export default function Home() {
           })}
         </div>
       </div>
+
+      <PlayerIdentityDialog
+        variant="add"
+        open={addPlayerOpen}
+        onOpenChange={setAddPlayerOpen}
+        takenNames={players.map((p) => p.name)}
+        onApply={(name, emoji) => addPlayer(name, emoji)}
+      />
     </>
   );
 }

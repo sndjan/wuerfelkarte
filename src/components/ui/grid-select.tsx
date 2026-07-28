@@ -76,7 +76,9 @@ function GridSelect({
       const rect = triggerRef.current?.getBoundingClientRect();
       if (!rect) return;
 
-      const columns = columnsForWidth(rect.width);
+      // A single option gets its own full-width row instead of a lone circle.
+      const columns =
+        options.length === 1 ? 1 : columnsForWidth(rect.width);
       const estimatedHeight = estimatePanelHeight(options.length, columns);
       const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
       const spaceAbove = rect.top - VIEWPORT_MARGIN;
@@ -187,9 +189,14 @@ function GridSelect({
             className="bg-popover text-popover-foreground z-50 overflow-y-auto rounded-xl border shadow-md"
           >
             <div
-              className="grid gap-2 p-3"
+              className="grid justify-between gap-2 p-3"
               style={{
-                gridTemplateColumns: `repeat(${position.columns}, minmax(0, 1fr))`,
+                // Fixed-width columns + space-between: circles sit flush with
+                // the panel edges and share the leftover space evenly.
+                gridTemplateColumns:
+                  options.length === 1
+                    ? "minmax(0, 1fr)"
+                    : `repeat(${position.columns}, ${CIRCLE_SIZE}px)`,
               }}
             >
               {options.map((opt, idx) => {
@@ -203,8 +210,11 @@ function GridSelect({
                     aria-selected={selected}
                     onClick={() => select(optValue)}
                     className={cn(
-                      "mx-auto flex size-10 items-center justify-center rounded-full font-medium transition-colors",
-                      optValue.length >= 3 ? "text-xs" : "text-sm",
+                      "flex h-10 items-center justify-center rounded-full font-medium transition-colors",
+                      options.length === 1 ? "w-full" : "w-10",
+                      options.length > 1 && optValue.length >= 3
+                        ? "text-xs"
+                        : "text-sm",
                       selected
                         ? "bg-green-800 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
                         : "bg-green-50 text-green-900 hover:bg-green-100 dark:bg-green-950/40 dark:text-green-300 dark:hover:bg-green-950/60",

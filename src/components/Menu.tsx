@@ -30,12 +30,13 @@ import {
   UserRoundPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { AddPlayer } from "./AddPlayer";
+import { useState } from "react";
 
 interface MenuProps {
   resetAll?: () => void;
   resetAllPoints?: () => void;
-  addPlayer?: (name: string) => void;
+  /** Opens the player dialog owned by the page, so both header entry points share it. */
+  onAddPlayer?: () => void;
   specialTheme?: Theme;
   isThemeActive?: boolean;
   setIsThemeActive?: (active: boolean) => void;
@@ -45,17 +46,18 @@ interface MenuProps {
 export function Menu({
   resetAll,
   resetAllPoints,
-  addPlayer,
+  onAddPlayer,
   specialTheme,
   isThemeActive,
   setIsThemeActive,
   gamemodeInfo,
 }: MenuProps) {
   const { theme, setTheme } = useTheme();
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -69,14 +71,16 @@ export function Menu({
           <DropdownMenuLabel>Optionen</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            {addPlayer && (
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <AddPlayer addPlayer={addPlayer}>
-                  <div className="flex items-center gap-2 w-full">
-                    <UserRoundPlus />
-                    <span>Spieler hinzufügen</span>
-                  </div>
-                </AddPlayer>
+            {onAddPlayer && (
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setOpen(false);
+                  onAddPlayer();
+                }}
+              >
+                <UserRoundPlus />
+                <span>Spieler hinzufügen</span>
               </DropdownMenuItem>
             )}
 

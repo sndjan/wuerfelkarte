@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { gamemodes } from "../gamemodes/gamemodes";
+import { syncRosterOrder } from "./playerRosterStorage";
 import { Player, Points } from "./types";
 import { toast } from "sonner";
 
@@ -122,12 +123,13 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
     savePlayersToStorage(players);
   }, [players]);
 
-  const addPlayer = (name: string) => {
+  const addPlayer = (name: string, emoji?: string) => {
     setPlayers((prevPlayers) => [
       ...prevPlayers,
       {
         id: Date.now(),
         name,
+        emoji,
         points: initialPoints,
         score: calculateScore(initialPoints, gamemode),
       },
@@ -176,10 +178,12 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
     });
   };
 
-  const changeName = (playerId: number, newName: string) => {
+  const changeName = (playerId: number, newName: string, emoji?: string) => {
     setPlayers((prevPlayers) =>
       prevPlayers.map((player) =>
-        player.id === playerId ? { ...player, name: newName } : player
+        player.id === playerId
+          ? { ...player, name: newName, emoji: emoji ?? player.emoji }
+          : player
       )
     );
     toast.success("Spielername geändert", {
@@ -187,31 +191,23 @@ export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
     });
   };
 
-  const moveToRight = (playerId: number) => {
-    setPlayers((prevPlayers) => {
-      const index = prevPlayers.findIndex((player) => player.id === playerId);
-      if (index === -1 || index === prevPlayers.length - 1) return prevPlayers;
+  // Moving a card also rewrites the stored roster order, so the lobby's
+  // selection order reflects the seating order the game ended up with.
+  const movePlayer = (playerId: number, offset: 1 | -1) => {
+    const index = players.findIndex((player) => player.id === playerId);
+    const target = index + offset;
+    if (index === -1 || target < 0 || target >= players.length) return;
 
-      const newPlayers = [...prevPlayers];
-      const player = newPlayers[index];
-      newPlayers.splice(index, 1);
-      newPlayers.splice(index + 1, 0, player);
-      return newPlayers;
-    });
+    const newPlayers = [...players];
+    const [player] = newPlayers.splice(index, 1);
+    newPlayers.splice(target, 0, player);
+    setPlayers(newPlayers);
+    syncRosterOrder(newPlayers.map((p) => p.name));
   };
 
-  const moveToLeft = (playerId: number) => {
-    setPlayers((prevPlayers) => {
-      const index = prevPlayers.findIndex((player) => player.id === playerId);
-      if (index <= 0) return prevPlayers;
+  const moveToRight = (playerId: number) => movePlayer(playerId, 1);
 
-      const newPlayers = [...prevPlayers];
-      const player = newPlayers[index];
-      newPlayers.splice(index, 1);
-      newPlayers.splice(index - 1, 0, player);
-      return newPlayers;
-    });
-  };
+  const moveToLeft = (playerId: number) => movePlayer(playerId, -1);
 
   const resetAllPoints = () => {
     setPlayers((prevPlayers) =>
