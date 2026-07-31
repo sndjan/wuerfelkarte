@@ -10,14 +10,21 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { Share } from "./Share";
+import { formatDuration } from "@/lib/utils";
 
 interface ScoringProps {
   players: Player[];
   gamemode: keyof typeof gamemodes;
+  elapsedMs?: number | null;
   children: React.ReactNode;
 }
 
-export function Scoring({ players, gamemode, children }: ScoringProps) {
+export function Scoring({
+  players,
+  gamemode,
+  elapsedMs,
+  children,
+}: ScoringProps) {
   const saveMatchLocally = () => {
     // Check if any player has a non-zero score
     const hasValidScores = players.some((p) => p.score > 0);
@@ -45,6 +52,7 @@ export function Scoring({ players, gamemode, children }: ScoringProps) {
       players,
       gamemode,
       timestamp: new Date().toISOString(),
+      ...(typeof elapsedMs === "number" ? { durationMs: elapsedMs } : {}),
     };
     lastMatchesData.push(newMatch);
 
@@ -65,6 +73,11 @@ export function Scoring({ players, gamemode, children }: ScoringProps) {
           <DialogTitle>Punkteauswertung</DialogTitle>
         </DialogHeader>
         <DialogDescription>Siehe wer gewonnen hat</DialogDescription>
+        {typeof elapsedMs === "number" && (
+          <p className="text-sm text-muted-foreground">
+            ⏱ Spielzeit: {formatDuration(elapsedMs)}
+          </p>
+        )}
         <div className="mt-4">
           <AnimatedScoreDiagram players={players} />
         </div>

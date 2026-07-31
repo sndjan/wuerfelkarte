@@ -5,6 +5,7 @@ import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
 import { PageHeader } from "@/components/PageHeader";
 import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { GamemodePillSelector } from "@/components/yatzy-lobby/GamemodePillSelector";
+import { GamemodeStats } from "@/components/yatzy-lobby/GamemodeStats";
 import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
 import { RecentMatchesList } from "@/components/yatzy-lobby/RecentMatchesList";
 import { useRouter } from "next/navigation";
@@ -94,6 +95,8 @@ export default function YatzyLobby() {
         >
           🎲 Spiel starten
         </button>
+
+        <GamemodeStats gamemode={selectedGamemode} />
 
         <RecentMatchesList />
       </div>

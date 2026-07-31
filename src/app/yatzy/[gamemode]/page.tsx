@@ -116,13 +116,20 @@ export default function Home() {
       return next;
     });
 
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const [gameEndTime, setGameEndTime] = useState<number | null>(null);
+
   const handleResetAll = () => {
     resetAll();
     setDoubled(new Set());
+    setGameStartTime(null);
+    setGameEndTime(null);
   };
   const handleResetAllPoints = () => {
     resetAllPoints();
     setDoubled(new Set());
+    setGameStartTime(null);
+    setGameEndTime(null);
   };
 
   const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -203,6 +210,7 @@ export default function Home() {
   }, [gamemode, missions.length, players, chaosRoundInterval]);
 
   const handleUpdatePoints = (playerId: number, points: Partial<Points>) => {
+    setGameStartTime((prev) => prev ?? Date.now());
     if (isBattle) {
       setDoubled((prev) => {
         const next = new Set(prev);
@@ -286,6 +294,19 @@ export default function Home() {
     );
   }, [players, gamemode, isBattle]);
 
+  // Timer stops the moment the last field is filled in, before the
+  // scoreboard is ever opened, so the saved duration reflects actual play time.
+  useEffect(() => {
+    if (gameFinished) {
+      setGameEndTime((prev) => prev ?? Date.now());
+    }
+  }, [gameFinished]);
+
+  const elapsedMs =
+    gameStartTime !== null && gameEndTime !== null
+      ? gameEndTime - gameStartTime
+      : null;
+
   const scoringPlayers = useMemo(
     () =>
       isBattle
@@ -305,7 +326,11 @@ export default function Home() {
         title={gamemodes[gamemode].name}
         right={
           <>
-            <Scoring players={scoringPlayers} gamemode={gamemode}>
+            <Scoring
+              players={scoringPlayers}
+              gamemode={gamemode}
+              elapsedMs={elapsedMs}
+            >
               <Button
                 variant="outline"
                 className={

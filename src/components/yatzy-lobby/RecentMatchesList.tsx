@@ -1,15 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { gamemodes } from "@/components/gamemodes/gamemodes";
-
-type StoredMatchPlayer = { name: string; score: number };
-
-type StoredMatch = {
-  players: StoredMatchPlayer[];
-  gamemode: string;
-  timestamp: string;
-};
+import { useMatchHistory } from "@/components/hooks/useMatchHistory";
 
 const MAX_MATCHES = 5;
 
@@ -18,28 +10,15 @@ function formatShortDate(timestamp: string): string {
   return `${date.getDate()}.${date.getMonth() + 1}.`;
 }
 
-function loadRecentMatches(): StoredMatch[] {
-  try {
-    const stored = localStorage.getItem("lastMatches");
-    if (!stored) return [];
-    const parsed: StoredMatch[] = JSON.parse(stored);
-    return [...parsed]
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      )
-      .slice(0, MAX_MATCHES);
-  } catch {
-    return [];
-  }
-}
-
 export function RecentMatchesList() {
-  const [matches, setMatches] = useState<StoredMatch[]>([]);
+  const history = useMatchHistory();
 
-  useEffect(() => {
-    setMatches(loadRecentMatches());
-  }, []);
+  const matches = [...history]
+    .sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    )
+    .slice(0, MAX_MATCHES);
 
   if (matches.length === 0) return null;
 
