@@ -8,7 +8,7 @@ export type GameEntry = {
 
 export const games: GameEntry[] = [
   { key: "yatzy", name: "Yatzy", emoji: "🎲", href: "/yatzy", locked: false },
-  { key: "wizard", name: "Wizard", emoji: "🧙‍♂️", locked: true },
+  { key: "wizard", name: "Wizard", emoji: "🧙‍♂️", href: "/wizard", locked: false },
   { key: "cabo", name: "Cabo", emoji: "🃏", locked: true },
   { key: "skullking", name: "Skull King", emoji: "💀", locked: true },
 ];
