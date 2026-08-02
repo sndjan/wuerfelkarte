@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { roundScore, totalScore } from "./scoring";
+import { effectiveBid, playerRoundScore, totalScore } from "./scoring";
 import { WizardGame } from "./types";
 
 interface HistoryTableProps {
@@ -60,11 +60,15 @@ export function HistoryTable({
                 {game.players.map((player) => {
                   const bid = round.bids[player.id] ?? null;
                   const tricks = round.tricks[player.id] ?? null;
-                  const score = roundScore(bid, tricks);
+                  const adjustedBid = effectiveBid(round, player.id);
+                  const score = playerRoundScore(round, player.id);
                   return (
                     <td key={player.id} className="px-3 py-2 whitespace-nowrap">
                       <span className="text-muted-foreground">
-                        {bid ?? "·"}/{tricks ?? "·"}
+                        {bid != null && adjustedBid != null && adjustedBid !== bid
+                          ? `${bid}→${adjustedBid}`
+                          : (bid ?? "·")}
+                        /{tricks ?? "·"}
                       </span>
                       {score !== null && (
                         <span

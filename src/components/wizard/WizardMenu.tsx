@@ -34,6 +34,7 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { ManagePlayersDialog } from "./ManagePlayersDialog";
 import { RoundsDialog } from "./RoundsDialog";
+import { deckSize } from "./scoring";
 import { WizardGame } from "./types";
 
 interface WizardMenuProps {
@@ -165,6 +166,7 @@ export function WizardMenu({
         onOpenChange={setManagePlayersOpen}
         players={game.players}
         totalRounds={game.totalRounds}
+        deckSize={deckSize(game.specialCards)}
         onAddPlayer={onAddPlayer}
         onRemovePlayer={onRemovePlayer}
         onRenamePlayer={onRenamePlayer}

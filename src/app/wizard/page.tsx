@@ -5,16 +5,23 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
-import { gamemodeSlug } from "@/components/wizard/gamemodes";
+import { gamemodeSlug, wizardGamemodes } from "@/components/wizard/gamemodes";
 import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
 import {
   MAX_PLAYERS,
   MIN_PLAYERS,
   createWizardGame,
+  deckSize,
   suggestedRounds,
 } from "@/components/wizard/scoring";
+import { ALL_SPECIAL_CARDS } from "@/components/wizard/specialCards";
+import { SpecialCardSelector } from "@/components/wizard/SpecialCardSelector";
 import { saveWizardGame } from "@/components/wizard/storage";
-import { WizardGamemodeKey, WizardPlayer } from "@/components/wizard/types";
+import {
+  WizardGamemodeKey,
+  WizardPlayer,
+  WizardSpecialCard,
+} from "@/components/wizard/types";
 import { WizardGamemodePillSelector } from "@/components/wizard/WizardGamemodePillSelector";
 import { WizardGamemodeStats } from "@/components/wizard/WizardGamemodeStats";
 import { WizardRecentMatchesList } from "@/components/wizard/WizardRecentMatchesList";
@@ -33,6 +40,9 @@ export default function WizardLobby() {
   const [selectedGamemode, setSelectedGamemode] =
     useState<WizardGamemodeKey>("Standard");
   const [plusMinusOne, setPlusMinusOne] = useState(false);
+  // Preselected in full — the anniversary edition ships all seven Sonderkarten.
+  const [selectedCards, setSelectedCards] =
+    useState<WizardSpecialCard[]>(ALL_SPECIAL_CARDS);
   // `null` follows the suggested round count automatically as players are
   // toggled; setting a number pins it until the player picks "Vorschlag" again.
   const [roundsOverride, setRoundsOverride] = useState<number | null>(null);
@@ -45,7 +55,13 @@ export default function WizardLobby() {
     activePlayers.map((player, index) => [player.id, index + 1]),
   );
 
-  const suggested = suggestedRounds(activePlayers.length || MIN_PLAYERS);
+  const usesSpecialCards = wizardGamemodes[selectedGamemode].usesSpecialCards;
+  const specialCards = usesSpecialCards ? selectedCards : [];
+  const cardsInDeck = deckSize(specialCards);
+  const suggested = suggestedRounds(
+    activePlayers.length || MIN_PLAYERS,
+    cardsInDeck,
+  );
   const totalRounds = Math.min(Math.max(roundsOverride ?? suggested, 1), suggested);
   const canStart =
     activePlayers.length >= MIN_PLAYERS && activePlayers.length <= MAX_PLAYERS;
@@ -62,6 +78,7 @@ export default function WizardLobby() {
       totalRounds,
       selectedGamemode,
       plusMinusOne,
+      specialCards,
     );
     saveWizardGame(game);
     router.push(`/wizard/${gamemodeSlug(selectedGamemode)}`);
@@ -105,7 +122,22 @@ export default function WizardLobby() {
             value={selectedGamemode}
             onChange={setSelectedGamemode}
           />
+          <p className="text-sm text-muted-foreground">
+            {wizardGamemodes[selectedGamemode].description}
+          </p>
         </div>
+
+        {usesSpecialCards && (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              Sonderkarten
+            </h2>
+            <SpecialCardSelector
+              value={selectedCards}
+              onChange={setSelectedCards}
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
@@ -141,6 +173,10 @@ export default function WizardLobby() {
           <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
             Rundenanzahl
           </h2>
+          <p className="text-sm text-muted-foreground">
+            {activePlayers.length || MIN_PLAYERS} Spieler · {cardsInDeck} Karten
+            → maximal {suggested} Runden.
+          </p>
           <div className="flex items-center gap-4 rounded-2xl bg-card p-4">
             <button
               type="button"

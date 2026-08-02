@@ -39,6 +39,8 @@ export default function WizardGamePage() {
     setRoundCount,
     setBid,
     setTricks,
+    setBombTrick,
+    setWolke,
     addPlayer,
     removePlayer,
     changeName,
@@ -161,7 +163,11 @@ export default function WizardGamePage() {
             )}
             <WizardMenu
               game={game}
-              gamemodeInfo={gamemodeInformation(gamemode, game.plusMinusOne)}
+              gamemodeInfo={gamemodeInformation(
+                gamemode,
+                game.plusMinusOne,
+                game.specialCards,
+              )}
               onAddPlayer={addPlayer}
               onRemovePlayer={removePlayer}
               onRenamePlayer={changeName}
@@ -219,6 +225,8 @@ export default function WizardGamePage() {
           onSetTricks={(playerId, value) =>
             setTricks(viewRoundIndex, playerId, value)
           }
+          onSetBombTrick={(value) => setBombTrick(viewRoundIndex, value)}
+          onSetWolke={(wolke) => setWolke(viewRoundIndex, wolke)}
           onAdvance={handleAdvance}
           renderFinalAction={(disabled) => (
             <Scoring

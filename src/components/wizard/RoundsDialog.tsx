@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { minAllowedRounds, suggestedRounds } from "./scoring";
+import { deckSize, minAllowedRounds, suggestedRounds } from "./scoring";
 import { WizardGame } from "./types";
 
 interface RoundsDialogProps {
@@ -24,7 +24,8 @@ export function RoundsDialog({
   children,
 }: RoundsDialogProps) {
   const min = minAllowedRounds(game);
-  const max = Math.max(min, suggestedRounds(game.players.length));
+  const cards = deckSize(game.specialCards);
+  const max = Math.max(min, suggestedRounds(game.players.length, cards));
 
   return (
     <Dialog>
@@ -35,7 +36,7 @@ export function RoundsDialog({
         </DialogHeader>
         <DialogDescription>
           Mit {game.players.length} Spielern sind maximal {max} Runden
-          möglich (60 Karten im Deck). Bereits gespielte Runden bleiben
+          möglich ({cards} Karten im Deck). Bereits gespielte Runden bleiben
           erhalten — minimal {min}.
         </DialogDescription>
         <div className="flex items-center justify-center gap-6 py-2">

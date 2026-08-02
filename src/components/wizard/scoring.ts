@@ -1,13 +1,26 @@
-import { WizardGame, WizardGamemodeKey, WizardPlayer, WizardRound } from "./types";
+import {
+  WizardGame,
+  WizardGamemodeKey,
+  WizardPlayer,
+  WizardRound,
+  WizardSpecialCard,
+} from "./types";
 
-/** A Wizard deck has 60 cards, which is what caps the number of rounds. */
+/** A Wizard deck has 60 character cards; Sonderkarten are shuffled in on top. */
 export const WIZARD_DECK_SIZE = 60;
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 6;
 
-/** 3 players → 20 rounds, 4 → 15, 5 → 12, 6 → 10. */
-export const suggestedRounds = (playerCount: number): number =>
-  playerCount > 0 ? Math.max(1, Math.floor(WIZARD_DECK_SIZE / playerCount)) : 1;
+/** 60 character cards plus one card per selected Sonderkarte. */
+export const deckSize = (specialCards: WizardSpecialCard[] = []): number =>
+  WIZARD_DECK_SIZE + specialCards.length;
+
+/** 3 players → 20 rounds, 4 → 15, 5 → 12, 6 → 10 (more with Sonderkarten). */
+export const suggestedRounds = (
+  playerCount: number,
+  cards: number = WIZARD_DECK_SIZE,
+): number =>
+  playerCount > 0 ? Math.max(1, Math.floor(cards / playerCount)) : 1;
 
 /** Round 1 is played with one card, round 2 with two, … */
 export const cardsInRound = (roundIndex: number): number => roundIndex + 1;
@@ -20,9 +33,52 @@ export const roundScore = (
   return bid === tricks ? 20 + 10 * tricks : -10 * Math.abs(bid - tricks);
 };
 
+/**
+ * The bid a player is actually scored against: the Wolke shifts its holder's
+ * prediction by ±1 after the round, while the originally entered bid stays put.
+ */
+export const effectiveBid = (
+  round: WizardRound,
+  playerId: string,
+): number | null => {
+  const bid = round.bids[playerId] ?? null;
+  if (bid == null) return null;
+  return round.wolke?.playerId === playerId ? bid + round.wolke.delta : bid;
+};
+
+export const playerRoundScore = (
+  round: WizardRound,
+  playerId: string,
+): number | null => roundScore(effectiveBid(round, playerId), round.tricks[playerId]);
+
+/** Tricks that can still be won this round — a Bombe trick belongs to nobody. */
+export const tricksInRound = (
+  round: WizardRound | undefined,
+  roundIndex: number,
+): number => Math.max(0, cardsInRound(roundIndex) - (round?.bombTrick ? 1 : 0));
+
+/**
+ * Which ±1 shifts the Wolke holder may take: the adjusted bid still has to be a
+ * number of tricks they could conceivably have made.
+ */
+export const wolkeDeltaOptions = (
+  round: WizardRound,
+  playerId: string,
+  roundIndex: number,
+): Array<1 | -1> => {
+  const bid = round.bids[playerId] ?? null;
+  if (bid == null) return [-1, 1];
+  const max = cardsInRound(roundIndex);
+  return ([-1, 1] as Array<1 | -1>).filter(
+    (delta) => bid + delta >= 0 && bid + delta <= max,
+  );
+};
+
 export const createRound = (players: WizardPlayer[]): WizardRound => ({
   bids: Object.fromEntries(players.map((p) => [p.id, null])),
   tricks: Object.fromEntries(players.map((p) => [p.id, null])),
+  bombTrick: false,
+  wolke: null,
 });
 
 export const createWizardGame = (
@@ -30,9 +86,11 @@ export const createWizardGame = (
   totalRounds: number,
   gamemode: WizardGamemodeKey,
   plusMinusOne: boolean,
+  specialCards: WizardSpecialCard[] = [],
 ): WizardGame => ({
   gamemode,
   plusMinusOne,
+  specialCards,
   players,
   totalRounds,
   rounds: Array.from({ length: totalRounds }, () => createRound(players)),
@@ -41,10 +99,14 @@ export const createWizardGame = (
   finishedAt: null,
 });
 
+export const hasSpecialCard = (
+  game: WizardGame,
+  card: WizardSpecialCard,
+): boolean => (game.specialCards ?? []).includes(card);
+
 export const totalScore = (game: WizardGame, playerId: string): number =>
   game.rounds.reduce(
-    (sum, round) =>
-      sum + (roundScore(round.bids[playerId], round.tricks[playerId]) ?? 0),
+    (sum, round) => sum + (playerRoundScore(round, playerId) ?? 0),
     0,
   );
 
@@ -56,15 +118,11 @@ export const scoreAfterRound = (
 ): number =>
   game.rounds
     .slice(0, roundIndex + 1)
-    .reduce(
-      (sum, round) =>
-        sum + (roundScore(round.bids[playerId], round.tricks[playerId]) ?? 0),
-      0,
-    );
+    .reduce((sum, round) => sum + (playerRoundScore(round, playerId) ?? 0), 0);
 
 export const exactBidCount = (game: WizardGame, playerId: string): number =>
   game.rounds.filter((round) => {
-    const bid = round.bids[playerId];
+    const bid = effectiveBid(round, playerId);
     const tricks = round.tricks[playerId];
     return bid != null && tricks != null && bid === tricks;
   }).length;
@@ -105,7 +163,9 @@ export const allTricksEntered = (round: WizardRound, players: WizardPlayer[]) =>
 
 export const hasAnyEntry = (round: WizardRound) =>
   Object.values(round.bids).some((v) => v != null) ||
-  Object.values(round.tricks).some((v) => v != null);
+  Object.values(round.tricks).some((v) => v != null) ||
+  round.bombTrick === true ||
+  round.wolke != null;
 
 export const isRoundDone = (round: WizardRound, players: WizardPlayer[]) =>
   allBidsEntered(round, players) && allTricksEntered(round, players);

@@ -6,17 +6,22 @@ import {
   WizardGame,
   WizardGamemodeKey,
   WizardPlayer,
+  WizardWolke,
 } from "../types";
 import {
   createRound,
   createWizardGame,
+  deckSize,
   exactBidCount,
   isGameFinished,
   minAllowedRounds,
   roundsPlayedBy,
   suggestedRounds,
   totalScore,
+  wolkeDeltaOptions,
 } from "../scoring";
+import { ALL_SPECIAL_CARDS } from "../specialCards";
+import { wizardGamemodes } from "../gamemodes";
 import {
   clearWizardGame,
   loadWizardGame,
@@ -35,6 +40,7 @@ function buildMatch(game: WizardGame): StoredWizardMatch | null {
   return {
     gamemode: game.gamemode,
     plusMinusOne: game.plusMinusOne,
+    specialCards: game.specialCards ?? [],
     totalRounds: game.totalRounds,
     timestamp: new Date().toISOString(),
     durationMs:
@@ -51,16 +57,28 @@ function buildMatch(game: WizardGame): StoredWizardMatch | null {
   };
 }
 
+/**
+ * Placeholder for a page opened without a game in storage — the lobby is what
+ * normally creates games, so this only ever renders the "no players" state.
+ */
+const emptyGame = (gamemode: WizardGamemodeKey): WizardGame => {
+  const cards = wizardGamemodes[gamemode].usesSpecialCards
+    ? ALL_SPECIAL_CARDS
+    : [];
+  return createWizardGame(
+    [],
+    suggestedRounds(FALLBACK_PLAYER_COUNT, deckSize(cards)),
+    gamemode,
+    false,
+    cards,
+  );
+};
+
 export function useWizard(gamemode: WizardGamemodeKey) {
   const [game, setGame] = useState<WizardGame>(() => {
     const stored = loadWizardGame();
     if (stored && stored.gamemode === gamemode) return stored;
-    return createWizardGame(
-      [],
-      suggestedRounds(FALLBACK_PLAYER_COUNT),
-      gamemode,
-      false,
-    );
+    return emptyGame(gamemode);
   });
 
   const hasSavedFinish = useRef(false);
@@ -115,11 +133,22 @@ export function useWizard(gamemode: WizardGamemodeKey) {
     updateGame((prev) => ({
       ...prev,
       startedAt: prev.startedAt ?? Date.now(),
-      rounds: prev.rounds.map((round, index) =>
-        index === roundIndex
-          ? { ...round, bids: { ...round.bids, [playerId]: value } }
-          : round,
-      ),
+      rounds: prev.rounds.map((round, index) => {
+        if (index !== roundIndex) return round;
+        const next = {
+          ...round,
+          bids: { ...round.bids, [playerId]: value },
+        };
+        // A ±1 that would push the bid below 0 or above the round's card count
+        // flips to the only shift that still makes sense.
+        if (next.wolke?.playerId === playerId) {
+          const allowed = wolkeDeltaOptions(next, playerId, roundIndex);
+          if (!allowed.includes(next.wolke.delta) && allowed.length > 0) {
+            next.wolke = { ...next.wolke, delta: allowed[0] };
+          }
+        }
+        return next;
+      }),
     }));
   };
 
@@ -135,6 +164,26 @@ export function useWizard(gamemode: WizardGamemodeKey) {
         index === roundIndex
           ? { ...round, tricks: { ...round.tricks, [playerId]: value } }
           : round,
+      ),
+    }));
+  };
+
+  /** Marks the round's trick that contained the Bombe — it belongs to nobody. */
+  const setBombTrick = (roundIndex: number, value: boolean) => {
+    updateGame((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((round, index) =>
+        index === roundIndex ? { ...round, bombTrick: value } : round,
+      ),
+    }));
+  };
+
+  /** `null` clears the Wolke: nobody ended the round holding it. */
+  const setWolke = (roundIndex: number, wolke: WizardWolke | null) => {
+    updateGame((prev) => ({
+      ...prev,
+      rounds: prev.rounds.map((round, index) =>
+        index === roundIndex ? { ...round, wolke } : round,
       ),
     }));
   };
@@ -185,7 +234,13 @@ export function useWizard(gamemode: WizardGamemodeKey) {
         const tricks = { ...round.tricks };
         delete bids[playerId];
         delete tricks[playerId];
-        return { ...round, bids, tricks };
+        return {
+          ...round,
+          bids,
+          tricks,
+          // A Wolke pointing at the removed player would score nobody.
+          wolke: round.wolke?.playerId === playerId ? null : round.wolke,
+        };
       });
       const totalRounds = Math.max(
         recalcRounds ?? prev.totalRounds,
@@ -227,14 +282,7 @@ export function useWizard(gamemode: WizardGamemodeKey) {
   const resetAll = () => {
     clearWizardGame();
     hasSavedFinish.current = false;
-    setGame(
-      createWizardGame(
-        [],
-        suggestedRounds(FALLBACK_PLAYER_COUNT),
-        gamemode,
-        false,
-      ),
-    );
+    setGame(emptyGame(gamemode));
   };
 
   // Keeps players, mode and round count — only the entered bids/tricks and
@@ -256,6 +304,8 @@ export function useWizard(gamemode: WizardGamemodeKey) {
     setRoundCount,
     setBid,
     setTricks,
+    setBombTrick,
+    setWolke,
     addPlayer,
     removePlayer,
     changeName,

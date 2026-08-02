@@ -34,6 +34,8 @@ interface ManagePlayersDialogProps {
   onOpenChange: (open: boolean) => void;
   players: WizardPlayer[];
   totalRounds: number;
+  /** Cards in the deck — Sonderkarten raise the round count a game can reach. */
+  deckSize: number;
   onAddPlayer: (name: string, emoji: string, totalRounds: number) => void;
   onRemovePlayer: (playerId: string, totalRounds: number) => void;
   onRenamePlayer: (playerId: string, name: string, emoji: string) => void;
@@ -44,6 +46,7 @@ export function ManagePlayersDialog({
   onOpenChange,
   players,
   totalRounds,
+  deckSize,
   onAddPlayer,
   onRemovePlayer,
   onRenamePlayer,
@@ -118,8 +121,11 @@ export function ManagePlayersDialog({
     onOpenChange(false);
   };
 
-  const suggestedForAdd = suggestedRounds(players.length + 1);
-  const suggestedForRemove = suggestedRounds(Math.max(players.length - 1, 1));
+  const suggestedForAdd = suggestedRounds(players.length + 1, deckSize);
+  const suggestedForRemove = suggestedRounds(
+    Math.max(players.length - 1, 1),
+    deckSize,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

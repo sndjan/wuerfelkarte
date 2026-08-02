@@ -11,7 +11,11 @@ export const loadWizardGame = (): WizardGame | null => {
     if (!stored) return null;
     const game = JSON.parse(stored) as WizardGame;
     if (!Array.isArray(game.players) || !Array.isArray(game.rounds)) return null;
-    return game;
+    // Games saved before the Sonderkarten mode existed have no card list.
+    return {
+      ...game,
+      specialCards: Array.isArray(game.specialCards) ? game.specialCards : [],
+    };
   } catch {
     return null;
   }
