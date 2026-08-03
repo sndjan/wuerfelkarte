@@ -21,9 +21,6 @@ const SEASONS: Array<{
   start: [number, number];
   end: [number, number];
 }> = [
-  // NOTE: this window is what the app has always used, but it ends before
-  // 31 October — the Halloween decoration never actually shows on Halloween.
-  // Kept as-is deliberately; changing it is a product decision.
   { theme: "Halloween", start: [10, 20], end: [11, 2] },
   { theme: "Christmas", start: [11, 20], end: [1, 10] },
   { theme: "Easter", start: [3, 22], end: [4, 12] },

@@ -4,19 +4,13 @@ import { THEME_EMOJIS, seasonFor } from "./useSeasonalTheme";
 
 const on = (iso: string) => seasonFor(new Date(`${iso}T12:00:00`));
 
-/**
- * These pin the date windows the app has always used. Note the Halloween one
- * ends on 2 October, so the pumpkins never appear on Halloween itself — that is
- * pre-existing behaviour, recorded here rather than silently changed.
- */
 describe("seasonFor", () => {
-  it("uses the stored Halloween window of 27 September to 2 October", () => {
-    expect(on("2026-09-26")).toBe("none");
-    expect(on("2026-09-27")).toBe("Halloween");
-    expect(on("2026-10-02")).toBe("Halloween");
-    expect(on("2026-10-03")).toBe("none");
-    // The actual 31st of October is outside the window.
-    expect(on("2026-10-31")).toBe("none");
+  it("decorates Halloween from 20 October to 2 November", () => {
+    expect(on("2026-10-19")).toBe("none");
+    expect(on("2026-10-20")).toBe("Halloween");
+    expect(on("2026-10-31")).toBe("Halloween");
+    expect(on("2026-11-02")).toBe("Halloween");
+    expect(on("2026-11-03")).toBe("none");
   });
 
   it("decorates Christmas from 20 November across the turn of the year", () => {
