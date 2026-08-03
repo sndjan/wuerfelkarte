@@ -1,4 +1,4 @@
-import { gamemodes } from "@/components/gamemodes/gamemodes";
+import { gamemodes } from "@/games/yatzy/gamemodes";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

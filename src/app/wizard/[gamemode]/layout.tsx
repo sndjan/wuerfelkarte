@@ -1,4 +1,4 @@
-import { gamemodeFromSlug, wizardGamemodes } from "@/components/wizard/gamemodes";
+import { gamemodeFromSlug, wizardGamemodes } from "@/games/wizard/gamemodes";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

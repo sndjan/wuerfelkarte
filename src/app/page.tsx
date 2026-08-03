@@ -1,9 +1,9 @@
 "use client";
 
-import { DarkModeToggle } from "@/components/DarkModeToggle";
-import { games } from "@/components/games/games";
-import { GameTile } from "@/components/games/GameTile";
-import { PageHeader } from "@/components/PageHeader";
+import { DarkModeToggle } from "@/components/common/DarkModeToggle";
+import { games } from "@/games/registry";
+import { GameTile } from "@/games/GameTile";
+import { PageHeader } from "@/components/common/PageHeader";
 
 export default function GamesOverview() {
   return (
