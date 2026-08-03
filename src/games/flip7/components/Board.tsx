@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Menu } from "./Menu";
 import {
@@ -20,7 +21,8 @@ import {
   isTiedAtTop,
   standings,
 } from "../scoring";
-import { Scoring } from "./Scoring";
+import { ScoreDialog } from "@/games/shared/components/ScoreDialog";
+import { shareConfigFor } from "../config";
 import {
   loadHideScoresSetting,
   saveHideScoresSetting,
@@ -268,14 +270,18 @@ export function Board() {
         onContinue={handleContinue}
       />
 
-      <Scoring
+      <ScoreDialog
         open={scoresOpen}
         onOpenChange={setScoresOpen}
         players={scoringPlayers}
-        gamemode={gamemode}
-        targetScore={game.targetScore}
-        rounds={game.rounds.length}
-        elapsedMs={elapsedMs}
+        shareConfig={shareConfigFor(game)}
+        subtitle={
+          <>
+            🎯 Ziel: {game.targetScore} Punkte · {game.rounds.length}{" "}
+            {game.rounds.length === 1 ? "Runde" : "Runden"}
+            {typeof elapsedMs === "number" && ` · ⏱ ${formatDuration(elapsedMs)}`}
+          </>
+        }
       />
     </>
   );

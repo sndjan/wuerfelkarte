@@ -18,8 +18,8 @@ import {
   addRosterPlayer,
   loadRoster,
   updateRosterPlayerByName,
-} from "@/games/shared/roster";
-import { EMOJI_OPTIONS, RosterPlayer } from "@/games/shared/types";
+} from "../roster";
+import { EMOJI_OPTIONS, RosterPlayer } from "../types";
 
 /**
  * `edit` retargets an existing card (its points stay), `add` puts another

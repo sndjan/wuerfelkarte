@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { PlayerEditMenu } from "./PlayerEditMenu";
-import { RosterPlayer } from "@/games/shared/types";
+import { RosterPlayer } from "../types";
 
 const LONG_PRESS_MS = 500;
 

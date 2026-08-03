@@ -18,7 +18,7 @@ import { useTheme } from "@/components/hooks/useTheme";
 import { Menu } from "@/components/Menu";
 import { PageHeader } from "@/components/PageHeader";
 import PlayerCard from "@/components/PlayerCard";
-import { PlayerIdentityDialog } from "@/components/PlayerIdentityDialog";
+import { PlayerIdentityDialog } from "@/games/shared/components/PlayerIdentityDialog";
 import ResetGame from "@/components/ResetGame";
 import { Scoring } from "@/components/Scoring";
 import { Button } from "@/components/ui/button";

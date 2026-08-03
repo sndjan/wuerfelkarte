@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { buildScoreText as buildYatzyText } from "./Share";
-import { buildScoreText as buildWizardText } from "@/games/wizard/components/Share";
-import { buildScoreText as buildFlip7Text } from "@/games/flip7/components/Share";
+import { buildShareText } from "@/games/shared/components/ShareResult";
+import { shareConfig as wizardShareConfig } from "@/games/wizard/config";
+import { shareConfig as flip7ShareConfig } from "@/games/flip7/config";
 import type { Player, Points } from "./hooks/types";
 
 /**
  * Characterization tests for the three share-text builders.
  *
- * These pin the *current* rank formatting, which differs between the games:
- * Yatzy numbers ranks up to 10, Wizard and Flip 7 stop at 6 and fall back to
- * a plain " 7. " label. The refactor unifies that later, and these expectations
- * change deliberately at that point.
+ * Yatzy still has its own builder; Wizard and Flip 7 share the one in
+ * games/shared, driven by their config. Ranks are numbered up to 10 for every
+ * game now — that is the one deliberate change from merging the three copies,
+ * which previously stopped at 6 for Wizard and Flip 7.
  */
 
 const DATE = new Date("2026-08-03T14:30:00Z");
@@ -115,10 +116,9 @@ describe("Yatzy share text", () => {
 
 describe("Wizard share text", () => {
   it("renders the Wizard header and mode label", () => {
-    const text = buildWizardText(
+    const text = buildShareText(
       [scored("Anna", 120), scored("Ben", 90, "🐸")],
-      "Standard",
-      false,
+      wizardShareConfig("Standard", false),
       DATE,
     );
 
@@ -137,33 +137,44 @@ describe("Wizard share text", () => {
   });
 
   it("appends the Plus/Minus Eins rule to the mode label when active", () => {
-    const text = buildWizardText([scored("Anna", 10)], "Standard", true, DATE);
+    const text = buildShareText(
+      [scored("Anna", 10)],
+      wizardShareConfig("Standard", true),
+      DATE,
+    );
     expect(text).toContain("⭐ Modus: Standard · Plus/Minus Eins");
   });
 
   it("names the 25 Jahre Edition", () => {
-    const text = buildWizardText([scored("Anna", 10)], "25 Jahre Edition", false, DATE);
+    const text = buildShareText(
+      [scored("Anna", 10)],
+      wizardShareConfig("25 Jahre Edition", false),
+      DATE,
+    );
     expect(text).toContain("⭐ Modus: 25 Jahre Edition");
   });
 
   it("handles negative totals", () => {
-    const text = buildWizardText([scored("Anna", -40)], "Standard", false, DATE);
+    const text = buildShareText(
+      [scored("Anna", -40)],
+      wizardShareConfig("Standard", false),
+      DATE,
+    );
     expect(text).toContain("🥇 Anna: -40 Punkte");
   });
 
-  it("falls back to a plain label past rank 6", () => {
+  it("numbers ranks past 6 like the other games", () => {
     const players = Array.from({ length: 7 }, (_, i) => scored(`P${i + 1}`, 70 - i * 10));
-    const text = buildWizardText(players, "Standard", false, DATE);
-    expect(text).toContain(" 7. P7: 10 Punkte");
+    const text = buildShareText(players, wizardShareConfig("Standard", false), DATE);
+    expect(text).toContain("7️⃣ P7: 10 Punkte");
   });
 });
 
 describe("Flip 7 share text", () => {
   it("renders the Flip 7 header and puts the target in the mode label", () => {
-    const text = buildFlip7Text(
+    const text = buildShareText(
       [scored("Anna", 205), scored("Ben", 180)],
-      "Standard",
-      200,
+      flip7ShareConfig("Standard", 200),
       DATE,
     );
 
@@ -181,9 +192,9 @@ describe("Flip 7 share text", () => {
     );
   });
 
-  it("falls back to a plain label past rank 6", () => {
+  it("numbers ranks past 6 like the other games", () => {
     const players = Array.from({ length: 7 }, (_, i) => scored(`P${i + 1}`, 70 - i * 10));
-    const text = buildFlip7Text(players, "Standard", 200, DATE);
-    expect(text).toContain(" 7. P7: 10 Punkte");
+    const text = buildShareText(players, flip7ShareConfig("Standard", 200), DATE);
+    expect(text).toContain("7️⃣ P7: 10 Punkte");
   });
 });

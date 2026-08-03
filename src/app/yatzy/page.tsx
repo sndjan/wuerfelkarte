@@ -3,10 +3,10 @@
 import { gamemodes } from "@/components/gamemodes/gamemodes";
 import { usePlayerRoster } from "@/games/shared/hooks/usePlayerRoster";
 import { PageHeader } from "@/components/PageHeader";
-import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
+import { AddPlayerDialog } from "@/games/shared/components/AddPlayerDialog";
 import { GamemodePillSelector } from "@/components/yatzy-lobby/GamemodePillSelector";
 import { GamemodeStats } from "@/components/yatzy-lobby/GamemodeStats";
-import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
+import { PlayerChip } from "@/games/shared/components/PlayerChip";
 import { RecentMatchesList } from "@/components/yatzy-lobby/RecentMatchesList";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

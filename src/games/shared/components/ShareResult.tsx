@@ -1,48 +1,69 @@
+"use client";
+
 import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { toPng } from "html-to-image";
-import { Button } from "@/components/ui/button";
-import { flip7Gamemodes } from "../gamemodes";
-import { Flip7GamemodeKey } from "../types";
 
-type ScoredPlayer = {
-  id: string;
-  name: string;
-  emoji?: string;
-  score: number;
+import { Button } from "@/components/ui/button";
+import { ScoredPlayer } from "../types";
+
+/**
+ * What a game contributes to its shared result. Everything else — the ranking,
+ * the layout, the 1200x1200 PNG, the Web-Share/WhatsApp fallback chain — is the
+ * same for every game.
+ */
+export type ShareConfig = {
+  /** Leads the text header and, unless `imageSrc` is set, the PNG header. */
+  emoji: string;
+  /** Named in the text header ("Würfelkarte - Wizard Ergebnis"); Yatzy has none. */
+  gameName?: string;
+  /** The "⭐ Modus:" line, e.g. "Standard · Plus/Minus Eins". */
+  modeLabel: string;
+  /** Headline inside the PNG, e.g. "Flip 7 · 200". */
+  imageTitle: string;
+  imageTitleFontSize?: number;
+  /** Optional artwork replacing the emoji in the PNG header. */
+  imageSrc?: string;
+  /** Goes into the shared file name: wuerfelkarte-<slug>.png */
+  fileSlug: string;
 };
 
-const modeLabel = (gamemode: Flip7GamemodeKey, targetScore: number) =>
-  `${flip7Gamemodes[gamemode].name} · ${targetScore} Punkte`;
+const escapeHtml = (s: string) =>
+  s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
-export function buildScoreText(
+/** Dense ranking: tied players share a rank, and the next distinct score follows. */
+const rankMap = (players: ScoredPlayer[]): Map<number, number> => {
+  const distinctDesc = Array.from(new Set(players.map((p) => p.score))).sort(
+    (a, b) => b - a,
+  );
+  const ranks = new Map<number, number>();
+  distinctDesc.forEach((score, index) => ranks.set(score, index + 1));
+  return ranks;
+};
+
+const MEDALS = ["🥇 ", "🥈 ", "🥉 ", "4️⃣ ", "5️⃣ ", "6️⃣ ", "7️⃣ ", "8️⃣ ", "9️⃣ ", "🔟 "];
+
+const medalForRank = (rank: number) => MEDALS[rank - 1] ?? ` ${rank}. `;
+
+export function buildShareText(
   players: ScoredPlayer[],
-  gamemode: Flip7GamemodeKey,
-  targetScore: number,
+  config: ShareConfig,
   date = new Date(),
-) {
-  const uniqueScoresDesc = Array.from(
-    new Set(players.map((p) => p.score)),
-  ).sort((a, b) => b - a);
-  const scoreToRank = new Map<number, number>();
-  uniqueScoresDesc.forEach((score, idx) => scoreToRank.set(score, idx + 1));
+): string {
+  const ranks = rankMap(players);
 
-  const medalForRank = (rank: number) => {
-    if (rank === 1) return "🥇 ";
-    if (rank === 2) return "🥈 ";
-    if (rank === 3) return "🥉 ";
-    if (rank === 4) return "4️⃣ ";
-    if (rank === 5) return "5️⃣ ";
-    if (rank === 6) return "6️⃣ ";
-    return ` ${rank}. `;
-  };
-
-  const sorted = [...players].sort((a, b) => b.score - a.score);
-  const lines = sorted.map((p) => {
-    const rank = scoreToRank.get(p.score) ?? 0;
-    const namePrefix = p.emoji ? `${p.emoji} ` : "";
-    return `${medalForRank(rank)}${namePrefix}${p.name}: ${p.score} Punkte`;
-  });
+  const lines = [...players]
+    .sort((a, b) => b.score - a.score)
+    .map((player) => {
+      const prefix = medalForRank(ranks.get(player.score) ?? 0);
+      const namePrefix = player.emoji ? `${player.emoji} ` : "";
+      return `${prefix}${namePrefix}${player.name}: ${player.score} Punkte`;
+    });
 
   const dateStr = date.toLocaleString(undefined, {
     year: "numeric",
@@ -51,46 +72,40 @@ export function buildScoreText(
     hour: "2-digit",
     minute: "2-digit",
   });
-  const header = `7️⃣ Würfelkarte - Flip 7 Ergebnis`;
-  const dateLine = `📆 ${dateStr}`;
-  const modeLine = `⭐ Modus: ${modeLabel(gamemode, targetScore)}`;
-  const footer = `\nGespielt mit www.würfelkarte.com`;
-  return [header, dateLine, modeLine, "", ...lines, footer].join("\n");
+
+  const header = `${config.emoji} Würfelkarte - ${
+    config.gameName ? `${config.gameName} ` : ""
+  }Ergebnis`;
+
+  return [
+    header,
+    `📆 ${dateStr}`,
+    `⭐ Modus: ${config.modeLabel}`,
+    "",
+    ...lines,
+    `\nGespielt mit www.würfelkarte.com`,
+  ].join("\n");
 }
 
+const BAR_COLORS = ["#ffd700", "#c0c0c0", "#cd7f32"];
+const NEUTRAL_BAR = "#e5e5e5";
+
+/** Renders the result off-screen at 1200x1200 and returns it as a PNG blob. */
 async function generateScoreImage(
   players: ScoredPlayer[],
-  gamemode: Flip7GamemodeKey,
-  targetScore: number,
+  config: ShareConfig,
   date = new Date(),
 ): Promise<Blob | null> {
-  const escapeHtml = (s: string) =>
-    s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
   if (document?.fonts?.ready) {
     try {
       await document.fonts.ready;
     } catch {
-      // ignore font-loading errors, image still renders
+      // Ignore font-loading errors — the image still renders.
     }
   }
 
   const totals = [...players].sort((a, b) => b.score - a.score);
   const maxTotal = Math.max(totals[0]?.score ?? 1, 1);
-
-  const barColor = (index: number) =>
-    index === 0
-      ? "#ffd700"
-      : index === 1
-        ? "#c0c0c0"
-        : index === 2
-          ? "#cd7f32"
-          : "#e5e5e5";
 
   const availableListHeight = 780;
   const rowGap = 16;
@@ -107,22 +122,28 @@ async function generateScoreImage(
   const nameFontSize = Math.floor(rowHeight * 0.38);
 
   const barsHTML = totals
-    .map((t, index) => {
-      const barWidth = (Math.max(t.score, 0) / maxTotal) * 100;
-      const color = barColor(index);
-      const displayName = t.emoji ? `${t.emoji} ${t.name}` : t.name;
+    .map((player, index) => {
+      const barWidth = (Math.max(player.score, 0) / maxTotal) * 100;
+      const color = BAR_COLORS[index] ?? NEUTRAL_BAR;
+      const displayName = player.emoji
+        ? `${player.emoji} ${player.name}`
+        : player.name;
       return `
         <div style="position:relative; width:100%; height:${rowHeight}px; border-radius:12px; margin-bottom:${rowGap}px; overflow:hidden;">
           <div style="position:absolute; top:0; left:0; height:100%; width:100%; background:#2a2a2a; border-radius:12px;"></div>
           <div style="position:absolute; top:0; left:0; height:100%; width:${barWidth}%; background:${color}; border-radius:12px;"></div>
           <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px;">
-            <div style="font-weight:700; font-size:${scoreFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(String(t.score))}</div>
+            <div style="font-weight:700; font-size:${scoreFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(String(player.score))}</div>
             <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(displayName)}</div>
           </div>
         </div>
       `;
     })
     .join("");
+
+  const iconHTML = config.imageSrc
+    ? `<img src="${config.imageSrc}" alt="" style="width: 80px; height: 80px; object-fit: contain;" />`
+    : `<div style="font-size:80px;">${config.emoji}</div>`;
 
   const wrapper = document.createElement("div");
   wrapper.setAttribute("aria-hidden", "true");
@@ -155,10 +176,10 @@ async function generateScoreImage(
         color: #d7e2ec;
       ">
         <div style="display: flex; align-items: center; gap: 30px;">
-          <div style="font-size:80px;">7️⃣</div>
-          <div style="font-weight:700; font-size:76px; color:#fff;">${escapeHtml(
-            `Flip 7 · ${targetScore}`,
-          )}</div>
+          ${iconHTML}
+          <div style="font-weight:700; font-size:${
+            config.imageTitleFontSize ?? 90
+          }px; color:#fff;">${escapeHtml(config.imageTitle)}</div>
         </div>
         <div style="margin-top:20px;">
           ${barsHTML}
@@ -201,27 +222,44 @@ async function generateScoreImage(
     return await response.blob();
   } catch (error) {
     console.error("Failed to generate image:", error);
-    if (document.body.contains(wrapper)) {
-      document.body.removeChild(wrapper);
-    }
+    if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
     return null;
   }
 }
 
-type ShareProps = {
-  gamemode: Flip7GamemodeKey;
-  targetScore: number;
-  players: ScoredPlayer[];
+type NavigatorWithShare = Navigator & {
+  share?: (data: {
+    title?: string;
+    text?: string;
+    files?: File[];
+  }) => Promise<void>;
 };
 
-export const Share = ({ gamemode, targetScore, players }: ShareProps) => {
+/**
+ * Shares the result as an image where the platform supports it, as text where
+ * it supports only that, and via WhatsApp everywhere else.
+ */
+export function ShareResult({
+  players,
+  config,
+}: {
+  players: ScoredPlayer[];
+  config: ShareConfig;
+}) {
   const [sharing, setSharing] = useState(false);
+
+  const shareViaWhatsApp = (text: string) => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
 
   const onShare = async () => {
     if (sharing) return;
     setSharing(true);
 
+    const text = buildShareText(players, config);
+
     try {
+      const nav = navigator as NavigatorWithShare;
       const hasWebShare = navigator && "share" in navigator;
       const supportsFiles =
         hasWebShare &&
@@ -229,55 +267,34 @@ export const Share = ({ gamemode, targetScore, players }: ShareProps) => {
         navigator.canShare({ files: [new File([], "test")] });
 
       if (supportsFiles) {
-        const imageBlob = await generateScoreImage(
-          players,
-          gamemode,
-          targetScore,
-        );
+        const imageBlob = await generateScoreImage(players, config);
         if (imageBlob) {
-          type NavigatorWithShare = Navigator & {
-            share?: (data: {
-              title?: string;
-              text?: string;
-              files?: File[];
-            }) => Promise<void>;
-          };
-          const nav = navigator as NavigatorWithShare;
-
-          const file = new File([imageBlob], "wuerfelkarte-flip7.png", {
-            type: "image/png",
-          });
-          const text = buildScoreText(players, gamemode, targetScore);
-
+          const file = new File(
+            [imageBlob],
+            `wuerfelkarte-${config.fileSlug}.png`,
+            { type: "image/png" },
+          );
           await nav.share?.({
-            title: "Würfelkarte Flip 7 Ergebnis",
+            title: `Würfelkarte ${config.gameName ?? ""} Ergebnis`.replace(
+              /\s+/g,
+              " ",
+            ),
             text,
             files: [file],
           });
-          setSharing(false);
           return;
         }
       }
 
-      const text = buildScoreText(players, gamemode, targetScore);
-
       if (hasWebShare) {
-        type NavigatorWithShare = Navigator & {
-          share?: (data: { title?: string; text?: string }) => Promise<void>;
-        };
-        const nav = navigator as NavigatorWithShare;
         await nav.share?.({ title: "Würfelkarte", text });
-        setSharing(false);
         return;
       }
 
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      window.open(waUrl, "_blank");
+      shareViaWhatsApp(text);
     } catch (e) {
       console.error("Sharing failed:", e);
-      const text = buildScoreText(players, gamemode, targetScore);
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      window.open(waUrl, "_blank");
+      shareViaWhatsApp(text);
     } finally {
       setSharing(false);
     }
@@ -288,4 +305,4 @@ export const Share = ({ gamemode, targetScore, players }: ShareProps) => {
       <Share2 /> {sharing ? "Teilen…" : "Teilen"}
     </Button>
   );
-};
+}

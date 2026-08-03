@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
-import { PlayerIdentityDialog } from "./PlayerIdentityDialog";
+import { PlayerIdentityDialog } from "@/games/shared/components/PlayerIdentityDialog";
 import { Button } from "./ui/button";
 
 interface EditPlayerProps {

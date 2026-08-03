@@ -20,7 +20,8 @@ import {
   isGameFinished,
   standings,
 } from "../scoring";
-import { Scoring } from "./Scoring";
+import { ScoreDialog } from "@/games/shared/components/ScoreDialog";
+import { shareConfigFor } from "../config";
 import {
   loadHideScoresSetting,
   saveHideScoresSetting,
@@ -132,24 +133,24 @@ export function Board() {
         right={
           <>
             {scoresRevealed ? (
-              <Scoring
+              <ScoreDialog
                 players={scoringPlayers}
-                gamemode={gamemode}
-                plusMinusOne={game.plusMinusOne}
+                shareConfig={shareConfigFor(game)}
                 elapsedMs={elapsedMs}
-              >
-                <Button
-                  variant="outline"
-                  className={
-                    finished
-                      ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-gray-500 dark:text-black"
-                      : "rounded-full bg-white"
-                  }
-                >
-                  🏆
-                  <span className="hidden sm:block">Punkteauswertung</span>
-                </Button>
-              </Scoring>
+                trigger={
+                  <Button
+                    variant="outline"
+                    className={
+                      finished
+                        ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-gray-500 dark:text-black"
+                        : "rounded-full bg-white"
+                    }
+                  >
+                    🏆
+                    <span className="hidden sm:block">Punkteauswertung</span>
+                  </Button>
+                }
+              />
             ) : (
               <Button
                 variant="outline"
@@ -229,16 +230,20 @@ export function Board() {
           onSetWolke={(wolke) => setWolke(viewRoundIndex, wolke)}
           onAdvance={handleAdvance}
           renderFinalAction={(disabled) => (
-            <Scoring
+            <ScoreDialog
               players={scoringPlayers}
-              gamemode={gamemode}
-              plusMinusOne={game.plusMinusOne}
+              shareConfig={shareConfigFor(game)}
               elapsedMs={elapsedMs}
-            >
-              <Button type="button" className="rounded-full" disabled={disabled}>
-                🏆 Punkteauswertung
-              </Button>
-            </Scoring>
+              trigger={
+                <Button
+                  type="button"
+                  className="rounded-full"
+                  disabled={disabled}
+                >
+                  🏆 Punkteauswertung
+                </Button>
+              }
+            />
           )}
         />
 

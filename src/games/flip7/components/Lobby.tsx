@@ -2,14 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { PageHeader } from "@/components/PageHeader";
-import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
-import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
-import { usePlayerRoster } from "@/games/shared/hooks/usePlayerRoster";
+
+import { GamemodePills } from "@/games/shared/components/GamemodePills";
+import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
+import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
+import {
+  MatchBadge,
+  RecentMatches,
+} from "@/games/shared/components/RecentMatches";
+import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { FLIP7_EMOJI, buildStats } from "../config";
 import { flip7Gamemodes, gamemodeSlug } from "../gamemodes";
-import { GamemodePillSelector } from "./GamemodePillSelector";
-import { GamemodeStats } from "./GamemodeStats";
-import { RecentMatchesList } from "./RecentMatchesList";
 import {
   DEFAULT_TARGET_SCORE,
   MAX_PLAYERS,
@@ -21,22 +24,15 @@ import {
   loadTargetScoreSetting,
   saveTargetScoreSetting,
 } from "../storage";
-import { TargetScoreStepper } from "./TargetScoreStepper";
 import { Flip7GamemodeKey, Flip7Player } from "../types";
+import { TargetScoreStepper } from "./TargetScoreStepper";
 
 export function Lobby() {
   const router = useRouter();
-  const {
-    roster,
-    addPlayer,
-    toggleActive,
-    renamePlayer,
-    changeEmoji,
-    removePlayer,
-  } = usePlayerRoster();
   const [selectedGamemode, setSelectedGamemode] =
     useState<Flip7GamemodeKey>("Standard");
   const [targetScore, setTargetScore] = useState(DEFAULT_TARGET_SCORE);
+  const history = useMatchHistory(flip7Storage.loadMatches);
 
   // The last target a group agreed on is the one they most likely want again.
   useEffect(() => {
@@ -44,95 +40,61 @@ export function Lobby() {
     if (stored != null) setTargetScore(stored);
   }, []);
 
-  const activePlayers = roster
-    .filter((player) => player.active)
-    .sort((a, b) => (a.selectionOrder ?? 0) - (b.selectionOrder ?? 0));
-
-  const selectionNumbers = new Map(
-    activePlayers.map((player, index) => [player.id, index + 1]),
-  );
-
-  const canStart =
-    activePlayers.length >= MIN_PLAYERS && activePlayers.length <= MAX_PLAYERS;
-
-  const handleStart = () => {
-    if (!canStart) return;
-    const players: Flip7Player[] = activePlayers.map((p) => ({
-      id: crypto.randomUUID(),
-      name: p.name,
-      emoji: p.emoji,
-    }));
-    saveTargetScoreSetting(targetScore);
-    flip7Storage.saveGame(createFlip7Game(players, targetScore, selectedGamemode));
-    router.push(`/flip7/${gamemodeSlug(selectedGamemode)}`);
-  };
-
   return (
-    <>
-      <PageHeader backHref="/" title="Flip 7" />
-      <div className="flex flex-col gap-6 px-4 pb-8">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Spieler
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            {roster.map((player) => (
-              <PlayerChip
-                key={player.id}
-                player={player}
-                selectionNumber={selectionNumbers.get(player.id)}
-                onToggleActive={toggleActive}
-                onRename={renamePlayer}
-                onChangeEmoji={changeEmoji}
-                onRemove={removePlayer}
-              />
-            ))}
-            <AddPlayerDialog onAdd={addPlayer} />
-          </div>
-          {!canStart && activePlayers.length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Flip 7 braucht {MIN_PLAYERS}–{MAX_PLAYERS} Spieler (aktuell{" "}
-              {activePlayers.length}).
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Spielmodus
-          </h2>
-          <GamemodePillSelector
-            value={selectedGamemode}
-            onChange={setSelectedGamemode}
+    <LobbyShell
+      title="Flip 7"
+      emoji={FLIP7_EMOJI}
+      minPlayers={MIN_PLAYERS}
+      maxPlayers={MAX_PLAYERS}
+      onStart={(selected) => {
+        const players: Flip7Player[] = selected.map((p) => ({
+          id: crypto.randomUUID(),
+          name: p.name,
+          emoji: p.emoji,
+        }));
+        saveTargetScoreSetting(targetScore);
+        flip7Storage.saveGame(
+          createFlip7Game(players, targetScore, selectedGamemode),
+        );
+        router.push(`/flip7/${gamemodeSlug(selectedGamemode)}`);
+      }}
+      footer={
+        <>
+          <GamemodeStats
+            matches={history.filter((m) => m.gamemode === selectedGamemode)}
+            buildStats={buildStats}
           />
-          <p className="text-sm text-muted-foreground">
-            {flip7Gamemodes[selectedGamemode].description}
-          </p>
-        </div>
+          <RecentMatches
+            matches={history}
+            modeName={(match) =>
+              flip7Gamemodes[match.gamemode]?.name ?? match.gamemode
+            }
+            badge={(match) => <MatchBadge>{match.targetScore}</MatchBadge>}
+          />
+        </>
+      }
+    >
+      {() => (
+        <>
+          <LobbySection title="Spielmodus">
+            <GamemodePills
+              gamemodes={flip7Gamemodes}
+              value={selectedGamemode}
+              onChange={setSelectedGamemode}
+            />
+            <p className="text-sm text-muted-foreground">
+              {flip7Gamemodes[selectedGamemode].description}
+            </p>
+          </LobbySection>
 
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Zielpunktzahl
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Die Partie endet, sobald am Rundenende jemand so viele Punkte hat.
-          </p>
-          <TargetScoreStepper value={targetScore} onChange={setTargetScore} />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleStart}
-          disabled={!canStart}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          7️⃣ Spiel starten
-        </button>
-
-        <GamemodeStats gamemode={selectedGamemode} />
-
-        <RecentMatchesList />
-      </div>
-    </>
+          <LobbySection title="Zielpunktzahl">
+            <p className="text-sm text-muted-foreground">
+              Die Partie endet, sobald am Rundenende jemand so viele Punkte hat.
+            </p>
+            <TargetScoreStepper value={targetScore} onChange={setTargetScore} />
+          </LobbySection>
+        </>
+      )}
+    </LobbyShell>
   );
 }
