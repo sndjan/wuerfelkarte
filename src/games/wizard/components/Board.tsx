@@ -4,6 +4,8 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import ThemeManager from "@/components/common/seasonal/ThemeManager";
+import { useSeasonalTheme } from "@/components/common/seasonal/useSeasonalTheme";
 import { PageHeader } from "@/components/PageHeader";
 import { RoundNav } from "@/games/shared/components/RoundNav";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ export function Board() {
   } = useGame(gamemode);
 
   const [hideScores, setHideScores] = useState(() => loadHideScoresSetting());
+  const { theme, isThemeActive, setIsThemeActive } = useSeasonalTheme();
 
   const toggleHideScores = () => {
     setHideScores((prev) => {
@@ -177,6 +180,9 @@ export function Board() {
               onResetAll={handleResetAll}
               hideScores={hideScores}
               onToggleHideScores={toggleHideScores}
+              seasonalTheme={theme}
+              isThemeActive={isThemeActive}
+              onToggleTheme={() => setIsThemeActive?.(!isThemeActive)}
             />
           </>
         }
@@ -189,7 +195,8 @@ export function Board() {
         onJump={jumpToRound}
       />
 
-      <div className="pb-8">
+      <div className="relative overflow-clip pb-8">
+        <ThemeManager theme={theme} isThemeActive={isThemeActive ?? false} />
         <RoundCard
           game={game}
           roundIndex={viewRoundIndex}

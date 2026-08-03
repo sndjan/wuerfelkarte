@@ -3,6 +3,7 @@
 import { Target, Users } from "lucide-react";
 import { useState } from "react";
 
+import type { Theme } from "@/components/common/seasonal/useSeasonalTheme";
 import { GameMenu } from "@/games/shared/components/GameMenu";
 import { ManagePlayersDialog } from "@/games/shared/components/ManagePlayersDialog";
 import { MAX_PLAYERS, minTargetScore } from "../scoring";
@@ -20,6 +21,9 @@ interface MenuProps {
   onResetAll: () => void;
   hideScores: boolean;
   onToggleHideScores: () => void;
+  seasonalTheme: Theme;
+  isThemeActive?: boolean;
+  onToggleTheme: () => void;
 }
 
 export function Menu({
@@ -33,6 +37,9 @@ export function Menu({
   onResetAll,
   hideScores,
   onToggleHideScores,
+  seasonalTheme,
+  isThemeActive,
+  onToggleTheme,
 }: MenuProps) {
   const [managePlayersOpen, setManagePlayersOpen] = useState(false);
 
@@ -65,6 +72,11 @@ export function Menu({
         hideScores={{ value: hideScores, onToggle: onToggleHideScores }}
         resetRounds={{ label: "Runden zurücksetzen", onSelect: onResetRounds }}
         onResetAll={onResetAll}
+        seasonalTheme={
+          seasonalTheme === "none"
+            ? undefined
+            : { active: isThemeActive ?? false, onToggle: onToggleTheme }
+        }
       />
 
       <ManagePlayersDialog

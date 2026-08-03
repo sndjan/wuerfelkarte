@@ -14,71 +14,41 @@ export const THEME_EMOJIS: Record<Theme, string[]> = {
   none: ["⭐", "🎲"],
 };
 
-const DATES = {
-  Halloween: {
-    start: { day: 27, month: 9 },
-    end: { day: 2, month: 10 },
-  },
-  Christmas: {
-    start: { day: 20, month: 11 },
-    end: { day: 10, month: 1 },
-  },
-  Easter: {
-    start: { day: 22, month: 3 },
-    end: { day: 12, month: 4 },
-  },
-};
+/** Inclusive date windows; Christmas deliberately wraps across new year. */
+const SEASONS: Array<{
+  theme: Theme;
+  /** [month, day], month 1-based. */
+  start: [number, number];
+  end: [number, number];
+}> = [
+  // NOTE: this window is what the app has always used, but it ends before
+  // 31 October — the Halloween decoration never actually shows on Halloween.
+  // Kept as-is deliberately; changing it is a product decision.
+  { theme: "Halloween", start: [9, 27], end: [10, 2] },
+  { theme: "Christmas", start: [11, 20], end: [1, 10] },
+  { theme: "Easter", start: [3, 22], end: [4, 12] },
+];
 
-const isDateInRange = (
-  startDay: number,
-  startMonth: number,
-  endDay: number,
-  endMonth: number,
+const dateKey = (month: number, day: number) => month * 100 + day;
+
+const inRange = (
+  date: Date,
+  [startMonth, startDay]: [number, number],
+  [endMonth, endDay]: [number, number],
 ): boolean => {
-  const now = new Date();
-  const dateKey = (d: Date) => (d.getMonth() + 1) * 100 + d.getDate();
-  const key = dateKey(now);
-  const start = startMonth * 100 + startDay;
-  const end = endMonth * 100 + endDay;
-  // handle ranges that wrap across year boundary
+  const key = dateKey(date.getMonth() + 1, date.getDate());
+  const start = dateKey(startMonth, startDay);
+  const end = dateKey(endMonth, endDay);
   return start <= end ? key >= start && key <= end : key >= start || key <= end;
 };
 
-const getTheme = () => {
-  if (
-    isDateInRange(
-      DATES.Halloween.start.day,
-      DATES.Halloween.start.month,
-      DATES.Halloween.end.day,
-      DATES.Halloween.end.month,
-    )
-  ) {
-    return "Halloween";
-  } else if (
-    isDateInRange(
-      DATES.Christmas.start.day,
-      DATES.Christmas.start.month,
-      DATES.Christmas.end.day,
-      DATES.Christmas.end.month,
-    )
-  ) {
-    return "Christmas";
-  } else if (
-    isDateInRange(
-      DATES.Easter.start.day,
-      DATES.Easter.start.month,
-      DATES.Easter.end.day,
-      DATES.Easter.end.month,
-    )
-  ) {
-    return "Easter";
-  } else {
-    return "none";
-  }
-};
+/** Which decoration a given day falls into — "none" for most of the year. */
+export const seasonFor = (date: Date = new Date()): Theme =>
+  SEASONS.find((season) => inRange(date, season.start, season.end))?.theme ??
+  "none";
 
 export const useSeasonalTheme = () => {
-  const [theme] = useState<Theme>(getTheme());
+  const [theme] = useState<Theme>(() => seasonFor());
   const [isThemeActive, setIsThemeActive] = useState<boolean>();
 
   // load persisted value on mount (safe for SSR)
