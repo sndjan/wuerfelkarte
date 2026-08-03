@@ -5,7 +5,7 @@ import { Player, Points } from "./hooks/types";
 import { useState } from "react";
 import { toPng } from "html-to-image";
 
-function buildScoreText(
+export function buildScoreText(
   players: Player[],
   date = new Date(),
   gamemode: keyof typeof gamemodes = "Wunder"

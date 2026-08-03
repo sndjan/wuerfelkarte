@@ -15,7 +15,7 @@ type ScoredPlayer = {
 const modeLabel = (gamemode: Flip7GamemodeKey, targetScore: number) =>
   `${flip7Gamemodes[gamemode].name} · ${targetScore} Punkte`;
 
-function buildScoreText(
+export function buildScoreText(
   players: ScoredPlayer[],
   gamemode: Flip7GamemodeKey,
   targetScore: number,

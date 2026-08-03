@@ -17,7 +17,7 @@ const modeLabel = (gamemode: WizardGamemodeKey, plusMinusOne: boolean) =>
     ? `${wizardGamemodes[gamemode].name} · Plus/Minus Eins`
     : wizardGamemodes[gamemode].name;
 
-function buildScoreText(
+export function buildScoreText(
   players: ScoredPlayer[],
   gamemode: WizardGamemodeKey,
   plusMinusOne: boolean,
