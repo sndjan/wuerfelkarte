@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
-import { Providers } from "../../providers/providers";
+import { Providers } from "./providers";
 import { StorageMigration } from "@/games/shared/StorageMigration";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";

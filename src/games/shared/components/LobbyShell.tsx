@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader";
 import { usePlayerRoster } from "../hooks/usePlayerRoster";
 import { activePlayers as sortActive } from "../roster";
 import { RosterPlayer } from "../types";

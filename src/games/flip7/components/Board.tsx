@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
 import { useSeasonalTheme } from "@/components/common/seasonal/useSeasonalTheme";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader";
 import { RoundNav } from "@/games/shared/components/RoundNav";
 import { formatDuration } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

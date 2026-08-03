@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useSeasonalTheme } from "@/components/common/seasonal/useSeasonalTheme";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { PlayerIdentityDialog } from "@/games/shared/components/PlayerIdentityDialog";
 import { ScoreDialog } from "@/games/shared/components/ScoreDialog";

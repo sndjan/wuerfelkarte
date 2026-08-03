@@ -19,14 +19,14 @@ export type GamemodeConfig = {
   information?: string[];
 };
 
-const allKniffel = [
+const standardOptions = [
   5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
   26, 27, 28, 29, 30,
 ];
-const allKniffelMini = [
+const miniOptions = [
   3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
 ];
-const allKniffelPlus = [
+const extendedOptions = [
   6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
   26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
 ];
@@ -38,8 +38,8 @@ const wunderPlusFields: PointField[] = [
   { key: "Vierer", label: "Vierer", options: [4, 8, 12, 16, 20] },
   { key: "Fünfer", label: "Fünfer", options: [5, 10, 15, 20, 25] },
   { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
-  { key: "Dreierpasch", label: "Dreierpasch", options: [...allKniffel] },
-  { key: "Viererpasch", label: "Viererpasch", options: [...allKniffel] },
+  { key: "Dreierpasch", label: "Dreierpasch", options: [...standardOptions] },
+  { key: "Viererpasch", label: "Viererpasch", options: [...standardOptions] },
   { key: "Full House", label: "Full House", options: [25] },
   { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
   { key: "Große Straße", label: "Große Straße", options: [40] },
@@ -48,7 +48,7 @@ const wunderPlusFields: PointField[] = [
     label: "Wunder",
     options: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
   },
-  { key: "Chance", label: "Chance", options: [...allKniffel] },
+  { key: "Chance", label: "Chance", options: [...standardOptions] },
 ];
 
 const wunderPlusBonus: BonusConfig = {
@@ -72,18 +72,18 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       {
         key: "Dreierpasch",
         label: "Dreierpasch",
-        options: allKniffel,
+        options: standardOptions,
       },
       {
         key: "Viererpasch",
         label: "Viererpasch",
-        options: allKniffel,
+        options: standardOptions,
       },
       { key: "Full House", label: "Full House", options: [25] },
       { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
       { key: "Große Straße", label: "Große Straße", options: [40] },
       { key: "Wunder", label: "Wunder", options: [50] },
-      { key: "Chance", label: "Chance", options: allKniffel },
+      { key: "Chance", label: "Chance", options: standardOptions },
     ],
     bonus: {
       label: "",
@@ -138,18 +138,18 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       {
         key: "Dreierpasch",
         label: "Dreierpasch",
-        options: allKniffel,
+        options: standardOptions,
       },
       {
         key: "Viererpasch",
         label: "Viererpasch",
-        options: allKniffel,
+        options: standardOptions,
       },
       { key: "Full House", label: "Full House", options: [25] },
       { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
       { key: "Große Straße", label: "Große Straße", options: [40] },
       { key: "Wunder", label: "Wunder", options: [50] },
-      { key: "Chance", label: "Chance", options: allKniffel },
+      { key: "Chance", label: "Chance", options: standardOptions },
     ],
     bonus: {
       label: "",
@@ -173,11 +173,11 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       { key: "Vierer", label: "Vierer", options: [4, 8, 12] },
       { key: "Fünfer", label: "Fünfer", options: [5, 10, 15] },
       { key: "Sechser", label: "Sechser", options: [6, 12, 18] },
-      { key: "Zweierpasch", label: "Zweierpasch", options: allKniffelMini },
+      { key: "Zweierpasch", label: "Zweierpasch", options: miniOptions },
       { key: "Tiny House", label: "Tiny House", options: [15] },
       { key: "Mini Straße", label: "Mini Straße", options: [20] },
       { key: "Mini Wunder", label: "Mini Wunder", options: [30] },
-      { key: "Chance", label: "Chance", options: allKniffelMini },
+      { key: "Chance", label: "Chance", options: miniOptions },
     ],
     bonus: {
       label: "",
@@ -208,12 +208,12 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       {
         key: "Viererpasch",
         label: "Viererpasch",
-        options: allKniffelPlus,
+        options: extendedOptions,
       },
       {
         key: "Fünferpasch",
         label: "Fünferpasch",
-        options: allKniffelPlus,
+        options: extendedOptions,
       },
       { key: "Dreifach-Paar", label: "Dreifach-Paar", options: [30] },
       { key: "Full Villa", label: "Full Villa", options: [45] },
@@ -223,7 +223,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       {
         key: "Chance",
         label: "Chance",
-        options: allKniffelPlus,
+        options: extendedOptions,
       },
     ],
     bonus: {

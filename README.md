@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Würfelkarte
 
-## Getting Started
+Score tracking for dice and card games you play at a real table — Yatzy, Wizard
+and Flip 7, with more on the way. No account, no backend: every roster, running
+game and result stays in the browser.
 
-First, run the development server:
+Live at [würfelkarte.com](https://www.würfelkarte.com).
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm start` | Serve the production build |
+| `npm test` | Vitest over the game logic, storage and migrations |
+| `npm run lint` | ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## The games
 
-## Learn More
+- **Yatzy** — the classic sheet, plus the Wunder+, Mini, Super, Battle and
+  Chaoswunder variants.
+- **Wizard** — trick prediction, including the 25 Jahre Edition Sonderkarten.
+- **Flip 7** — press your luck to seven different number cards.
 
-To learn more about Next.js, take a look at the following resources:
+Seasonal decoration (Halloween, Christmas, Easter) appears in every game during
+its window and can be switched off from any game's menu.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Code
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Games live in `src/games/<name>/`, each with the same shape, on top of a shared
+kit that provides the lobby, menu, statistics, history, scoreboard and sharing.
+Adding a game means writing its rules and one board component.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layout, the storage
+conventions and a step-by-step walkthrough for adding a game.
