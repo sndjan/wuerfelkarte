@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { gamemodes } from "../gamemodes/gamemodes";
-import { syncRosterOrder } from "./playerRosterStorage";
+import { syncRosterOrder } from "@/games/shared/roster";
 import { Player, Points } from "./types";
 import { toast } from "sonner";
 

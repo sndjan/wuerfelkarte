@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
-import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
+import { usePlayerRoster } from "@/games/shared/hooks/usePlayerRoster";
 import { flip7Gamemodes, gamemodeSlug } from "@/components/flip7/gamemodes";
 import { Flip7GamemodePillSelector } from "@/components/flip7/Flip7GamemodePillSelector";
 import { Flip7GamemodeStats } from "@/components/flip7/Flip7GamemodeStats";

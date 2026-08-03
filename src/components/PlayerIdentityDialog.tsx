@@ -18,8 +18,8 @@ import {
   addRosterPlayer,
   loadRoster,
   updateRosterPlayerByName,
-} from "@/components/hooks/playerRosterStorage";
-import { EMOJI_OPTIONS, RosterPlayer } from "@/components/yatzy-lobby/types";
+} from "@/games/shared/roster";
+import { EMOJI_OPTIONS, RosterPlayer } from "@/games/shared/types";
 
 /**
  * `edit` retargets an existing card (its points stay), `add` puts another

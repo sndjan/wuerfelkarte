@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { Providers } from "../../providers/providers";
+import { StorageMigration } from "@/games/shared/StorageMigration";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
@@ -46,6 +47,7 @@ export default function RootLayout({
         }}
       >
         <Providers>
+          <StorageMigration />
           {children}
           <SpeedInsights />
           <Analytics />

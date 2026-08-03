@@ -1,36 +1,34 @@
-import { RosterPlayer } from "@/components/yatzy-lobby/types";
+import { ROSTER_KEY, migrateLegacyStorage } from "./migrations";
+import { readJSON, writeJSON } from "./storage";
+import { RosterPlayer } from "./types";
 
-export const ROSTER_STORAGE_KEY = "kniffel:roster";
-
-const backfillSelectionOrder = (roster: RosterPlayer[]): RosterPlayer[] => {
-  let nextOrder = nextSelectionOrder(roster);
-  return roster.map((p) =>
-    p.active && p.selectionOrder == null
-      ? { ...p, selectionOrder: nextOrder++ }
-      : p,
-  );
-};
+/**
+ * The app-wide player roster. It belongs to no single game — every lobby picks
+ * its players from this one list, and a game that adds a player mid-play adds
+ * them here too.
+ */
 
 export const nextSelectionOrder = (roster: RosterPlayer[]): number =>
   Math.max(0, ...roster.map((p) => p.selectionOrder ?? 0)) + 1;
 
-export const loadRoster = (): RosterPlayer[] => {
-  try {
-    const stored = localStorage.getItem(ROSTER_STORAGE_KEY);
-    if (!stored) return [];
-    return backfillSelectionOrder(JSON.parse(stored) as RosterPlayer[]);
-  } catch {
-    return [];
-  }
+/** Entries written before selection order existed get one on first read. */
+const backfillSelectionOrder = (roster: RosterPlayer[]): RosterPlayer[] => {
+  let order = nextSelectionOrder(roster);
+  return roster.map((p) =>
+    p.active && p.selectionOrder == null ? { ...p, selectionOrder: order++ } : p,
+  );
 };
 
-export const saveRoster = (roster: RosterPlayer[]) => {
-  try {
-    localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(roster));
-  } catch {
-    // Handle storage errors silently
-  }
+export const loadRoster = (): RosterPlayer[] => {
+  // The roster is auto-saved by usePlayerRoster, so reading it before the
+  // legacy migration ran would persist an empty list over the old data. The
+  // schema check inside makes this call free after the first one.
+  migrateLegacyStorage();
+  const roster = readJSON<RosterPlayer[]>(ROSTER_KEY, []);
+  return Array.isArray(roster) ? backfillSelectionOrder(roster) : [];
 };
+
+export const saveRoster = (roster: RosterPlayer[]) => writeJSON(ROSTER_KEY, roster);
 
 export const createRosterPlayer = (
   name: string,
@@ -54,16 +52,33 @@ export const addRosterPlayer = (name: string, emoji: string) => {
   saveRoster([...roster, createRosterPlayer(name, emoji, roster)]);
 };
 
+const sameName = (a: string, b: string) =>
+  a.trim().toLowerCase() === b.trim().toLowerCase();
+
 /** A player joining a running game counts as selected for the lobby too. */
 export const activateRosterPlayerByName = (name: string) => {
   const roster = loadRoster();
-  const key = name.trim().toLowerCase();
-  const match = roster.find((p) => p.name.trim().toLowerCase() === key);
+  const match = roster.find((p) => sameName(p.name, name));
   if (!match || match.active) return;
   const order = nextSelectionOrder(roster);
   saveRoster(
     roster.map((p) =>
       p.id === match.id ? { ...p, active: true, selectionOrder: order } : p,
+    ),
+  );
+};
+
+export const updateRosterPlayerByName = (
+  currentName: string,
+  name: string,
+  emoji?: string,
+) => {
+  const roster = loadRoster();
+  const match = roster.find((p) => sameName(p.name, currentName));
+  if (!match) return;
+  saveRoster(
+    roster.map((p) =>
+      p.id === match.id ? { ...p, name, emoji: emoji ?? p.emoji } : p,
     ),
   );
 };
@@ -103,19 +118,8 @@ export const syncRosterOrder = (orderedNames: string[]) => {
   );
 };
 
-export const updateRosterPlayerByName = (
-  currentName: string,
-  name: string,
-  emoji?: string,
-) => {
-  const roster = loadRoster();
-  const match = roster.find(
-    (p) => p.name.toLowerCase() === currentName.trim().toLowerCase(),
-  );
-  if (!match) return;
-  saveRoster(
-    roster.map((p) =>
-      p.id === match.id ? { ...p, name, emoji: emoji ?? p.emoji } : p,
-    ),
-  );
-};
+/** The players a lobby starts a game with, in the order they were picked. */
+export const activePlayers = (roster: RosterPlayer[]): RosterPlayer[] =>
+  roster
+    .filter((player) => player.active)
+    .sort((a, b) => (a.selectionOrder ?? 0) - (b.selectionOrder ?? 0));

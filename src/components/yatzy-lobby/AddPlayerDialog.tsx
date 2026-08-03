@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { EMOJI_OPTIONS } from "./types";
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 
 interface AddPlayerDialogProps {
   onAdd: (name: string, emoji: string) => void;

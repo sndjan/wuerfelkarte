@@ -1,7 +1,8 @@
 import Link from "next/link";
-import type { GameEntry } from "./games";
 
-export function GameTile({ game }: { game: GameEntry }) {
+import type { GameSummary } from "./registry";
+
+export function GameTile({ game }: { game: GameSummary }) {
   if (game.locked) {
     return (
       <div
@@ -21,7 +22,7 @@ export function GameTile({ game }: { game: GameEntry }) {
 
   return (
     <Link
-      href={game.href ?? "#"}
+      href={game.href ?? `/${game.key}`}
       className="flex h-[150px] w-full flex-col justify-between rounded-[20px] bg-primary p-5 text-primary-foreground"
     >
       <span className="text-4xl">{game.emoji}</span>

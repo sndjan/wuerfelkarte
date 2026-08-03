@@ -1,7 +1,7 @@
 "use client";
 
 import { gamemodes } from "@/components/gamemodes/gamemodes";
-import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
+import { usePlayerRoster } from "@/games/shared/hooks/usePlayerRoster";
 import { PageHeader } from "@/components/PageHeader";
 import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { GamemodePillSelector } from "@/components/yatzy-lobby/GamemodePillSelector";

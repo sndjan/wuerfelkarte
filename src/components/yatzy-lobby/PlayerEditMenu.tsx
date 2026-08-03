@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { EMOJI_OPTIONS, RosterPlayer } from "./types";
+import { EMOJI_OPTIONS, RosterPlayer } from "@/games/shared/types";
 
 interface PlayerEditMenuProps {
   player: RosterPlayer;

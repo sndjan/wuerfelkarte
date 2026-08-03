@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { EMOJI_OPTIONS } from "@/components/yatzy-lobby/types";
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 import {
   Flip7Game,
   Flip7GamemodeKey,

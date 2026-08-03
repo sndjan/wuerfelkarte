@@ -1,12 +1,16 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { RosterPlayer } from "@/components/yatzy-lobby/types";
+
 import {
   createRosterPlayer,
   loadRoster,
   nextSelectionOrder,
   saveRoster,
-} from "./playerRosterStorage";
+} from "../roster";
+import { RosterPlayer } from "../types";
 
+/** The app-wide roster as state, used by every game's lobby. */
 export function usePlayerRoster() {
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
   // Guards the save effect from overwriting stored data with the initial
@@ -19,9 +23,7 @@ export function usePlayerRoster() {
   }, []);
 
   useEffect(() => {
-    if (loaded) {
-      saveRoster(roster);
-    }
+    if (loaded) saveRoster(roster);
   }, [roster, loaded]);
 
   const addPlayer = (name: string, emoji: string) => {
@@ -37,9 +39,9 @@ export function usePlayerRoster() {
           p.id === id ? { ...p, active: false, selectionOrder: null } : p,
         );
       }
-      const nextOrder = nextSelectionOrder(prev);
+      const order = nextSelectionOrder(prev);
       return prev.map((p) =>
-        p.id === id ? { ...p, active: true, selectionOrder: nextOrder } : p,
+        p.id === id ? { ...p, active: true, selectionOrder: order } : p,
       );
     });
   };

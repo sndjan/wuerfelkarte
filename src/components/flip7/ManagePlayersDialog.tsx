@@ -12,13 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { EMOJI_OPTIONS, RosterPlayer } from "@/components/yatzy-lobby/types";
+import { EMOJI_OPTIONS, RosterPlayer } from "@/games/shared/types";
 import {
   activateRosterPlayerByName,
   addRosterPlayer,
   loadRoster,
   updateRosterPlayerByName,
-} from "@/components/hooks/playerRosterStorage";
+} from "@/games/shared/roster";
 import { MAX_PLAYERS } from "./scoring";
 import { Flip7Player } from "./types";
 

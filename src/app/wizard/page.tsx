@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { AddPlayerDialog } from "@/components/yatzy-lobby/AddPlayerDialog";
 import { PlayerChip } from "@/components/yatzy-lobby/PlayerChip";
 import { gamemodeSlug, wizardGamemodes } from "@/components/wizard/gamemodes";
-import { usePlayerRoster } from "@/components/hooks/usePlayerRoster";
+import { usePlayerRoster } from "@/games/shared/hooks/usePlayerRoster";
 import {
   MAX_PLAYERS,
   MIN_PLAYERS,

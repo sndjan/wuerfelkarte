@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { EMOJI_OPTIONS } from "@/components/yatzy-lobby/types";
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 import {
   StoredWizardMatch,
   WizardGame,
