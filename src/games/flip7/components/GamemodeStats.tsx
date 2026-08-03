@@ -1,12 +1,13 @@
 "use client";
 
 import { formatDuration } from "@/lib/utils";
-import { useFlip7MatchHistory } from "./hooks/useFlip7MatchHistory";
-import { Flip7GamemodeKey } from "./types";
+import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { flip7Storage } from "../storage";
+import { Flip7GamemodeKey } from "../types";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-type Flip7GamemodeStatsProps = {
+type GamemodeStatsProps = {
   gamemode: Flip7GamemodeKey;
 };
 
@@ -26,8 +27,8 @@ const emptyTotals = (): Totals => ({
   busts: 0,
 });
 
-export function Flip7GamemodeStats({ gamemode }: Flip7GamemodeStatsProps) {
-  const history = useFlip7MatchHistory();
+export function GamemodeStats({ gamemode }: GamemodeStatsProps) {
+  const history = useMatchHistory(flip7Storage.loadMatches);
   const matches = history.filter((match) => match.gamemode === gamemode);
 
   const gamesPlayed = matches.length;

@@ -1,7 +1,8 @@
 "use client";
 
-import { flip7Gamemodes } from "./gamemodes";
-import { useFlip7MatchHistory } from "./hooks/useFlip7MatchHistory";
+import { flip7Gamemodes } from "../gamemodes";
+import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { flip7Storage } from "../storage";
 
 const MAX_MATCHES = 5;
 
@@ -10,8 +11,8 @@ function formatShortDate(timestamp: string): string {
   return `${date.getDate()}.${date.getMonth() + 1}.`;
 }
 
-export function Flip7RecentMatchesList() {
-  const history = useFlip7MatchHistory();
+export function RecentMatchesList() {
+  const history = useMatchHistory(flip7Storage.loadMatches);
 
   const matches = [...history]
     .sort(

@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { clampTargetScore } from "./scoring";
+import { clampTargetScore } from "../scoring";
 import { TargetScoreStepper } from "./TargetScoreStepper";
 
 interface TargetScoreDialogProps {

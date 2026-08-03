@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FLIP7_BONUS, MAX_ROUND_POINTS } from "./scoring";
+import { FLIP7_BONUS, MAX_ROUND_POINTS } from "../scoring";
 
 const MAX_DIGITS = String(MAX_ROUND_POINTS).length;
 

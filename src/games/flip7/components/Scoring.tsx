@@ -8,7 +8,7 @@ import {
 import { formatDuration } from "@/lib/utils";
 import { AnimatedScoreDiagram } from "./AnimatedScoreDiagram";
 import { Share } from "./Share";
-import { Flip7GamemodeKey } from "./types";
+import { Flip7GamemodeKey } from "../types";
 
 type ScoredPlayer = {
   id: string;

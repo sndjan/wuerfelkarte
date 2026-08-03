@@ -6,7 +6,7 @@ import {
   MAX_TARGET_SCORE,
   MIN_TARGET_SCORE,
   TARGET_SCORE_STEP,
-} from "./scoring";
+} from "../scoring";
 
 interface TargetScoreStepperProps {
   value: number;

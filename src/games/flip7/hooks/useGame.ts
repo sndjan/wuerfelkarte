@@ -23,13 +23,7 @@ import {
   roundsPlayedBy,
   totalScore,
 } from "../scoring";
-import {
-  clearFlip7Game,
-  loadFlip7Game,
-  removeFlip7Match,
-  saveFlip7Game,
-  saveFlip7Match,
-} from "../storage";
+import { flip7Storage } from "../storage";
 
 const freeEmoji = (players: Flip7Player[]) =>
   EMOJI_OPTIONS.find((o) => !players.some((p) => p.emoji === o)) ??
@@ -66,15 +60,15 @@ function buildMatch(game: Flip7Game): StoredFlip7Match | null {
 const emptyGame = (gamemode: Flip7GamemodeKey): Flip7Game =>
   createFlip7Game([], DEFAULT_TARGET_SCORE, gamemode);
 
-export function useFlip7(gamemode: Flip7GamemodeKey) {
+export function useGame(gamemode: Flip7GamemodeKey) {
   const [game, setGame] = useState<Flip7Game>(() => {
-    const stored = loadFlip7Game();
+    const stored = flip7Storage.loadGame();
     if (stored && stored.gamemode === gamemode) return stored;
     return emptyGame(gamemode);
   });
 
   useEffect(() => {
-    saveFlip7Game(game);
+    flip7Storage.saveGame(game);
   }, [game]);
 
   // A finished game is mirrored into the history on every change, so late
@@ -82,7 +76,7 @@ export function useFlip7(gamemode: Flip7GamemodeKey) {
   useEffect(() => {
     if (game.finishedAt == null) return;
     const match = buildMatch(game);
-    if (match) saveFlip7Match(match);
+    if (match) flip7Storage.saveMatch(match);
   }, [game]);
 
   const updateGame = (updater: (prev: Flip7Game) => Flip7Game) =>
@@ -155,7 +149,7 @@ export function useFlip7(gamemode: Flip7GamemodeKey) {
 
   /** Keeps playing past a finish — the recorded result is withdrawn again. */
   const resumeGame = () => {
-    removeFlip7Match(game.id);
+    flip7Storage.removeMatch(game.id);
     updateGame((prev) => ({
       ...prev,
       finishedAt: null,
@@ -220,7 +214,7 @@ export function useFlip7(gamemode: Flip7GamemodeKey) {
   };
 
   const resetAll = () => {
-    clearFlip7Game();
+    flip7Storage.clearGame();
     setGame(emptyGame(gamemode));
   };
 

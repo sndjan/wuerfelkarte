@@ -19,8 +19,8 @@ import {
   loadRoster,
   updateRosterPlayerByName,
 } from "@/games/shared/roster";
-import { MAX_PLAYERS } from "./scoring";
-import { Flip7Player } from "./types";
+import { MAX_PLAYERS } from "../scoring";
+import { Flip7Player } from "../types";
 
 type Step =
   | { type: "list" }

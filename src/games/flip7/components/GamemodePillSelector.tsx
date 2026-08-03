@@ -1,17 +1,17 @@
 "use client";
 
-import { flip7Gamemodes } from "./gamemodes";
-import { Flip7GamemodeKey } from "./types";
+import { flip7Gamemodes } from "../gamemodes";
+import { Flip7GamemodeKey } from "../types";
 
-interface Flip7GamemodePillSelectorProps {
+interface GamemodePillSelectorProps {
   value: Flip7GamemodeKey;
   onChange: (key: Flip7GamemodeKey) => void;
 }
 
-export function Flip7GamemodePillSelector({
+export function GamemodePillSelector({
   value,
   onChange,
-}: Flip7GamemodePillSelectorProps) {
+}: GamemodePillSelectorProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {Object.entries(flip7Gamemodes).map(([key, mode]) => (

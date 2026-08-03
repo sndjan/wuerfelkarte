@@ -11,8 +11,8 @@ import {
   playerRoundScore,
   roundTotal,
   scoreAfterRound,
-} from "./scoring";
-import { Flip7Game } from "./types";
+} from "../scoring";
+import { Flip7Game } from "../types";
 
 interface RoundCardProps {
   game: Flip7Game;

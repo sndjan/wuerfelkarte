@@ -1,4 +1,4 @@
-import { flip7Gamemodes, gamemodeFromSlug } from "@/components/flip7/gamemodes";
+import { flip7Gamemodes, gamemodeFromSlug } from "@/games/flip7/gamemodes";
 import type { Metadata } from "next";
 
 export async function generateMetadata({

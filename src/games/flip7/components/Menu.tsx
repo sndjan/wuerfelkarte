@@ -34,10 +34,10 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { ManagePlayersDialog } from "./ManagePlayersDialog";
 import { TargetScoreDialog } from "./TargetScoreDialog";
-import { minTargetScore } from "./scoring";
-import { Flip7Game } from "./types";
+import { minTargetScore } from "../scoring";
+import { Flip7Game } from "../types";
 
-interface Flip7MenuProps {
+interface MenuProps {
   game: Flip7Game;
   gamemodeInfo: string[];
   onAddPlayer: (name: string, emoji: string) => void;
@@ -50,7 +50,7 @@ interface Flip7MenuProps {
   onToggleHideScores: () => void;
 }
 
-export function Flip7Menu({
+export function Menu({
   game,
   gamemodeInfo,
   onAddPlayer,
@@ -61,7 +61,7 @@ export function Flip7Menu({
   onResetAll,
   hideScores,
   onToggleHideScores,
-}: Flip7MenuProps) {
+}: MenuProps) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [managePlayersOpen, setManagePlayersOpen] = useState(false);

@@ -2,8 +2,8 @@ import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
-import { flip7Gamemodes } from "./gamemodes";
-import { Flip7GamemodeKey } from "./types";
+import { flip7Gamemodes } from "../gamemodes";
+import { Flip7GamemodeKey } from "../types";
 
 type ScoredPlayer = {
   id: string;

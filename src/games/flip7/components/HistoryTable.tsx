@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { playerRoundScore, totalScore } from "./scoring";
-import { Flip7Game } from "./types";
+import { playerRoundScore, totalScore } from "../scoring";
+import { Flip7Game } from "../types";
 
 interface HistoryTableProps {
   game: Flip7Game;
