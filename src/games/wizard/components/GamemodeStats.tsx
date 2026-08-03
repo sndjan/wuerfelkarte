@@ -1,17 +1,18 @@
 "use client";
 
 import { formatDuration } from "@/lib/utils";
-import { useWizardMatchHistory } from "./hooks/useWizardMatchHistory";
-import { WizardGamemodeKey } from "./types";
+import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { wizardStorage } from "../storage";
+import { WizardGamemodeKey } from "../types";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-type WizardGamemodeStatsProps = {
+type GamemodeStatsProps = {
   gamemode: WizardGamemodeKey;
 };
 
-export function WizardGamemodeStats({ gamemode }: WizardGamemodeStatsProps) {
-  const history = useWizardMatchHistory();
+export function GamemodeStats({ gamemode }: GamemodeStatsProps) {
+  const history = useMatchHistory(wizardStorage.loadMatches);
   const matches = history.filter((match) => match.gamemode === gamemode);
 
   const gamesPlayed = matches.length;

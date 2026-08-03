@@ -22,12 +22,7 @@ import {
 } from "../scoring";
 import { ALL_SPECIAL_CARDS } from "../specialCards";
 import { wizardGamemodes } from "../gamemodes";
-import {
-  clearWizardGame,
-  loadWizardGame,
-  saveWizardGame,
-  saveWizardMatch,
-} from "../storage";
+import { wizardStorage } from "../storage";
 
 const FALLBACK_PLAYER_COUNT = 4;
 
@@ -38,6 +33,7 @@ const freeEmoji = (players: WizardPlayer[]) =>
 function buildMatch(game: WizardGame): StoredWizardMatch | null {
   if (game.players.length === 0) return null;
   return {
+    id: game.id,
     gamemode: game.gamemode,
     plusMinusOne: game.plusMinusOne,
     specialCards: game.specialCards ?? [],
@@ -74,9 +70,9 @@ const emptyGame = (gamemode: WizardGamemodeKey): WizardGame => {
   );
 };
 
-export function useWizard(gamemode: WizardGamemodeKey) {
+export function useGame(gamemode: WizardGamemodeKey) {
   const [game, setGame] = useState<WizardGame>(() => {
-    const stored = loadWizardGame();
+    const stored = wizardStorage.loadGame();
     if (stored && stored.gamemode === gamemode) return stored;
     return emptyGame(gamemode);
   });
@@ -84,7 +80,7 @@ export function useWizard(gamemode: WizardGamemodeKey) {
   const hasSavedFinish = useRef(false);
 
   useEffect(() => {
-    saveWizardGame(game);
+    wizardStorage.saveGame(game);
   }, [game]);
 
   // A finished game is recorded exactly once, the moment it becomes finished.
@@ -92,7 +88,7 @@ export function useWizard(gamemode: WizardGamemodeKey) {
     if (!isGameFinished(game) || hasSavedFinish.current) return;
     hasSavedFinish.current = true;
     const match = buildMatch(game);
-    if (match) saveWizardMatch(match);
+    if (match) wizardStorage.saveMatch(match);
   }, [game]);
 
   // Every mutation runs through here so `finishedAt` always tracks
@@ -280,7 +276,7 @@ export function useWizard(gamemode: WizardGamemodeKey) {
   };
 
   const resetAll = () => {
-    clearWizardGame();
+    wizardStorage.clearGame();
     hasSavedFinish.current = false;
     setGame(emptyGame(gamemode));
   };
@@ -291,6 +287,7 @@ export function useWizard(gamemode: WizardGamemodeKey) {
     hasSavedFinish.current = false;
     updateGame((prev) => ({
       ...prev,
+      id: crypto.randomUUID(),
       rounds: Array.from({ length: prev.totalRounds }, () =>
         createRound(prev.players),
       ),

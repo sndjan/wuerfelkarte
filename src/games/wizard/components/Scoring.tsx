@@ -9,7 +9,7 @@ import {
 import { formatDuration } from "@/lib/utils";
 import { AnimatedScoreDiagram } from "./AnimatedScoreDiagram";
 import { Share } from "./Share";
-import { WizardGamemodeKey } from "./types";
+import { WizardGamemodeKey } from "../types";
 
 type ScoredPlayer = {
   id: string;

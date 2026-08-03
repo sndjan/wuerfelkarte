@@ -88,6 +88,7 @@ export const createWizardGame = (
   plusMinusOne: boolean,
   specialCards: WizardSpecialCard[] = [],
 ): WizardGame => ({
+  id: crypto.randomUUID(),
   gamemode,
   plusMinusOne,
   specialCards,

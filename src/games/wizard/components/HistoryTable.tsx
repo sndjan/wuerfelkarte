@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { effectiveBid, playerRoundScore, totalScore } from "./scoring";
-import { WizardGame } from "./types";
+import { effectiveBid, playerRoundScore, totalScore } from "../scoring";
+import { WizardGame } from "../types";
 
 interface HistoryTableProps {
   game: WizardGame;

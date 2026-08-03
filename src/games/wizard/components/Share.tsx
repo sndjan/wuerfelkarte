@@ -2,8 +2,8 @@ import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
-import { wizardGamemodes } from "./gamemodes";
-import { WizardGamemodeKey } from "./types";
+import { wizardGamemodes } from "../gamemodes";
+import { WizardGamemodeKey } from "../types";
 
 type ScoredPlayer = {
   id: string;

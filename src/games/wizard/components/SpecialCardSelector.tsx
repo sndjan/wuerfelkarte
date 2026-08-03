@@ -3,14 +3,14 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { deckSize } from "./scoring";
+import { deckSize } from "../scoring";
 import {
   ALL_SPECIAL_CARDS,
   WIZARD_SPECIAL_CARDS,
   coupledWith,
   specialCardInfo,
-} from "./specialCards";
-import { WizardSpecialCard } from "./types";
+} from "../specialCards";
+import { WizardSpecialCard } from "../types";
 
 interface SpecialCardSelectorProps {
   value: WizardSpecialCard[];

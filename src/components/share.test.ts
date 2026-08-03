@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildScoreText as buildYatzyText } from "./Share";
-import { buildScoreText as buildWizardText } from "./wizard/Share";
+import { buildScoreText as buildWizardText } from "@/games/wizard/components/Share";
 import { buildScoreText as buildFlip7Text } from "@/games/flip7/components/Share";
 import type { Player, Points } from "./hooks/types";
 

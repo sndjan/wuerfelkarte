@@ -34,10 +34,10 @@ import { useTheme } from "next-themes";
 import { useState } from "react";
 import { ManagePlayersDialog } from "./ManagePlayersDialog";
 import { RoundsDialog } from "./RoundsDialog";
-import { deckSize } from "./scoring";
-import { WizardGame } from "./types";
+import { deckSize } from "../scoring";
+import { WizardGame } from "../types";
 
-interface WizardMenuProps {
+interface MenuProps {
   game: WizardGame;
   gamemodeInfo: string[];
   onAddPlayer: (name: string, emoji: string, totalRounds: number) => void;
@@ -50,7 +50,7 @@ interface WizardMenuProps {
   onToggleHideScores: () => void;
 }
 
-export function WizardMenu({
+export function Menu({
   game,
   gamemodeInfo,
   onAddPlayer,
@@ -61,7 +61,7 @@ export function WizardMenu({
   onResetAll,
   hideScores,
   onToggleHideScores,
-}: WizardMenuProps) {
+}: MenuProps) {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [managePlayersOpen, setManagePlayersOpen] = useState(false);

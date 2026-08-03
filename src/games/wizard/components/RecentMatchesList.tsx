@@ -1,7 +1,8 @@
 "use client";
 
-import { wizardGamemodes } from "./gamemodes";
-import { useWizardMatchHistory } from "./hooks/useWizardMatchHistory";
+import { wizardGamemodes } from "../gamemodes";
+import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { wizardStorage } from "../storage";
 
 const MAX_MATCHES = 5;
 
@@ -10,8 +11,8 @@ function formatShortDate(timestamp: string): string {
   return `${date.getDate()}.${date.getMonth() + 1}.`;
 }
 
-export function WizardRecentMatchesList() {
-  const history = useWizardMatchHistory();
+export function RecentMatchesList() {
+  const history = useMatchHistory(wizardStorage.loadMatches);
 
   const matches = [...history]
     .sort(

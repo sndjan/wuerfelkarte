@@ -19,8 +19,8 @@ import {
   loadRoster,
   updateRosterPlayerByName,
 } from "@/games/shared/roster";
-import { suggestedRounds } from "./scoring";
-import { WizardPlayer } from "./types";
+import { suggestedRounds } from "../scoring";
+import { WizardPlayer } from "../types";
 
 type Step =
   | { type: "list" }

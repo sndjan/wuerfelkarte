@@ -17,9 +17,9 @@ import {
   tricksInRound,
   trickSum,
   wolkeDeltaOptions,
-} from "./scoring";
-import { specialCardInfo } from "./specialCards";
-import { WizardGame, WizardPhase, WizardWolke } from "./types";
+} from "../scoring";
+import { specialCardInfo } from "../specialCards";
+import { WizardGame, WizardPhase, WizardWolke } from "../types";
 
 interface RoundCardProps {
   game: WizardGame;

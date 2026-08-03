@@ -1,17 +1,17 @@
 "use client";
 
-import { wizardGamemodes } from "./gamemodes";
-import { WizardGamemodeKey } from "./types";
+import { wizardGamemodes } from "../gamemodes";
+import { WizardGamemodeKey } from "../types";
 
-interface WizardGamemodePillSelectorProps {
+interface GamemodePillSelectorProps {
   value: WizardGamemodeKey;
   onChange: (key: WizardGamemodeKey) => void;
 }
 
-export function WizardGamemodePillSelector({
+export function GamemodePillSelector({
   value,
   onChange,
-}: WizardGamemodePillSelectorProps) {
+}: GamemodePillSelectorProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {Object.entries(wizardGamemodes).map(([key, mode]) => (

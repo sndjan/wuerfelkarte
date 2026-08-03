@@ -9,8 +9,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { deckSize, minAllowedRounds, suggestedRounds } from "./scoring";
-import { WizardGame } from "./types";
+import { deckSize, minAllowedRounds, suggestedRounds } from "../scoring";
+import { WizardGame } from "../types";
 
 interface RoundsDialogProps {
   game: WizardGame;

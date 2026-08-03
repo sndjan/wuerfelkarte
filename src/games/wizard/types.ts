@@ -39,6 +39,8 @@ export type WizardRound = {
 export type WizardPhase = "bids" | "tricks";
 
 export type WizardGame = {
+  /** Identifies the match in the history, so re-finishing updates instead of duplicating. */
+  id: string;
   gamemode: WizardGamemodeKey;
   /** Sum of all predictions must not equal the number of tricks in the round — a per-game rule toggle, independent of gamemode. */
   plusMinusOne: boolean;
@@ -64,6 +66,7 @@ export type WizardMatchPlayer = {
 };
 
 export type StoredWizardMatch = {
+  id: string;
   players: WizardMatchPlayer[];
   gamemode: WizardGamemodeKey;
   plusMinusOne: boolean;
