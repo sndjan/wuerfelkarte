@@ -1,10 +1,11 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { RoundNav } from "@/games/shared/components/RoundNav";
 import { Button } from "@/components/ui/button";
 import {
   gamemodeFromSlug,
@@ -90,7 +91,6 @@ export function Board() {
   };
 
   const resumeRound = firstOpenRound(game);
-  const isBrowsingPast = viewRoundIndex !== resumeRound;
   const finished = isGameFinished(game);
   const scoresRevealed = !hideScores || finished;
 
@@ -182,39 +182,12 @@ export function Board() {
         }
       />
 
-      <div className="flex items-center justify-between px-4 mb-2">
-        <button
-          type="button"
-          aria-label="Vorherige Runde"
-          disabled={viewRoundIndex === 0}
-          onClick={() => jumpToRound(viewRoundIndex - 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border disabled:opacity-30"
-        >
-          <ChevronLeft size={18} />
-        </button>
-        {isBrowsingPast ? (
-          <button
-            type="button"
-            className="text-sm font-bold text-brand-accent underline"
-            onClick={() => jumpToRound(resumeRound)}
-          >
-            Zur aktuellen Runde ({resumeRound + 1})
-          </button>
-        ) : (
-          <span className="text-sm text-muted-foreground">
-            Aktuelle Runde
-          </span>
-        )}
-        <button
-          type="button"
-          aria-label="Nächste Runde"
-          disabled={viewRoundIndex >= game.rounds.length - 1}
-          onClick={() => jumpToRound(viewRoundIndex + 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card border border-border disabled:opacity-30"
-        >
-          <ChevronRight size={18} />
-        </button>
-      </div>
+      <RoundNav
+        index={viewRoundIndex}
+        roundCount={game.rounds.length}
+        currentRound={resumeRound}
+        onJump={jumpToRound}
+      />
 
       <div className="pb-8">
         <RoundCard

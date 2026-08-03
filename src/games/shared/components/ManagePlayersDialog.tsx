@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,38 +13,65 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { EMOJI_OPTIONS, RosterPlayer } from "@/games/shared/types";
 import {
   activateRosterPlayerByName,
   addRosterPlayer,
   loadRoster,
   updateRosterPlayerByName,
-} from "@/games/shared/roster";
-import { MAX_PLAYERS } from "../scoring";
-import { Flip7Player } from "../types";
+} from "../roster";
+import { EMOJI_OPTIONS, GamePlayer, RosterPlayer } from "../types";
 
 type Step =
   | { type: "list" }
   | { type: "rename"; playerId: string; name: string; emoji: string }
   | { type: "newPlayer"; name: string; emoji: string }
+  | { type: "confirmAdd"; name: string; emoji: string }
   | { type: "confirmRemove"; playerId: string; name: string };
 
-interface ManagePlayersDialogProps {
+/**
+ * Args handed to a game's extra confirmation step. `done` performs the shared
+ * bookkeeping (roster sync for adds) and closes the dialog — the game calls it
+ * once it has applied its own change.
+ */
+export type ConfirmArgs = {
+  name: string;
+  emoji: string;
+  done: () => void;
+  cancel: () => void;
+};
+
+type ManagePlayersDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  players: Flip7Player[];
+  players: GamePlayer[];
+  maxPlayers?: number;
+  /** Explains what joining mid-game means for the newcomer's score. */
+  joinHint?: ReactNode;
   onAddPlayer: (name: string, emoji: string) => void;
   onRemovePlayer: (playerId: string) => void;
   onRenamePlayer: (playerId: string, name: string, emoji: string) => void;
-}
+  /**
+   * Optional step between choosing a player and adding them — Wizard uses it
+   * to confirm the round count that the bigger table allows. When given, the
+   * game commits its own change and then calls `done()`.
+   */
+  confirmAdd?: (args: ConfirmArgs) => ReactNode;
+  /** Same for removals; without it a plain "are you sure" is shown. */
+  confirmRemove?: (args: ConfirmArgs & { playerId: string }) => ReactNode;
+};
 
+/** Add, rename and remove players in a running game. */
 export function ManagePlayersDialog({
   open,
   onOpenChange,
   players,
+  maxPlayers,
+  joinHint,
   onAddPlayer,
   onRemovePlayer,
   onRenamePlayer,
+  confirmAdd,
+  confirmRemove,
 }: ManagePlayersDialogProps) {
   const [step, setStep] = useState<Step>({ type: "list" });
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
@@ -59,14 +87,15 @@ export function ManagePlayersDialog({
   const switchable = roster.filter(
     (p) => !takenNames.has(p.name.trim().toLowerCase()),
   );
-  const full = players.length >= MAX_PLAYERS;
+  const full = maxPlayers !== undefined && players.length >= maxPlayers;
 
-  const freeEmoji = (extra?: string) =>
-    EMOJI_OPTIONS.find(
-      (o) => !players.some((p) => p.emoji === o) && o !== extra,
-    ) ?? EMOJI_OPTIONS[0];
+  const freeEmoji = () =>
+    EMOJI_OPTIONS.find((o) => !players.some((p) => p.emoji === o)) ??
+    EMOJI_OPTIONS[0];
 
-  const startRename = (player: Flip7Player) =>
+  const backToList = () => setStep({ type: "list" });
+
+  const startRename = (player: GamePlayer) =>
     setStep({
       type: "rename",
       playerId: player.id,
@@ -81,30 +110,33 @@ export function ManagePlayersDialog({
     const player = players.find((p) => p.id === step.playerId);
     if (player) updateRosterPlayerByName(player.name, trimmed, step.emoji);
     onRenamePlayer(step.playerId, trimmed, step.emoji);
-    setStep({ type: "list" });
+    backToList();
   };
 
-  /** Joining mid-game: past rounds are marked as "not there yet", not as zeros. */
-  const finishAdd = (name: string, emoji: string) => {
+  /** Mirrors the addition onto the app-wide roster and closes the dialog. */
+  const commitRosterAdd = (name: string, emoji: string) => {
+    const alreadySaved = roster.some(
+      (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase(),
+    );
+    if (alreadySaved) activateRosterPlayerByName(name);
+    else addRosterPlayer(name, emoji);
+    onOpenChange(false);
+  };
+
+  /** Either hands over to the game's confirmation step, or adds right away. */
+  const beginAdd = (name: string, emoji: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    const alreadySaved = roster.some(
-      (p) => p.name.trim().toLowerCase() === trimmed.toLowerCase(),
-    );
-    if (alreadySaved) {
-      activateRosterPlayerByName(trimmed);
-    } else {
-      addRosterPlayer(trimmed, emoji);
+    if (confirmAdd) {
+      setStep({ type: "confirmAdd", name: trimmed, emoji });
+      return;
     }
     onAddPlayer(trimmed, emoji);
-    onOpenChange(false);
+    commitRosterAdd(trimmed, emoji);
   };
 
-  const finishRemove = () => {
-    if (step.type !== "confirmRemove") return;
-    onRemovePlayer(step.playerId);
-    onOpenChange(false);
-  };
+  const beginRemove = (playerId: string, name: string) =>
+    setStep({ type: "confirmRemove", playerId, name });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,7 +152,7 @@ export function ManagePlayersDialog({
                   key={player.id}
                   className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2"
                 >
-                  <span className="font-semibold truncate">
+                  <span className="truncate font-semibold">
                     {player.emoji ? `${player.emoji} ` : ""}
                     {player.name}
                   </span>
@@ -135,14 +167,8 @@ export function ManagePlayersDialog({
                     </button>
                     <button
                       type="button"
-                      onClick={() =>
-                        setStep({
-                          type: "confirmRemove",
-                          playerId: player.id,
-                          name: player.name,
-                        })
-                      }
-                      className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent text-destructive"
+                      onClick={() => beginRemove(player.id, player.name)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-accent"
                       aria-label="Entfernen"
                     >
                       <Trash2 size={16} />
@@ -158,21 +184,20 @@ export function ManagePlayersDialog({
               </span>
               {full ? (
                 <p className="text-sm text-muted-foreground">
-                  Mehr als {MAX_PLAYERS} Personen passen nicht in eine Partie.
+                  Mehr als {maxPlayers} Personen passen nicht in eine Partie.
                 </p>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground">
-                    Wer jetzt dazukommt, startet bei 0 Punkten; die bereits
-                    gespielten Runden bleiben für ihn leer.
-                  </p>
+                  {joinHint && (
+                    <p className="text-sm text-muted-foreground">{joinHint}</p>
+                  )}
                   <div className="flex flex-wrap items-center gap-2">
                     {switchable.map((player) => (
                       <button
                         key={player.id}
                         type="button"
-                        onClick={() => finishAdd(player.name, player.emoji)}
-                        className="flex select-none items-center gap-2 rounded-full bg-card border px-4 py-2 text-foreground"
+                        onClick={() => beginAdd(player.name, player.emoji)}
+                        className="flex select-none items-center gap-2 rounded-full border bg-card px-4 py-2 text-foreground"
                       >
                         <span className="text-lg">{player.emoji}</span>
                         <span className="font-semibold">{player.name}</span>
@@ -214,7 +239,7 @@ export function ManagePlayersDialog({
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
                 if (step.type === "rename") saveRename();
-                else finishAdd(step.name, step.emoji);
+                else beginAdd(step.name, step.emoji);
               }}
             />
             <div className="grid grid-cols-4 gap-2">
@@ -234,11 +259,7 @@ export function ManagePlayersDialog({
               ))}
             </div>
             <DialogFooter className="flex flex-row justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setStep({ type: "list" })}
-              >
+              <Button type="button" variant="secondary" onClick={backToList}>
                 Abbrechen
               </Button>
               <Button
@@ -246,38 +267,62 @@ export function ManagePlayersDialog({
                 onClick={() =>
                   step.type === "rename"
                     ? saveRename()
-                    : finishAdd(step.name, step.emoji)
+                    : beginAdd(step.name, step.emoji)
                 }
                 disabled={!step.name.trim()}
               >
-                {step.type === "rename" ? "Speichern" : "Hinzufügen"}
+                {step.type === "rename"
+                  ? "Speichern"
+                  : confirmAdd
+                    ? "Weiter"
+                    : "Hinzufügen"}
               </Button>
             </DialogFooter>
           </>
         )}
 
-        {step.type === "confirmRemove" && (
-          <>
-            <DialogHeader>
-              <DialogTitle>{step.name} entfernen?</DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              Die Punkte von {step.name} gehen verloren.
-            </DialogDescription>
-            <DialogFooter className="flex flex-row justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setStep({ type: "list" })}
-              >
-                Abbrechen
-              </Button>
-              <Button type="button" variant="destructive" onClick={finishRemove}>
-                Entfernen
-              </Button>
-            </DialogFooter>
-          </>
-        )}
+        {step.type === "confirmAdd" &&
+          confirmAdd?.({
+            name: step.name,
+            emoji: step.emoji,
+            done: () => commitRosterAdd(step.name, step.emoji),
+            cancel: backToList,
+          })}
+
+        {step.type === "confirmRemove" &&
+          (confirmRemove ? (
+            confirmRemove({
+              playerId: step.playerId,
+              name: step.name,
+              emoji: "",
+              done: () => onOpenChange(false),
+              cancel: backToList,
+            })
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>{step.name} entfernen?</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                Die Punkte von {step.name} gehen verloren.
+              </DialogDescription>
+              <DialogFooter className="flex flex-row justify-between sm:justify-between">
+                <Button type="button" variant="secondary" onClick={backToList}>
+                  Abbrechen
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    onRemovePlayer(step.playerId);
+                    onOpenChange(false);
+                  }}
+                >
+                  Entfernen
+                </Button>
+              </DialogFooter>
+            </>
+          ))}
       </DialogContent>
     </Dialog>
   );

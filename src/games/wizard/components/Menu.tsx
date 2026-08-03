@@ -1,41 +1,20 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Hash, Users } from "lucide-react";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Eye,
-  EyeOff,
-  EllipsisVertical,
-  Hash,
-  Info,
-  Moon,
-  RotateCcw,
-  Sun,
-  Trash2,
-  Users,
-} from "lucide-react";
-import { useTheme } from "next-themes";
-import { useState } from "react";
-import { ManagePlayersDialog } from "./ManagePlayersDialog";
-import { RoundsDialog } from "./RoundsDialog";
-import { deckSize } from "../scoring";
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { GameMenu } from "@/games/shared/components/GameMenu";
+import { ManagePlayersDialog } from "@/games/shared/components/ManagePlayersDialog";
+import { MAX_PLAYERS, deckSize, suggestedRounds } from "../scoring";
 import { WizardGame } from "../types";
+import { RoundsDialog } from "./RoundsDialog";
 
 interface MenuProps {
   game: WizardGame;
@@ -62,114 +41,125 @@ export function Menu({
   hideScores,
   onToggleHideScores,
 }: MenuProps) {
-  const { theme, setTheme } = useTheme();
-  const [open, setOpen] = useState(false);
   const [managePlayersOpen, setManagePlayersOpen] = useState(false);
+
+  const cards = deckSize(game.specialCards);
+  const totalRounds = game.totalRounds;
+  // A bigger or smaller table changes how many rounds the deck allows, so both
+  // adding and removing a player offer to recalculate.
+  const suggestedForAdd = suggestedRounds(game.players.length + 1, cards);
+  const suggestedForRemove = suggestedRounds(
+    Math.max(game.players.length - 1, 1),
+    cards,
+  );
 
   return (
     <>
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="rounded-full bg-white">
-            <EllipsisVertical />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuLabel>Optionen</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                setOpen(false);
-                setManagePlayersOpen(true);
-              }}
-            >
-              <Users />
-              <span>Spieler verwalten</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+      <GameMenu
+        actions={[
+          {
+            icon: <Users />,
+            label: "Spieler verwalten",
+            onSelect: () => setManagePlayersOpen(true),
+          },
+          {
+            icon: <Hash />,
+            label: "Rundenanzahl anpassen",
+            dialog: (trigger) => (
               <RoundsDialog game={game} onSetRoundCount={onSetRoundCount}>
-                <div className="flex items-center gap-2 w-full">
-                  <Hash />
-                  <span>Rundenanzahl anpassen</span>
-                </div>
+                {trigger}
               </RoundsDialog>
-            </DropdownMenuItem>
-
-            {gamemodeInfo.length > 0 && (
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="flex items-center gap-2 w-full">
-                      <Info />
-                      <span>Regeln anzeigen</span>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Infos zum Spielmodus</DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription>{gamemodeInfo[0]}</DialogDescription>
-                    <div className="grid grid-cols-1 gap-4">
-                      {gamemodeInfo.slice(1).map((info, index) => (
-                        <p key={index} className="text-sm">
-                          {info}
-                        </p>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </DropdownMenuItem>
-            )}
-
-            <DropdownMenuItem onSelect={onToggleHideScores}>
-              {hideScores ? <Eye /> : <EyeOff />}
-              <span>
-                {hideScores
-                  ? "Punktestand wieder anzeigen"
-                  : "Punktestand während des Spiels verstecken"}
-              </span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onSelect={onResetRounds}>
-              <RotateCcw />
-              <span>Runden zurücksetzen</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onResetAll}>
-              <Trash2 />
-              <span>Alles zurücksetzen</span>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onSelect={() => setTheme(theme === "light" ? "dark" : "light")}
-            >
-              {theme === "light" ? (
-                <>
-                  <Moon className="h-[1.2rem] w-[1.2rem] transition-all scale-100" />
-                  <span>Dunkler Modus</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-                  <span>Heller Modus</span>
-                </>
-              )}
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            ),
+          },
+        ]}
+        gamemodeInfo={gamemodeInfo}
+        hideScores={{ value: hideScores, onToggle: onToggleHideScores }}
+        resetRounds={{ label: "Runden zurücksetzen", onSelect: onResetRounds }}
+        onResetAll={onResetAll}
+      />
 
       <ManagePlayersDialog
         open={managePlayersOpen}
         onOpenChange={setManagePlayersOpen}
         players={game.players}
-        totalRounds={game.totalRounds}
-        deckSize={deckSize(game.specialCards)}
-        onAddPlayer={onAddPlayer}
-        onRemovePlayer={onRemovePlayer}
+        maxPlayers={MAX_PLAYERS}
+        onAddPlayer={(name, emoji) => onAddPlayer(name, emoji, totalRounds)}
+        onRemovePlayer={(playerId) => onRemovePlayer(playerId, totalRounds)}
         onRenamePlayer={onRenamePlayer}
+        confirmAdd={({ name, emoji, done, cancel }) => (
+          <>
+            <DialogHeader>
+              <DialogTitle>Rundenanzahl neu berechnen?</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              {name} kommt mit 0 Punkten und leeren Vorrunden dazu. Aktuell sind{" "}
+              {totalRounds} Runden eingestellt, empfohlen für{" "}
+              {game.players.length + 1} Spieler sind {suggestedForAdd} Runden.
+            </DialogDescription>
+            <DialogFooter className="flex flex-col gap-2 sm:flex-col">
+              <Button type="button" variant="secondary" onClick={cancel}>
+                Abbrechen
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onAddPlayer(name, emoji, totalRounds);
+                  done();
+                }}
+              >
+                Beibehalten ({totalRounds} Runden)
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onAddPlayer(name, emoji, suggestedForAdd);
+                  done();
+                }}
+              >
+                Neu berechnen ({suggestedForAdd} Runden)
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+        confirmRemove={({ playerId, name, done, cancel }) => (
+          <>
+            <DialogHeader>
+              <DialogTitle>{name} entfernen?</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              Die Punkte von {name} gehen verloren. Aktuell sind {totalRounds}{" "}
+              Runden eingestellt, empfohlen für{" "}
+              {Math.max(game.players.length - 1, 1)} Spieler sind{" "}
+              {suggestedForRemove} Runden.
+            </DialogDescription>
+            <DialogFooter className="flex flex-col gap-2 sm:flex-col">
+              <Button type="button" variant="secondary" onClick={cancel}>
+                Abbrechen
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  onRemovePlayer(playerId, totalRounds);
+                  done();
+                }}
+              >
+                Beibehalten ({totalRounds} Runden)
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  onRemovePlayer(playerId, suggestedForRemove);
+                  done();
+                }}
+              >
+                Entfernen & neu berechnen ({suggestedForRemove} Runden)
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       />
     </>
   );
