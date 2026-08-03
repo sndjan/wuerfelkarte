@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateScore } from "../hooks/useKniffel";
+import { calculateScore } from "./scoring";
 import { gamemodes } from "./gamemodes";
-import type { Points } from "../hooks/types";
+import type { Points } from "./types";
 
 /**
  * Characterization tests: these pin down what the scoring does *today*, before

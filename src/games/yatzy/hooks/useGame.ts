@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { gamemodes } from "../gamemodes/gamemodes";
+import { gamemodes } from "../gamemodes";
+import { calculateScore } from "../scoring";
+import { loadPlayers, savePlayers } from "../storage";
 import { syncRosterOrder } from "@/games/shared/roster";
-import { Player, Points } from "./types";
+import { Player, Points } from "../types";
 import { toast } from "sonner";
 
 const initialPoints = {
@@ -33,78 +35,23 @@ const initialPlayers = [
   },
 ];
 
-const STORAGE_KEY = "kniffel:player-names";
-
-type StoredPlayer = string | { name: string; emoji?: string };
-
 const loadPlayersFromStorage = (): Player[] | null => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const storedPlayers: StoredPlayer[] = JSON.parse(stored);
-      return storedPlayers.map((entry, index) => {
-        const { name, emoji } =
-          typeof entry === "string" ? { name: entry, emoji: undefined } : entry;
-        return {
-          id: Date.now() + index,
-          name,
-          emoji,
-          points: { ...initialPoints },
-          score: 0,
-        };
-      });
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  const stored = loadPlayers();
+  if (!stored) return null;
+  return stored.map((entry, index) => ({
+    id: Date.now() + index,
+    name: entry.name,
+    emoji: entry.emoji,
+    points: { ...initialPoints },
+    score: 0,
+  }));
 };
 
-const savePlayersToStorage = (players: Player[]) => {
-  try {
-    const storedPlayers: StoredPlayer[] = players.map((player) => ({
-      name: player.name,
-      emoji: player.emoji,
-    }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(storedPlayers));
-  } catch {
-    // Handle storage errors silently
-  }
-};
+const savePlayersToStorage = (players: Player[]) =>
+  savePlayers(players.map(({ name, emoji }) => ({ name, emoji })));
 
-export function calculateScore(
-  points: Points,
-  gamemode: keyof typeof gamemodes
-): number {
-  const config = gamemodes[gamemode];
-  let bonus = 0;
-  let sum = 0;
-  if (config?.bonus) {
-    sum = config.bonus.fields.reduce(
-      (acc, key) =>
-        acc +
-        (typeof points[key as keyof typeof points] === "number"
-          ? (points[key as keyof typeof points] as number)
-          : 0),
-      0
-    );
-    if (sum >= config.bonus.minSum) {
-      bonus = config.bonus.bonus;
-    }
-  }
-  const totalScore =
-    config?.fields.reduce(
-      (acc, { key }) =>
-        acc +
-        (typeof points[key as keyof typeof points] === "number"
-          ? (points[key as keyof typeof points] as number)
-          : 0),
-      0
-    ) + bonus;
-  return totalScore;
-}
 
-export const useKniffel = (gamemode: keyof typeof gamemodes = "Klassiker") => {
+export const useGame = (gamemode: keyof typeof gamemodes = "Klassiker") => {
   const [players, setPlayers] = useState<Player[]>(() => {
     const storedPlayers = loadPlayersFromStorage();
     if (storedPlayers) {

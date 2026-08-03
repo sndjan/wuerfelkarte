@@ -1,18 +1,20 @@
 "use client";
 
-import { Theme } from "@/app/yatzy/[gamemode]/page";
 import { Card } from "@/components/ui/card";
 import JSConfetti from "js-confetti";
 import { useEffect, useState } from "react";
-import pointsJson from "../../public/points.json";
+import { pointOptions } from "../points";
 import { EditPlayer } from "./EditPlayer";
-import { BattleFieldStatus } from "./gamemodes/battle";
-import { gamemodes } from "./gamemodes/gamemodes";
-import { THEME_EMOJIS } from "./hooks/useTheme";
-import ThemeManager from "./themes/ThemeManager";
-import { Badge } from "./ui/badge";
-import { GridSelect } from "./ui/grid-select";
-import { Progress } from "./ui/progress";
+import { BattleFieldStatus } from "../gamemodes/battle";
+import { gamemodes } from "../gamemodes";
+import {
+  THEME_EMOJIS,
+  type Theme,
+} from "@/components/common/seasonal/useSeasonalTheme";
+import ThemeManager from "@/components/common/seasonal/ThemeManager";
+import { Badge } from "@/components/ui/badge";
+import { GridSelect } from "@/components/ui/grid-select";
+import { Progress } from "@/components/ui/progress";
 
 interface PlayerCardProps {
   playerName: string;
@@ -119,9 +121,10 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       </div>
 
       <ThemeManager
-        gamemode={gamemode}
         theme={theme}
         isThemeActive={isThemeActive}
+        // The narrow MiniWunder card has no room for the centre-piece.
+        compact={gamemode === "MiniWunder"}
       />
 
       {config.fields.map(
@@ -132,7 +135,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         }) => {
           const { key, label, options } = field;
           const selectOptions =
-            options ?? pointsJson[key as keyof typeof pointsJson];
+            options ?? pointOptions[key as keyof typeof pointOptions];
           const own = playerPoints[key];
           const isOpen = own === 0 || own === undefined;
           const status = battleFieldStatus?.[key] ?? "open";

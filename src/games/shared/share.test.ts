@@ -1,18 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { buildScoreText as buildYatzyText } from "./Share";
 import { buildShareText } from "@/games/shared/components/ShareResult";
 import { shareConfig as wizardShareConfig } from "@/games/wizard/config";
 import { shareConfig as flip7ShareConfig } from "@/games/flip7/config";
-import type { Player, Points } from "./hooks/types";
+import { shareConfig as yatzyShareConfig } from "@/games/yatzy/config";
 
 /**
  * Characterization tests for the three share-text builders.
  *
- * Yatzy still has its own builder; Wizard and Flip 7 share the one in
- * games/shared, driven by their config. Ranks are numbered up to 10 for every
- * game now — that is the one deliberate change from merging the three copies,
- * which previously stopped at 6 for Wizard and Flip 7.
+ * All three games share one builder in games/shared, driven by their config.
+ * Ranks are numbered up to 10 for every game — that is the one deliberate
+ * change from merging the three copies, which stopped at 6 for Wizard and
+ * Flip 7.
  */
 
 const DATE = new Date("2026-08-03T14:30:00Z");
@@ -33,26 +32,14 @@ const scored = (name: string, score: number, emoji?: string) => ({
   score,
 });
 
-/** A Yatzy player whose sheet adds up to `total`, put into the Chance field. */
-const yatzyPlayer = (
-  id: number,
-  name: string,
-  chance: number,
-  emoji?: string,
-): Player => ({
-  id,
-  name,
-  emoji,
-  points: { Chance: chance } as unknown as Points,
-  score: chance,
-});
+
 
 describe("Yatzy share text", () => {
   it("renders header, date, mode and one ranked line per player", () => {
-    const text = buildYatzyText(
-      [yatzyPlayer(1, "Anna", 20, "🦄"), yatzyPlayer(2, "Ben", 30)],
+    const text = buildShareText(
+      [scored("Anna", 20, "🦄"), scored("Ben", 30)],
+      yatzyShareConfig("Wunder"),
       DATE,
-      "Wunder",
     );
 
     expect(text).toBe(
@@ -69,33 +56,11 @@ describe("Yatzy share text", () => {
     );
   });
 
-  it("adds the upper-section bonus to the shared total", () => {
-    const player: Player = {
-      id: 1,
-      name: "Anna",
-      points: {
-        Einser: 3,
-        Zweier: 8,
-        Dreier: 12,
-        Vierer: 16,
-        Fünfer: 10,
-        Sechser: 14,
-      } as unknown as Points,
-      score: 0,
-    };
-    // 63 upper + 35 bonus
-    expect(buildYatzyText([player], DATE, "Wunder")).toContain("Anna: 98 Punkte");
-  });
-
   it("gives tied players the same rank (dense ranking)", () => {
-    const text = buildYatzyText(
-      [
-        yatzyPlayer(1, "Anna", 30),
-        yatzyPlayer(2, "Ben", 30),
-        yatzyPlayer(3, "Cleo", 10),
-      ],
+    const text = buildShareText(
+      [scored("Anna", 30), scored("Ben", 30), scored("Cleo", 10)],
+      yatzyShareConfig("Wunder"),
       DATE,
-      "Wunder",
     );
     expect(text).toContain("🥇 Anna: 30 Punkte");
     expect(text).toContain("🥇 Ben: 30 Punkte");
@@ -105,9 +70,9 @@ describe("Yatzy share text", () => {
 
   it("numbers ranks up to 10", () => {
     const players = Array.from({ length: 10 }, (_, i) =>
-      yatzyPlayer(i + 1, `P${i + 1}`, 100 - i * 10),
+      scored(`P${i + 1}`, 100 - i * 10),
     );
-    const text = buildYatzyText(players, DATE, "Wunder");
+    const text = buildShareText(players, yatzyShareConfig("Wunder"), DATE);
     for (const prefix of ["🥇 ", "🥈 ", "🥉 ", "4️⃣ ", "5️⃣ ", "6️⃣ ", "7️⃣ ", "8️⃣ ", "9️⃣ ", "🔟 "]) {
       expect(text).toContain(prefix);
     }

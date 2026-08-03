@@ -1,4 +1,4 @@
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,14 +8,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
+} from "@/components/ui/dialog";
 
-interface ResetGameProps {
-  resetAllPoints: () => void;
+interface ResetPointsDialogProps {
+  onConfirm: () => void;
   children: React.ReactNode;
 }
 
-export function ResetGame({ resetAllPoints, children }: ResetGameProps) {
+export function ResetPointsDialog({ onConfirm, children }: ResetPointsDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -36,7 +36,7 @@ export function ResetGame({ resetAllPoints, children }: ResetGameProps) {
             <Button
               type="submit"
               variant="destructive"
-              onClick={() => resetAllPoints()}
+              onClick={onConfirm}
             >
               Zurücksetzen
             </Button>
@@ -47,4 +47,4 @@ export function ResetGame({ resetAllPoints, children }: ResetGameProps) {
   );
 }
 
-export default ResetGame;
+export default ResetPointsDialog;

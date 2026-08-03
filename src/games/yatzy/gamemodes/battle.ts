@@ -1,5 +1,5 @@
-import { GamemodeConfig } from "./gamemodes";
-import { Player } from "../hooks/types";
+import { GamemodeConfig } from "./index";
+import { Player } from "../types";
 
 export type BattleFieldStatus = "open" | "blocked" | "forced";
 

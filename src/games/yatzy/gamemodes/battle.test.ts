@@ -7,8 +7,8 @@ import {
   getOpenForcedFields,
   isForcedSuccess,
 } from "./battle";
-import { gamemodes } from "./gamemodes";
-import type { Player, Points } from "../hooks/types";
+import { gamemodes } from "./index";
+import type { Player, Points } from "../types";
 
 /**
  * Characterization tests for Battle mode. Battle is the most stateful part of

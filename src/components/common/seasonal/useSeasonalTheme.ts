@@ -1,5 +1,11 @@
-import { Theme } from "@/app/yatzy/[gamemode]/page";
+"use client";
+
 import { useEffect, useState } from "react";
+
+import { THEME_ACTIVE_KEY } from "@/games/shared/migrations";
+
+/** The seasonal decorations the app knows; "none" is the rest of the year. */
+export type Theme = "none" | "Halloween" | "Christmas" | "Easter";
 
 export const THEME_EMOJIS: Record<Theme, string[]> = {
   Halloween: ["🎃", "👻", "🍬"],
@@ -71,14 +77,14 @@ const getTheme = () => {
   }
 };
 
-export const useTheme = () => {
+export const useSeasonalTheme = () => {
   const [theme] = useState<Theme>(getTheme());
   const [isThemeActive, setIsThemeActive] = useState<boolean>();
 
   // load persisted value on mount (safe for SSR)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("kniffel:isThemeActive");
+      const raw = localStorage.getItem(THEME_ACTIVE_KEY);
       if (raw !== null) {
         setIsThemeActive(JSON.parse(raw));
       } else {
@@ -92,10 +98,7 @@ export const useTheme = () => {
   // persist changes
   useEffect(() => {
     try {
-      localStorage.setItem(
-        "kniffel:isThemeActive",
-        JSON.stringify(isThemeActive),
-      );
+      localStorage.setItem(THEME_ACTIVE_KEY, JSON.stringify(isThemeActive));
     } catch {
       console.warn("Could not persist theme preference");
     }

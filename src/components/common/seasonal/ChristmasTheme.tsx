@@ -2,13 +2,14 @@ import Image from "next/image";
 import Snowfall from "react-snowfall";
 
 type ChristmasThemeProps = {
-  gamemode?: string;
+  /** Hides the centre-piece where the card is too narrow for it. */
+  compact?: boolean;
 };
 
-export default function ChristmasTheme({ gamemode }: ChristmasThemeProps) {
+export default function ChristmasTheme({ compact = false }: ChristmasThemeProps) {
   return (
     <>
-      {gamemode !== "MiniWunder" && (
+      {!compact && (
         <div className="absolute -right-20 -bottom-20 transform rotate-330 z-0">
           <Image
             src="/images/santa.png"

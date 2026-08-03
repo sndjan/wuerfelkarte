@@ -143,3 +143,48 @@ export const missions: Mission[] = [
     difficulty: 1,
   },
 ];
+
+/** Total Yatzy fields; missions rotate every `interval` rounds across them. */
+const TOTAL_ROUNDS = 14;
+
+export const missionCountFor = (interval: number): number =>
+  TOTAL_ROUNDS / interval;
+
+/**
+ * In balanced mode a run gets a fixed difficulty mix instead of a free draw,
+ * so nobody ends up with an evening of nothing but hard missions.
+ */
+const BALANCED_MIX: Record<number, { hard: number; neutral: number; good: number }> =
+  {
+    7: { hard: 1, neutral: 3, good: 3 },
+    14: { hard: 2, neutral: 6, good: 6 },
+  };
+
+type Shuffle = <T>(items: T[]) => T[];
+
+const defaultShuffle: Shuffle = (items) =>
+  [...items].sort(() => Math.random() - 0.5);
+
+/**
+ * The missions for one Chaoswunder game. `shuffle` is injectable so the
+ * selection can be tested without randomness.
+ */
+export function selectMissions(
+  interval: number,
+  balanced: boolean,
+  shuffle: Shuffle = defaultShuffle,
+): Mission[] {
+  const count = missionCountFor(interval);
+
+  if (!balanced) return shuffle(missions).slice(0, count);
+
+  const ofDifficulty = (difficulty: 1 | 2 | 3) =>
+    shuffle(missions.filter((m) => m.difficulty === difficulty));
+
+  const mix = BALANCED_MIX[count] ?? BALANCED_MIX[14];
+  return shuffle([
+    ...ofDifficulty(3).slice(0, mix.hard),
+    ...ofDifficulty(2).slice(0, mix.neutral),
+    ...ofDifficulty(1).slice(0, mix.good),
+  ]);
+}
