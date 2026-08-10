@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   Dialog,
@@ -42,25 +42,49 @@ export function ScoreDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Punkteauswertung</DialogTitle>
-        </DialogHeader>
-        <DialogDescription>Siehe wer gewonnen hat</DialogDescription>
-        {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        )}
-        {!subtitle && typeof elapsedMs === "number" && (
-          <p className="text-sm text-muted-foreground">
-            ⏱ Spielzeit: {formatDuration(elapsedMs)}
-          </p>
-        )}
-        <div className="mt-4">
-          <ScoreDiagram players={players} />
-        </div>
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <ShareResult players={players} config={shareConfig} />
-        </div>
+        {/* Mounted only while open, so every opening replays the reveal. */}
+        <ScoreDialogBody
+          players={players}
+          shareConfig={shareConfig}
+          subtitle={subtitle}
+          elapsedMs={elapsedMs}
+        />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ScoreDialogBody({
+  players,
+  shareConfig,
+  subtitle,
+  elapsedMs,
+}: Pick<
+  ScoreDialogProps,
+  "players" | "shareConfig" | "subtitle" | "elapsedMs"
+>) {
+  const [revealing, setRevealing] = useState(true);
+
+  const details =
+    subtitle ??
+    (typeof elapsedMs === "number" ? (
+      <>⏱ Spielzeit: {formatDuration(elapsedMs)}</>
+    ) : (
+      "Siehe wer gewonnen hat"
+    ));
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Punkteauswertung</DialogTitle>
+      </DialogHeader>
+      <DialogDescription>{revealing ? "Läuft…" : details}</DialogDescription>
+      <div className="mt-2">
+        <ScoreDiagram players={players} onRevealingChange={setRevealing} />
+      </div>
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <ShareResult players={players} config={shareConfig} />
+      </div>
+    </>
   );
 }
