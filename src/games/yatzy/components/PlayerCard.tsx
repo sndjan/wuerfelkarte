@@ -93,7 +93,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     <Card className="p-4 flex flex-col justify-between items-center space-y-[-15px] h-full relative overflow-clip">
       <div className="flex flex-row justify-between w-full items-center mb-1">
         <button
-          className="z-20 font-bold bg-white dark:bg-[#171717] px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-[#212121] transition-colors cursor-pointer"
+          className="z-20 font-bold bg-white dark:bg-card px-3 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-secondary transition-colors cursor-pointer"
           onClick={() => !badge && setNameDialogOpen(true)}
           style={badge ? { cursor: "default" } : undefined}
         >
@@ -211,7 +211,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 className="w-full flex flex-col items-center"
               >
                 {fieldElement}
-                <div className="my-3 w-full z-20 bg-white dark:bg-[#171717] px-3 py-2 rounded-md">
+                <div className="my-3 w-full z-20 bg-white dark:bg-card px-3 py-2 rounded-md">
                   <div className="flex items-center justify-center gap-2 font-bold">
                     <span>{sum}</span>
                     {bonusReached && (
