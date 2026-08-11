@@ -80,7 +80,11 @@ function ScoreDialogBody({
       </DialogHeader>
       <DialogDescription>{revealing ? "Läuft…" : details}</DialogDescription>
       <div className="mt-2">
-        <ScoreDiagram players={players} onRevealingChange={setRevealing} />
+        <ScoreDiagram
+          players={players}
+          onRevealingChange={setRevealing}
+          lowerIsBetter={shareConfig.lowerIsBetter}
+        />
       </div>
       <div className="mt-2 flex items-center justify-end gap-2">
         <ShareResult players={players} config={shareConfig} />

@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
+import { CABO_EMOJI } from "@/games/cabo/config";
+import { caboGamemodes } from "@/games/cabo/gamemodes";
+import { caboStorage } from "@/games/cabo/storage";
 import { FLIP7_EMOJI } from "@/games/flip7/config";
 import { flip7Gamemodes } from "@/games/flip7/gamemodes";
 import { flip7Storage } from "@/games/flip7/storage";
@@ -34,6 +37,8 @@ type Row = {
   timestamp: string;
   players: { name: string; score: number }[];
   action: MatchAction | null;
+  /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
+  lowerIsBetter: boolean;
 };
 
 /** Every match ever played, across every game and gamemode, newest first. */
@@ -42,6 +47,7 @@ export function AllMatches() {
   const yatzyMatches = useMatchHistory(yatzyStorage.loadMatches);
   const wizardMatches = useMatchHistory(wizardStorage.loadMatches);
   const flip7Matches = useMatchHistory(flip7Storage.loadMatches);
+  const caboMatches = useMatchHistory(caboStorage.loadMatches);
 
   const rows: Row[] = [
     ...yatzyMatches.map((match) => {
@@ -58,6 +64,7 @@ export function AllMatches() {
           icon: info.icon,
           onClick: () => router.push(info.href),
         },
+        lowerIsBetter: false,
       };
     }),
     ...wizardMatches.map((match) => ({
@@ -68,6 +75,7 @@ export function AllMatches() {
       timestamp: match.timestamp,
       players: match.players,
       action: null,
+      lowerIsBetter: false,
     })),
     ...flip7Matches.map((match) => ({
       id: `flip7:${match.id}`,
@@ -77,6 +85,17 @@ export function AllMatches() {
       timestamp: match.timestamp,
       players: match.players,
       action: null,
+      lowerIsBetter: false,
+    })),
+    ...caboMatches.map((match) => ({
+      id: `cabo:${match.id}`,
+      gameEmoji: CABO_EMOJI,
+      gameName: "Cabo",
+      gamemodeName: caboGamemodes[match.gamemode]?.name ?? match.gamemode,
+      timestamp: match.timestamp,
+      players: match.players,
+      action: null,
+      lowerIsBetter: true,
     })),
   ].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
@@ -93,8 +112,8 @@ export function AllMatches() {
         ) : (
           <div className="flex flex-col gap-2">
             {rows.map((row) => {
-              const winner = [...row.players].sort(
-                (a, b) => b.score - a.score,
+              const winner = [...row.players].sort((a, b) =>
+                row.lowerIsBetter ? a.score - b.score : b.score - a.score,
               )[0];
               return (
                 <div

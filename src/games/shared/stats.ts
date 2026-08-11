@@ -67,8 +67,12 @@ export function mostPlayedGamemode<TMatch extends StoredMatch<MatchPlayer>>(
 /** Everything the gamemode statistics view needs, derived from raw match history. */
 export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer>>(
   matches: TMatch[],
+  /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
+  lowerIsBetter = false,
 ): GamemodeStatsSummary {
   if (matches.length === 0) return emptySummary;
+
+  const isBetter = (a: number, b: number) => (lowerIsBetter ? a < b : a > b);
 
   const chronological = [...matches].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
@@ -91,7 +95,7 @@ export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer
     totalPlayerSlots += match.players.length;
 
     for (const player of match.players) {
-      if (!highscore || player.score > highscore.score) {
+      if (!highscore || isBetter(player.score, highscore.score)) {
         highscore = { name: player.name, emoji: player.emoji, score: player.score };
       }
     }
@@ -99,7 +103,9 @@ export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer
     // Solo-Partien haben keinen echten Sieger und zählen nicht fürs Ranking.
     if (match.players.length < 2) continue;
 
-    const winner = [...match.players].sort((a, b) => b.score - a.score)[0];
+    const winner = [...match.players].sort((a, b) =>
+      lowerIsBetter ? a.score - b.score : b.score - a.score,
+    )[0];
     runLength = winner.name === runName ? runLength + 1 : 1;
     runName = winner.name;
     bestStreaks.set(runName, Math.max(bestStreaks.get(runName) ?? 0, runLength));
@@ -146,7 +152,7 @@ export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer
 
   const topAverage = standings.reduce<PlayerStanding | null>(
     (best, standing) =>
-      !best || standing.averageScore > best.averageScore ? standing : best,
+      !best || isBetter(standing.averageScore, best.averageScore) ? standing : best,
     null,
   );
   const bestAverage = topAverage && {

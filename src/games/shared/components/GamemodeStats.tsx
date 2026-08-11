@@ -55,12 +55,15 @@ type GamemodeStatsProps<TMatch extends StoredMatch<MatchPlayer>> = {
   matches: TMatch[];
   /** Display name of the currently selected gamemode, e.g. "Wunder+". */
   modeName: string;
+  /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
+  lowerIsBetter?: boolean;
 };
 
 /** The redesigned per-gamemode statistics card: podium, records, full ranking. */
 export function GamemodeStats<TMatch extends StoredMatch<MatchPlayer>>({
   matches,
   modeName,
+  lowerIsBetter = false,
 }: GamemodeStatsProps<TMatch>) {
   const [timeframe, setTimeframe] = useState<Timeframe>("all");
 
@@ -71,7 +74,10 @@ export function GamemodeStats<TMatch extends StoredMatch<MatchPlayer>>({
     return matches.filter((match) => new Date(match.timestamp).getTime() >= cutoff);
   }, [matches, timeframe]);
 
-  const summary = useMemo(() => buildGamemodeStatsSummary(filtered), [filtered]);
+  const summary = useMemo(
+    () => buildGamemodeStatsSummary(filtered, lowerIsBetter),
+    [filtered, lowerIsBetter],
+  );
 
   if (matches.length === 0) {
     return (
@@ -94,7 +100,7 @@ export function GamemodeStats<TMatch extends StoredMatch<MatchPlayer>>({
       ) : (
         <>
           <Podium standings={summary.standings} />
-          <RecordCards summary={summary} />
+          <RecordCards summary={summary} lowerIsBetter={lowerIsBetter} />
           {summary.standings.length > 3 && (
             <FurtherPlayers standings={summary.standings} />
           )}
@@ -246,11 +252,17 @@ function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStand
   );
 }
 
-function RecordCards({ summary }: { summary: GamemodeStatsSummary }) {
+function RecordCards({
+  summary,
+  lowerIsBetter,
+}: {
+  summary: GamemodeStatsSummary;
+  lowerIsBetter: boolean;
+}) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <RecordCard
-        label="🏆 HIGHSCORE"
+        label={lowerIsBetter ? "🏆 BESTWERT" : "🏆 HIGHSCORE"}
         value={summary.highscore?.score ?? "–"}
         valueClassName="text-brand-accent"
         sub={summary.highscore ? identity(summary.highscore.emoji, summary.highscore.name) : "–"}
@@ -265,7 +277,7 @@ function RecordCards({ summary }: { summary: GamemodeStatsSummary }) {
         }
       />
       <RecordCard
-        label="📈 HÖCHSTER Ø"
+        label={lowerIsBetter ? "📉 NIEDRIGSTER Ø" : "📈 HÖCHSTER Ø"}
         value={summary.bestAverage ? Math.round(summary.bestAverage.average) : "–"}
         sub={
           summary.bestAverage

@@ -30,6 +30,8 @@ type RecentMatchesProps<TMatch extends StoredMatch<MatchPlayer>> = {
   action?: (match: TMatch) => MatchAction | null;
   /** Link to the cross-game history page; rendered top-right of the heading. */
   viewAllHref?: string;
+  /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
+  lowerIsBetter?: boolean;
 };
 
 /** The "Letzte Spiele" list under every lobby, newest first. */
@@ -39,6 +41,7 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
   badge,
   action,
   viewAllHref,
+  lowerIsBetter = false,
 }: RecentMatchesProps<TMatch>) {
   const recent = [...matches]
     .sort(
@@ -65,7 +68,9 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
         )}
       </div>
       {recent.map((match) => {
-        const winner = [...match.players].sort((a, b) => b.score - a.score)[0];
+        const winner = [...match.players].sort((a, b) =>
+          lowerIsBetter ? a.score - b.score : b.score - a.score,
+        )[0];
         const matchAction = action?.(match) ?? null;
         return (
           <div

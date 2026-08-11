@@ -26,6 +26,8 @@ export type ShareConfig = {
   imageSrc?: string;
   /** Goes into the shared file name: wuerfelkarte-<slug>.png */
   fileSlug: string;
+  /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
+  lowerIsBetter?: boolean;
 };
 
 const escapeHtml = (s: string) =>
@@ -37,12 +39,15 @@ const escapeHtml = (s: string) =>
     .replace(/'/g, "&#039;");
 
 /** Dense ranking: tied players share a rank, and the next distinct score follows. */
-const rankMap = (players: ScoredPlayer[]): Map<number, number> => {
-  const distinctDesc = Array.from(new Set(players.map((p) => p.score))).sort(
-    (a, b) => b - a,
+const rankMap = (
+  players: ScoredPlayer[],
+  lowerIsBetter: boolean,
+): Map<number, number> => {
+  const distinct = Array.from(new Set(players.map((p) => p.score))).sort((a, b) =>
+    lowerIsBetter ? a - b : b - a,
   );
   const ranks = new Map<number, number>();
-  distinctDesc.forEach((score, index) => ranks.set(score, index + 1));
+  distinct.forEach((score, index) => ranks.set(score, index + 1));
   return ranks;
 };
 
@@ -55,10 +60,11 @@ export function buildShareText(
   config: ShareConfig,
   date = new Date(),
 ): string {
-  const ranks = rankMap(players);
+  const lowerIsBetter = config.lowerIsBetter ?? false;
+  const ranks = rankMap(players, lowerIsBetter);
 
   const lines = [...players]
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => (lowerIsBetter ? a.score - b.score : b.score - a.score))
     .map((player) => {
       const prefix = medalForRank(ranks.get(player.score) ?? 0);
       const namePrefix = player.emoji ? `${player.emoji} ` : "";
@@ -104,8 +110,17 @@ async function generateScoreImage(
     }
   }
 
-  const totals = [...players].sort((a, b) => b.score - a.score);
-  const maxTotal = Math.max(totals[0]?.score ?? 1, 1);
+  const lowerIsBetter = config.lowerIsBetter ?? false;
+  const totals = [...players].sort((a, b) =>
+    lowerIsBetter ? a.score - b.score : b.score - a.score,
+  );
+  const maxTotal = Math.max(...totals.map((p) => p.score), 1);
+  // Bar length always shows "how well they did": for a lowerIsBetter game the
+  // winner has the smallest score, so its bar is measured from the worst
+  // score downward instead of from zero upward.
+  const metricOf = (score: number) =>
+    lowerIsBetter ? Math.max(maxTotal - score, 0) : Math.max(score, 0);
+  const maxMetric = Math.max(...totals.map((p) => metricOf(p.score)), 1);
 
   const availableListHeight = 780;
   const rowGap = 16;
@@ -123,7 +138,7 @@ async function generateScoreImage(
 
   const barsHTML = totals
     .map((player, index) => {
-      const barWidth = (Math.max(player.score, 0) / maxTotal) * 100;
+      const barWidth = (metricOf(player.score) / maxMetric) * 100;
       const color = BAR_COLORS[index] ?? NEUTRAL_BAR;
       const displayName = player.emoji
         ? `${player.emoji} ${player.name}`
