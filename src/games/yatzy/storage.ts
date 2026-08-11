@@ -1,10 +1,11 @@
 import { createGameStorage } from "@/games/shared/storage";
-import { MatchPlayer, StoredMatch } from "@/games/shared/types";
+import { StoredMatch } from "@/games/shared/types";
+import { YatzyMatchPlayer } from "./types";
 
 /** What Yatzy remembers between sessions: the seating and the two mode toggles. */
 export type StoredYatzyPlayer = { name: string; emoji?: string };
 
-export type YatzyMatch = StoredMatch<MatchPlayer>;
+export type YatzyMatch = StoredMatch<YatzyMatchPlayer>;
 
 type YatzySettings = {
   /** Chaoswunder: rotate the mission every round instead of every second one. */

@@ -240,6 +240,8 @@ export function Board() {
         score: isBattle
           ? battleTotalScore(player.points, playerDoubledSet(player.id), config)
           : player.score,
+        points: player.points,
+        doubled: isBattle ? Array.from(playerDoubledSet(player.id)) : [],
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isBattle, players, config, doubled],
@@ -250,10 +252,12 @@ export function Board() {
     if (!scoringPlayers.some((player) => player.score > 0)) return;
     yatzyStorage.saveMatch({
       id: matchId,
-      players: scoringPlayers.map(({ name, emoji, score }) => ({
+      players: scoringPlayers.map(({ name, emoji, score, points, doubled }) => ({
         name,
         ...(emoji ? { emoji } : {}),
         score,
+        points,
+        ...(doubled.length > 0 ? { doubled } : {}),
       })),
       gamemode,
       timestamp: new Date().toISOString(),

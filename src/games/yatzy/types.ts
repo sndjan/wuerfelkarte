@@ -21,3 +21,14 @@ export type Points = {
   Wunder: number | "X";
   Chance: number | "X";
 };
+
+/** A finished match's per-player record: the full sheet, not just the total. */
+export type YatzyMatchPlayer = {
+  name: string;
+  emoji?: string;
+  score: number;
+  /** Absent on matches saved before this field existed. */
+  points?: Points;
+  /** Battle only: field keys that counted double for this player. */
+  doubled?: string[];
+};
