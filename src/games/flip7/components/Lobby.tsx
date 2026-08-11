@@ -82,6 +82,7 @@ export function Lobby() {
               flip7Gamemodes[match.gamemode]?.name ?? match.gamemode
             }
             badge={(match) => <MatchBadge>{match.targetScore}</MatchBadge>}
+            viewAllHref="/verlauf"
           />
         </>
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Eye, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,9 +20,8 @@ import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
 import { mostPlayedGamemode } from "@/games/shared/stats";
 import { YATZY_EMOJI, gamemodeSlug } from "../config";
 import { gamemodes } from "../gamemodes";
-import { isMatchComplete } from "../scoring";
+import { yatzyMatchActionInfo } from "../matchAction";
 import { savePlayers, yatzyStorage } from "../storage";
-import { Points } from "../types";
 
 /** Yatzy has no upper limit — everyone who fits around the table can play. */
 const MIN_PLAYERS = 1;
@@ -73,25 +72,16 @@ export function Lobby() {
               gamemodes[match.gamemode]?.name ?? match.gamemode
             }
             action={(match) => {
-              if (
-                !match.players.every((p) => p.points) ||
-                !(match.gamemode in gamemodes)
-              ) {
-                return null;
-              }
-              const complete = isMatchComplete(
-                match.players.map((p) => ({ points: p.points as Points })),
-                match.gamemode as keyof typeof gamemodes,
+              const info = yatzyMatchActionInfo(match);
+              return (
+                info && {
+                  label: info.label,
+                  icon: info.icon,
+                  onClick: () => router.push(info.href),
+                }
               );
-              return {
-                label: complete ? "Ergebnis" : "Weiterspielen",
-                icon: complete ? Eye : ArrowRight,
-                onClick: () =>
-                  router.push(
-                    `/yatzy/${gamemodeSlug(match.gamemode)}?matchId=${match.id}`,
-                  ),
-              };
             }}
+            viewAllHref="/verlauf"
           />
         </>
       }

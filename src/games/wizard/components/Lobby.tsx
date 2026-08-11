@@ -101,6 +101,7 @@ export function Lobby() {
             badge={(match) =>
               match.plusMinusOne ? <MatchBadge>±1</MatchBadge> : null
             }
+            viewAllHref="/verlauf"
           />
         </>
       }

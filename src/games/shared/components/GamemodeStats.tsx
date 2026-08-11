@@ -240,7 +240,7 @@ function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStand
       <span className="text-sm font-extrabold text-foreground">{standing.name}</span>
       <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
       <div className="flex h-10 w-full items-center justify-center rounded-t-[12px] bg-bronze">
-        <span className={cn(BALOO, "text-lg font-extrabold text-white")}>3</span>
+        <span className={cn(BALOO, "text-lg font-extrabold text-foreground")}>3</span>
       </div>
     </div>
   );

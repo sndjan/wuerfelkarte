@@ -1,6 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ type RecentMatchesProps<TMatch extends StoredMatch<MatchPlayer>> = {
   badge?: (match: TMatch) => ReactNode;
   /** Per-row button before the winner; return null to omit it for that row. */
   action?: (match: TMatch) => MatchAction | null;
+  /** Link to the cross-game history page; rendered top-right of the heading. */
+  viewAllHref?: string;
 };
 
 /** The "Letzte Spiele" list under every lobby, newest first. */
@@ -35,6 +38,7 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
   modeName,
   badge,
   action,
+  viewAllHref,
 }: RecentMatchesProps<TMatch>) {
   const recent = [...matches]
     .sort(
@@ -47,9 +51,19 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
 
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-        Letzte Spiele
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          Letzte Spiele
+        </h2>
+        {viewAllHref && (
+          <Link
+            href={viewAllHref}
+            className="text-sm font-semibold text-brand-accent"
+          >
+            Alle Spiele
+          </Link>
+        )}
+      </div>
       {recent.map((match) => {
         const winner = [...match.players].sort((a, b) => b.score - a.score)[0];
         const matchAction = action?.(match) ?? null;
