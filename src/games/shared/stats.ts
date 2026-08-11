@@ -44,6 +44,26 @@ const emptySummary: GamemodeStatsSummary = {
   streak: null,
 };
 
+/** Whichever gamemode has the most matches on record, or `null` with no history yet. */
+export function mostPlayedGamemode<TMatch extends StoredMatch<MatchPlayer>>(
+  matches: TMatch[],
+): string | null {
+  const counts = new Map<string, number>();
+  for (const match of matches) {
+    counts.set(match.gamemode, (counts.get(match.gamemode) ?? 0) + 1);
+  }
+
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [gamemode, count] of counts) {
+    if (count > bestCount) {
+      best = gamemode;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
 /** Everything the gamemode statistics view needs, derived from raw match history. */
 export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer>>(
   matches: TMatch[],

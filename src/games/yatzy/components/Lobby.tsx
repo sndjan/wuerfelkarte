@@ -2,7 +2,7 @@
 
 import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import { RecentMatches } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { mostPlayedGamemode } from "@/games/shared/stats";
 import { YATZY_EMOJI, gamemodeSlug } from "../config";
 import { gamemodes } from "../gamemodes";
 import { savePlayers, yatzyStorage } from "../storage";
@@ -30,7 +31,18 @@ export function Lobby() {
   const [selectedGamemode, setSelectedGamemode] = useState<
     keyof typeof gamemodes
   >(Object.keys(gamemodes)[0]);
+  const [hasManualGamemode, setHasManualGamemode] = useState(false);
   const history = useMatchHistory(yatzyStorage.loadMatches);
+
+  // Once history loads, default to the group's most-played mode — unless
+  // they've already picked one themselves.
+  useEffect(() => {
+    if (hasManualGamemode) return;
+    const mostPlayed = mostPlayedGamemode(history);
+    if (mostPlayed && mostPlayed in gamemodes) {
+      setSelectedGamemode(mostPlayed as keyof typeof gamemodes);
+    }
+  }, [history, hasManualGamemode]);
 
   return (
     <LobbyShell
@@ -67,7 +79,10 @@ export function Lobby() {
           <GamemodePills
             gamemodes={gamemodes}
             value={selectedGamemode}
-            onChange={setSelectedGamemode}
+            onChange={(mode) => {
+              setHasManualGamemode(true);
+              setSelectedGamemode(mode);
+            }}
           />
           {gamemodes[selectedGamemode].description && (
             <p className="text-sm text-muted-foreground">

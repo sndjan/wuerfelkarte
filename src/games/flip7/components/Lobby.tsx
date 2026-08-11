@@ -11,6 +11,7 @@ import {
   RecentMatches,
 } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { mostPlayedGamemode } from "@/games/shared/stats";
 import { FLIP7_EMOJI } from "../config";
 import { flip7Gamemodes, gamemodeSlug } from "../gamemodes";
 import {
@@ -31,6 +32,7 @@ export function Lobby() {
   const router = useRouter();
   const [selectedGamemode, setSelectedGamemode] =
     useState<Flip7GamemodeKey>("Standard");
+  const [hasManualGamemode, setHasManualGamemode] = useState(false);
   const [targetScore, setTargetScore] = useState(DEFAULT_TARGET_SCORE);
   const history = useMatchHistory(flip7Storage.loadMatches);
 
@@ -39,6 +41,16 @@ export function Lobby() {
     const stored = loadTargetScoreSetting();
     if (stored != null) setTargetScore(stored);
   }, []);
+
+  // Once history loads, default to the group's most-played mode — unless
+  // they've already picked one themselves.
+  useEffect(() => {
+    if (hasManualGamemode) return;
+    const mostPlayed = mostPlayedGamemode(history);
+    if (mostPlayed && mostPlayed in flip7Gamemodes) {
+      setSelectedGamemode(mostPlayed as Flip7GamemodeKey);
+    }
+  }, [history, hasManualGamemode]);
 
   return (
     <LobbyShell
@@ -80,7 +92,10 @@ export function Lobby() {
             <GamemodePills
               gamemodes={flip7Gamemodes}
               value={selectedGamemode}
-              onChange={setSelectedGamemode}
+              onChange={(mode) => {
+                setHasManualGamemode(true);
+                setSelectedGamemode(mode);
+              }}
             />
             <p className="text-sm text-muted-foreground">
               {flip7Gamemodes[selectedGamemode].description}

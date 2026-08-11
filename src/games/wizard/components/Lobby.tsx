@@ -2,7 +2,7 @@
 
 import { Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
 import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
@@ -12,6 +12,7 @@ import {
   RecentMatches,
 } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
+import { mostPlayedGamemode } from "@/games/shared/stats";
 import { WIZARD_EMOJI } from "../config";
 import { gamemodeSlug, wizardGamemodes } from "../gamemodes";
 import {
@@ -34,6 +35,7 @@ export function Lobby() {
   const router = useRouter();
   const [selectedGamemode, setSelectedGamemode] =
     useState<WizardGamemodeKey>("Standard");
+  const [hasManualGamemode, setHasManualGamemode] = useState(false);
   const [plusMinusOne, setPlusMinusOne] = useState(false);
   // Preselected in full — the anniversary edition ships all seven Sonderkarten.
   const [selectedCards, setSelectedCards] =
@@ -42,6 +44,16 @@ export function Lobby() {
   // toggled; setting a number pins it until the player picks "Vorschlag" again.
   const [roundsOverride, setRoundsOverride] = useState<number | null>(null);
   const history = useMatchHistory(wizardStorage.loadMatches);
+
+  // Once history loads, default to the group's most-played mode — unless
+  // they've already picked one themselves.
+  useEffect(() => {
+    if (hasManualGamemode) return;
+    const mostPlayed = mostPlayedGamemode(history);
+    if (mostPlayed && mostPlayed in wizardGamemodes) {
+      setSelectedGamemode(mostPlayed as WizardGamemodeKey);
+    }
+  }, [history, hasManualGamemode]);
 
   const usesSpecialCards = wizardGamemodes[selectedGamemode].usesSpecialCards;
   const specialCards = usesSpecialCards ? selectedCards : [];
@@ -109,7 +121,10 @@ export function Lobby() {
               <GamemodePills
                 gamemodes={wizardGamemodes}
                 value={selectedGamemode}
-                onChange={setSelectedGamemode}
+                onChange={(mode) => {
+                  setHasManualGamemode(true);
+                  setSelectedGamemode(mode);
+                }}
               />
               <p className="text-sm text-muted-foreground">
                 {wizardGamemodes[selectedGamemode].description}
