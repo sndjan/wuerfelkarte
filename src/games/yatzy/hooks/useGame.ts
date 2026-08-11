@@ -51,8 +51,22 @@ const savePlayersToStorage = (players: Player[]) =>
   savePlayers(players.map(({ name, emoji }) => ({ name, emoji })));
 
 
-export const useGame = (gamemode: keyof typeof gamemodes = "Klassiker") => {
+type SeedPlayer = { name: string; emoji?: string; points: Points };
+
+export const useGame = (
+  gamemode: keyof typeof gamemodes = "Klassiker",
+  seedPlayers?: SeedPlayer[],
+) => {
   const [players, setPlayers] = useState<Player[]>(() => {
+    if (seedPlayers && seedPlayers.length > 0) {
+      return seedPlayers.map((p, index) => ({
+        id: Date.now() + index,
+        name: p.name,
+        emoji: p.emoji,
+        points: p.points,
+        score: calculateScore(p.points, gamemode),
+      }));
+    }
     const storedPlayers = loadPlayersFromStorage();
     if (storedPlayers) {
       return storedPlayers.map((p) => ({

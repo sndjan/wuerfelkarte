@@ -1,7 +1,7 @@
 "use client";
 
 import { RotateCcw, UserRoundPlus } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,7 @@ import {
 } from "../gamemodes/battle";
 import { Mission, selectMissions } from "../gamemodes/chaoswunder";
 import { useGame } from "../hooks/useGame";
+import { isMatchComplete } from "../scoring";
 import { loadChaosSettings, saveChaosSetting, yatzyStorage } from "../storage";
 import { Points } from "../types";
 import { ChaosMissions } from "./ChaosMissions";
@@ -32,6 +33,28 @@ export function Board() {
   const gamemode = gamemodeFromSlug((params.gamemode as string) || "");
   const config = gamemodes[gamemode];
 
+  // Opening a "Letzte Spiele" entry seeds the board with that match's sheet
+  // instead of the default/stored roster, so it can be reviewed or corrected.
+  const searchParams = useSearchParams();
+  const viewMatchId = searchParams.get("matchId");
+  const seedMatch = useMemo(() => {
+    if (!viewMatchId) return null;
+    const match = yatzyStorage
+      .loadMatches()
+      .find((m) => m.id === viewMatchId);
+    if (!match || !match.players.every((p) => p.points)) return null;
+    return match;
+  }, [viewMatchId]);
+  const seedPlayers = useMemo(
+    () =>
+      seedMatch?.players.map((p) => ({
+        name: p.name,
+        emoji: p.emoji,
+        points: p.points as Points,
+      })),
+    [seedMatch],
+  );
+
   const {
     players,
     addPlayer,
@@ -43,7 +66,7 @@ export function Board() {
     moveToLeft,
     resetAll,
     resetAllPoints,
-  } = useGame(gamemode);
+  } = useGame(gamemode, seedPlayers);
   const { theme, isThemeActive, setIsThemeActive } = useSeasonalTheme();
 
   // Shared by the header button and the menu entry — both open the same dialog.
@@ -51,8 +74,17 @@ export function Board() {
 
   const isBattle = gamemode === "Battle";
   // Battle: composite keys `${playerId}::${fieldKey}` flagging doubled fields.
-  const [doubled, setDoubled] = useState<Set<string>>(new Set());
   const dkey = (playerId: number, field: string) => `${playerId}::${field}`;
+  const [doubled, setDoubled] = useState<Set<string>>(() => {
+    if (!seedMatch) return new Set();
+    const seeded = new Set<string>();
+    seedMatch.players.forEach((mp, index) => {
+      const player = players[index];
+      if (!player || !mp.doubled) return;
+      mp.doubled.forEach((field) => seeded.add(dkey(player.id, field)));
+    });
+    return seeded;
+  });
   const playerDoubledSet = (playerId: number) =>
     new Set(
       config.fields
@@ -66,11 +98,23 @@ export function Board() {
       return next;
     });
 
-  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-  const [gameEndTime, setGameEndTime] = useState<number | null>(null);
+  // Reopening a past match keeps its original duration until it's played
+  // further, instead of showing none or restarting the clock.
+  const [gameStartTime, setGameStartTime] = useState<number | null>(() =>
+    seedMatch?.durationMs != null
+      ? new Date(seedMatch.timestamp).getTime() - seedMatch.durationMs
+      : null,
+  );
+  const [gameEndTime, setGameEndTime] = useState<number | null>(() =>
+    seedMatch?.durationMs != null
+      ? new Date(seedMatch.timestamp).getTime()
+      : null,
+  );
   // Identifies this sitting in the history, so re-opening the scoreboard
   // updates the entry instead of adding another one.
-  const [matchId, setMatchId] = useState(() => crypto.randomUUID());
+  const [matchId, setMatchId] = useState(
+    () => seedMatch?.id ?? crypto.randomUUID(),
+  );
 
   const [missions, setMissions] = useState<Mission[]>([]);
   const [currentMissionIndex, setCurrentMissionIndex] = useState(0);
@@ -196,29 +240,10 @@ export function Board() {
     }, 100);
   };
 
-  const gameFinished = useMemo(() => {
-    const fields = config?.fields.map((f) => f.key) ?? [];
-    if (players.length === 0) return false;
-    if (isBattle) {
-      // Each field is done when someone claimed it, or everyone crossed it.
-      return fields.every((key) => {
-        const claimed = players.some((p) => {
-          const v = p.points[key as keyof typeof p.points];
-          return typeof v === "number" && v !== 0;
-        });
-        if (claimed) return true;
-        return players.every(
-          (p) => p.points[key as keyof typeof p.points] === "X",
-        );
-      });
-    }
-    return players.every((player) =>
-      fields.every((key) => {
-        const point = player.points[key as keyof typeof player.points];
-        return point !== undefined && point !== 0;
-      }),
-    );
-  }, [players, config, isBattle]);
+  const gameFinished = useMemo(
+    () => isMatchComplete(players, gamemode),
+    [players, gamemode],
+  );
 
   // The timer stops the moment the last field is filled in, before the
   // scoreboard is ever opened, so the saved duration is actual play time.

@@ -1,7 +1,9 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { Button } from "@/components/ui/button";
 import { MatchPlayer, StoredMatch } from "../types";
 
 const MAX_MATCHES = 5;
@@ -11,12 +13,20 @@ const formatShortDate = (timestamp: string): string => {
   return `${date.getDate()}.${date.getMonth() + 1}.`;
 };
 
+export type MatchAction = {
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+};
+
 type RecentMatchesProps<TMatch extends StoredMatch<MatchPlayer>> = {
   matches: TMatch[];
   /** The mode's display name — the key stored on the match is the raw one. */
   modeName: (match: TMatch) => string;
   /** Optional chip after the mode name: Wizard's ±1, Flip 7's target score. */
   badge?: (match: TMatch) => ReactNode;
+  /** Per-row button before the winner; return null to omit it for that row. */
+  action?: (match: TMatch) => MatchAction | null;
 };
 
 /** The "Letzte Spiele" list under every lobby, newest first. */
@@ -24,6 +34,7 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
   matches,
   modeName,
   badge,
+  action,
 }: RecentMatchesProps<TMatch>) {
   const recent = [...matches]
     .sort(
@@ -41,6 +52,7 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
       </h2>
       {recent.map((match) => {
         const winner = [...match.players].sort((a, b) => b.score - a.score)[0];
+        const matchAction = action?.(match) ?? null;
         return (
           <div
             key={match.id}
@@ -55,11 +67,24 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
                 {match.players.map((p) => p.name).join(", ")}
               </p>
             </div>
-            {winner && (
-              <p className="shrink-0 font-bold text-brand-accent">
-                🏆 {winner.name} · {winner.score}
-              </p>
-            )}
+            <div className="flex shrink-0 items-center gap-3">
+              {matchAction && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={matchAction.onClick}
+                >
+                  <matchAction.icon className="size-4" />
+                  {matchAction.label}
+                </Button>
+              )}
+              {winner && (
+                <p className="font-bold text-brand-accent">
+                  🏆 {winner.name} · {winner.score}
+                </p>
+              )}
+            </div>
           </div>
         );
       })}
