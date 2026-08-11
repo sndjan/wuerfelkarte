@@ -17,7 +17,7 @@ import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import { RecentMatches } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
-import { YATZY_EMOJI, buildStats, gamemodeSlug } from "../config";
+import { YATZY_EMOJI, gamemodeSlug } from "../config";
 import { gamemodes } from "../gamemodes";
 import { savePlayers, yatzyStorage } from "../storage";
 
@@ -51,7 +51,7 @@ export function Lobby() {
         <>
           <GamemodeStats
             matches={history.filter((m) => m.gamemode === selectedGamemode)}
-            buildStats={buildStats}
+            modeName={gamemodes[selectedGamemode].name}
           />
           <RecentMatches
             matches={history}

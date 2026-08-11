@@ -12,7 +12,7 @@ import {
   RecentMatches,
 } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
-import { WIZARD_EMOJI, buildStats } from "../config";
+import { WIZARD_EMOJI } from "../config";
 import { gamemodeSlug, wizardGamemodes } from "../gamemodes";
 import {
   MAX_PLAYERS,
@@ -79,7 +79,7 @@ export function Lobby() {
         <>
           <GamemodeStats
             matches={history.filter((m) => m.gamemode === selectedGamemode)}
-            buildStats={buildStats}
+            modeName={wizardGamemodes[selectedGamemode].name}
           />
           <RecentMatches
             matches={history}

@@ -1,69 +1,178 @@
 import { MatchPlayer, StoredMatch } from "./types";
 
-/** Wins and appearances per player name, across a set of matches. */
-export type WinTally = { name: string; games: number; wins: number };
-
-type TallyOptions = {
-  /**
-   * Matches with fewer players than this do not count toward the ranking —
-   * Yatzy ignores solo games, where there is nobody to beat.
-   */
-  minPlayers?: number;
+export type PlayerStanding = {
+  name: string;
+  emoji?: string;
+  games: number;
+  wins: number;
+  averageScore: number;
+  /** Win rate smoothed against the random-chance baseline for each match's player count. */
+  winRate: number;
 };
 
-export function tallyWins<TMatch extends StoredMatch<MatchPlayer>>(
+export type StreakInfo = {
+  name: string;
+  emoji?: string;
+  length: number;
+  /** Still going as of the most recent match — nobody has beaten them since. */
+  active: boolean;
+};
+
+export type GamemodeStatsSummary = {
+  gamesPlayed: number;
+  /**
+   * Ranked by adjusted win rate (ties broken by raw win count). Solo matches
+   * have no real winner, so they don't count towards this ranking.
+   */
+  standings: PlayerStanding[];
+  highscore: { name: string; emoji?: string; score: number } | null;
+  averageDurationMs: number | null;
+  /** Average duration divided by the average number of players per match. */
+  perPlayerDurationMs: number | null;
+  bestAverage: { name: string; emoji?: string; average: number } | null;
+  /** The longest win streak on record — current if still active, historical otherwise. */
+  streak: StreakInfo | null;
+};
+
+const emptySummary: GamemodeStatsSummary = {
+  gamesPlayed: 0,
+  standings: [],
+  highscore: null,
+  averageDurationMs: null,
+  perPlayerDurationMs: null,
+  bestAverage: null,
+  streak: null,
+};
+
+/** Everything the gamemode statistics view needs, derived from raw match history. */
+export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer>>(
   matches: TMatch[],
-  { minPlayers = 1 }: TallyOptions = {},
-): Map<string, WinTally> {
-  const tally = new Map<string, WinTally>();
+): GamemodeStatsSummary {
+  if (matches.length === 0) return emptySummary;
 
-  const entryFor = (name: string): WinTally => {
-    const existing = tally.get(name);
-    if (existing) return existing;
-    const created = { name, games: 0, wins: 0 };
-    tally.set(name, created);
-    return created;
-  };
+  const chronological = [...matches].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+  );
 
-  for (const match of matches) {
-    if (match.players.length < Math.max(1, minPlayers)) continue;
+  const players = new Map<
+    string,
+    { emoji?: string; games: number; wins: number; totalScore: number; expectedWins: number }
+  >();
+  let highscore: { name: string; emoji?: string; score: number } | null = null;
+  let totalPlayerSlots = 0;
+
+  // Longest win streak per player, plus the streak currently in progress —
+  // together these say whether the longest one on record is still running.
+  const bestStreaks = new Map<string, number>();
+  let runName: string | null = null;
+  let runLength = 0;
+
+  for (const match of chronological) {
+    totalPlayerSlots += match.players.length;
+
+    for (const player of match.players) {
+      if (!highscore || player.score > highscore.score) {
+        highscore = { name: player.name, emoji: player.emoji, score: player.score };
+      }
+    }
+
+    // Solo-Partien haben keinen echten Sieger und zählen nicht fürs Ranking.
+    if (match.players.length < 2) continue;
 
     const winner = [...match.players].sort((a, b) => b.score - a.score)[0];
-    entryFor(winner.name).wins += 1;
+    runLength = winner.name === runName ? runLength + 1 : 1;
+    runName = winner.name;
+    bestStreaks.set(runName, Math.max(bestStreaks.get(runName) ?? 0, runLength));
 
-    for (const player of match.players) entryFor(player.name).games += 1;
-  }
-
-  return tally;
-}
-
-/** Sums a per-player number over every match a player appears in. */
-export function sumByPlayer<TPlayer extends MatchPlayer>(
-  matches: Array<StoredMatch<TPlayer>>,
-  value: (player: TPlayer) => number,
-): Map<string, number> {
-  const totals = new Map<string, number>();
-  for (const match of matches) {
+    // Erwartete Siege aus reinem Zufall: 1 / Spieleranzahl dieser Partie.
+    const expectedShare = 1 / match.players.length;
     for (const player of match.players) {
-      totals.set(player.name, (totals.get(player.name) ?? 0) + value(player));
+      const entry = players.get(player.name) ?? {
+        emoji: player.emoji,
+        games: 0,
+        wins: 0,
+        totalScore: 0,
+        expectedWins: 0,
+      };
+      entry.emoji = player.emoji ?? entry.emoji;
+      entry.games += 1;
+      entry.totalScore += player.score;
+      entry.expectedWins += expectedShare;
+      if (player.name === winner.name) entry.wins += 1;
+      players.set(player.name, entry);
     }
   }
-  return totals;
-}
 
-/** The "63 % · 12/19" detail every ranking row uses. */
-export const rateDetail = (hits: number, of: number): string =>
-  `${Math.round((of === 0 ? 0 : hits / of) * 100)} % · ${hits}/${of}`;
+  // Bayesian-smoothed win rate: every player starts with C imaginary extra
+  // games, won at exactly the rate random chance would predict for them.
+  // Few real games barely move the needle away from that baseline; a long
+  // track record drowns it out.
+  const PRIOR_GAMES = 5;
+  const adjustedWinRate = (wins: number, games: number, expectedWins: number) => {
+    const baseline = games > 0 ? expectedWins / games : 0;
+    return (wins + PRIOR_GAMES * baseline) / (games + PRIOR_GAMES);
+  };
 
-/** Highest-rate-first top three; ties broken by the raw count. */
-export function topThree<T extends { rate: number; count: number }>(
-  rows: T[],
-  order: "desc" | "asc" = "desc",
-): T[] {
-  const sorted = [...rows].sort((a, b) =>
-    order === "desc"
-      ? b.rate - a.rate || b.count - a.count
-      : a.rate - b.rate || a.count - b.count,
+  const standings: PlayerStanding[] = [...players.entries()]
+    .map(([name, { emoji, games, wins, totalScore, expectedWins }]) => ({
+      name,
+      emoji,
+      games,
+      wins,
+      averageScore: totalScore / games,
+      winRate: adjustedWinRate(wins, games, expectedWins),
+    }))
+    .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
+
+  const topAverage = standings.reduce<PlayerStanding | null>(
+    (best, standing) =>
+      !best || standing.averageScore > best.averageScore ? standing : best,
+    null,
   );
-  return sorted.slice(0, 3);
+  const bestAverage = topAverage && {
+    name: topAverage.name,
+    emoji: topAverage.emoji,
+    average: topAverage.averageScore,
+  };
+
+  const durations = matches
+    .map((match) => match.durationMs)
+    .filter((duration): duration is number => typeof duration === "number");
+  const averageDurationMs =
+    durations.length > 0
+      ? durations.reduce((sum, duration) => sum + duration, 0) / durations.length
+      : null;
+  const averagePlayerCount = totalPlayerSlots / chronological.length;
+  const perPlayerDurationMs =
+    averageDurationMs !== null ? averageDurationMs / averagePlayerCount : null;
+
+  // Prefer the active player on a tie — a streak still running beats one that
+  // merely tied the record in the past.
+  let bestStreakName: string | null = null;
+  let bestStreakLength = 0;
+  for (const [name, length] of bestStreaks) {
+    if (length > bestStreakLength || (length === bestStreakLength && name === runName)) {
+      bestStreakName = name;
+      bestStreakLength = length;
+    }
+  }
+
+  const streak: StreakInfo | null = bestStreakName
+    ? {
+        name: bestStreakName,
+        emoji: players.get(bestStreakName)?.emoji,
+        length: bestStreakLength,
+        active: bestStreakName === runName && bestStreakLength === runLength,
+      }
+    : null;
+
+  return {
+    gamesPlayed: matches.length,
+    standings,
+    highscore,
+    averageDurationMs,
+    perPlayerDurationMs,
+    bestAverage,
+    streak,
+  };
 }

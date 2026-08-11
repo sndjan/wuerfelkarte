@@ -1,142 +1,336 @@
 "use client";
 
+import { Info } from "lucide-react";
 import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
-import { formatDuration } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn, formatDuration } from "@/lib/utils";
+import { buildGamemodeStatsSummary, GamemodeStatsSummary, PlayerStanding } from "../stats";
 import { MatchPlayer, StoredMatch } from "../types";
 
-export const MEDALS = ["🥇", "🥈", "🥉"];
+const BALOO = "font-[family-name:var(--font-baloo)]";
 
-/** One number in the grid at the top of the statistics card. */
-export type StatTile = {
-  label: string;
-  value: ReactNode;
-  accent?: boolean;
+type Timeframe = "all" | "30d" | "7d";
+
+const TIMEFRAME_LABELS: Record<Timeframe, string> = {
+  all: "Alle Zeiten",
+  "30d": "Letzte 30 Tage",
+  "7d": "Letzte 7 Tage",
 };
 
-/** One medal list, e.g. "Siegquote" or Flip 7's "Verzock-Quote". */
-export type StatSection = {
-  label: string;
-  /** Optional explainer rendered next to the label — Yatzy explains its ranking. */
-  info?: ReactNode;
-  entries: Array<{ name: string; detail: ReactNode }>;
+const TIMEFRAME_DAYS: Record<Timeframe, number | null> = {
+  all: null,
+  "30d": 30,
+  "7d": 7,
 };
 
-/**
- * What a game contributes to its own statistics card on top of the numbers
- * every game has (games played, highscore, average duration).
- */
-export type GameStats = {
-  tiles?: StatTile[];
-  sections?: StatSection[];
-};
+const identity = (emoji: string | undefined, name: string) =>
+  `${emoji ?? ""} ${name}`.trim();
+
+const pluralize = (count: number, singular: string, plural: string) =>
+  count === 1 ? singular : plural;
+
+const formatWinRate = (rate: number) =>
+  rate.toLocaleString(undefined, {
+    style: "percent",
+    maximumFractionDigits: 0,
+  });
 
 type GamemodeStatsProps<TMatch extends StoredMatch<MatchPlayer>> = {
-  /** Already narrowed to the selected gamemode. */
   matches: TMatch[];
-  buildStats?: (matches: TMatch[]) => GameStats;
+  /** Display name of the currently selected gamemode, e.g. "Wunder+". */
+  modeName: string;
 };
 
+/** The redesigned per-gamemode statistics card: podium, records, full ranking. */
 export function GamemodeStats<TMatch extends StoredMatch<MatchPlayer>>({
   matches,
-  buildStats,
+  modeName,
 }: GamemodeStatsProps<TMatch>) {
-  const gamesPlayed = matches.length;
+  const [timeframe, setTimeframe] = useState<Timeframe>("all");
 
-  let highscore: { name: string; score: number } | null = null;
-  for (const match of matches) {
-    for (const player of match.players) {
-      if (!highscore || player.score > highscore.score) {
-        highscore = { name: player.name, score: player.score };
-      }
-    }
+  const filtered = useMemo(() => {
+    const days = TIMEFRAME_DAYS[timeframe];
+    if (days === null) return matches;
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    return matches.filter((match) => new Date(match.timestamp).getTime() >= cutoff);
+  }, [matches, timeframe]);
+
+  const summary = useMemo(() => buildGamemodeStatsSummary(filtered), [filtered]);
+
+  if (matches.length === 0) {
+    return (
+      <div className="flex flex-col gap-4 rounded-[20px] bg-background py-5">
+        <EmptyCard>Noch keine Spiele in diesem Modus</EmptyCard>
+      </div>
+    );
   }
 
-  const durations = matches
-    .map((match) => match.durationMs)
-    .filter((duration): duration is number => typeof duration === "number");
-  const averageDurationMs =
-    durations.length > 0
-      ? durations.reduce((sum, duration) => sum + duration, 0) / durations.length
-      : null;
+  return (
+    <div className="flex flex-col gap-4 rounded-[20px] bg-background py-5">
+      <Header
+        modeName={modeName}
+        summary={summary}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+      />
+      {summary.gamesPlayed === 0 ? (
+        <EmptyCard>Keine Spiele in diesem Zeitraum</EmptyCard>
+      ) : (
+        <>
+          <Podium standings={summary.standings} />
+          <RecordCards summary={summary} />
+          {summary.standings.length > 3 && (
+            <FurtherPlayers standings={summary.standings} />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
-  const { tiles = [], sections = [] } = buildStats?.(matches) ?? {};
+function EmptyCard({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-center rounded-2xl bg-card p-4 text-center">
+      <p className="text-sm font-extrabold text-muted-foreground">{children}</p>
+    </div>
+  );
+}
+
+function Header({
+  modeName,
+  summary,
+  timeframe,
+  onTimeframeChange,
+}: {
+  modeName: string;
+  summary: GamemodeStatsSummary;
+  timeframe: Timeframe;
+  onTimeframeChange: (timeframe: Timeframe) => void;
+}) {
+  const gamesLabel = `${summary.gamesPlayed} ${pluralize(summary.gamesPlayed, "SPIEL", "SPIELE")}`;
 
   return (
-    <div className="flex flex-col gap-2">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-        Statistiken
-      </h2>
-      <div className="flex flex-col gap-4 rounded-2xl bg-card p-4">
-        {gamesPlayed === 0 || !highscore ? (
-          <p className="text-sm text-muted-foreground">
-            Noch keine Spiele in diesem Modus.
-          </p>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <Tile label="Gespielte Spiele" value={gamesPlayed} />
-              <Tile
-                label="Highscore"
-                value={`${highscore.score} · ${highscore.name}`}
-                accent
-              />
-              {tiles.map((tile) => (
-                <Tile key={tile.label} {...tile} />
-              ))}
-              {averageDurationMs !== null && (
-                <Tile
-                  label="Ø Spielzeit"
-                  value={formatDuration(averageDurationMs)}
-                />
-              )}
-            </div>
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+          {modeName.toUpperCase()} · {gamesLabel}
+        </h2>
+        <RankingInfo />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="shrink-0 rounded-full bg-card px-3 py-1.5 text-[11px] font-extrabold text-foreground">
+          {TIMEFRAME_LABELS[timeframe]} ⌄
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuRadioGroup
+            value={timeframe}
+            onValueChange={(value) => onTimeframeChange(value as Timeframe)}
+          >
+            {(Object.keys(TIMEFRAME_LABELS) as Timeframe[]).map((key) => (
+              <DropdownMenuRadioItem key={key} value={key}>
+                {TIMEFRAME_LABELS[key]}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
-            {sections.map(
-              (section) =>
-                section.entries.length > 0 && (
-                  <div
-                    key={section.label}
-                    className="flex flex-col gap-2 border-t border-border pt-4"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                        {section.label}
-                      </p>
-                      {section.info}
-                    </div>
-                    {section.entries.map(({ name, detail }, index) => (
-                      <div
-                        key={name}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="font-bold">
-                          {MEDALS[index]} {name}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {detail}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ),
-            )}
-          </>
-        )}
+function RankingInfo() {
+  return (
+    <Dialog>
+      <DialogTrigger aria-label="Erklärung zur Rangliste" className="text-muted-foreground">
+        <Info className="size-3.5" />
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Wie wird die Rangliste berechnet?</DialogTitle>
+        </DialogHeader>
+        <DialogDescription>
+          Nicht einfach Siege ÷ Spiele – sonst stünde jeder, der genau ein Spiel
+          gewonnen hat, mit 100 % ganz oben.
+        </DialogDescription>
+        <div className="flex flex-col gap-4 text-sm">
+          <p>
+            Stattdessen startet jeder mit 5 gedachten Extra-Spielen, in denen er
+            genau so oft gewinnt, wie es der Zufall erwarten lässt: bei 4
+            Spielern also 25 % davon, bei 2 Spielern 50 %.
+          </p>
+          <p>
+            Wer wenig gespielt hat, liegt dadurch nah an diesem Erwartungswert.
+            Je mehr Partien dazukommen, desto mehr zählt die echte Bilanz – die
+            gedachten Spiele fallen kaum noch ins Gewicht.
+          </p>
+          <p className="text-muted-foreground">
+            Solo-Partien zählen nicht mit, da es dort keinen Gegner zu schlagen
+            gibt.
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Podium({ standings }: { standings: PlayerStanding[] }) {
+  const byRank = new Map(standings.slice(0, 3).map((standing, index) => [index + 1, standing]));
+
+  return (
+    <div className="flex items-end gap-3.5">
+      {[2, 1, 3].map((rank) => {
+        const standing = byRank.get(rank);
+        return standing ? <PodiumCard key={rank} rank={rank as 1 | 2 | 3} standing={standing} /> : null;
+      })}
+    </div>
+  );
+}
+
+function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStanding }) {
+  const subline = `${standing.wins} ${pluralize(standing.wins, "Sieg", "Siege")} · ${formatWinRate(standing.winRate)}`;
+
+  if (rank === 1) {
+    return (
+      <div className="flex flex-[1.15] flex-col items-center gap-1.5 rounded-2xl bg-card p-4 shadow-[0_0_24px_rgba(242,194,48,.35)]">
+        <span className="text-[18px] leading-none">👑</span>
+        <span className="text-[30px] leading-none">{standing.emoji}</span>
+        <span className={cn(BALOO, "text-base font-extrabold text-foreground")}>
+          {standing.name}
+        </span>
+        <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
+        <div className="flex h-[84px] w-full items-center justify-center rounded-t-[12px] bg-gold">
+          <span className={cn(BALOO, "text-[26px] font-extrabold text-foreground")}>1</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (rank === 2) {
+    return (
+      <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-card p-4">
+        <span className="text-[26px] leading-none">{standing.emoji}</span>
+        <span className="text-sm font-extrabold text-foreground">{standing.name}</span>
+        <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
+        <div className="flex h-14 w-full items-center justify-center rounded-t-[12px] bg-silver">
+          <span className={cn(BALOO, "text-xl font-extrabold text-foreground")}>2</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-card p-4">
+      <span className="text-[26px] leading-none">{standing.emoji}</span>
+      <span className="text-sm font-extrabold text-foreground">{standing.name}</span>
+      <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
+      <div className="flex h-10 w-full items-center justify-center rounded-t-[12px] bg-bronze">
+        <span className={cn(BALOO, "text-lg font-extrabold text-white")}>3</span>
       </div>
     </div>
   );
 }
 
-function Tile({ label, value, accent }: StatTile) {
+function RecordCards({ summary }: { summary: GamemodeStatsSummary }) {
   return (
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <RecordCard
+        label="🏆 HIGHSCORE"
+        value={summary.highscore?.score ?? "–"}
+        valueClassName="text-brand-accent"
+        sub={summary.highscore ? identity(summary.highscore.emoji, summary.highscore.name) : "–"}
+      />
+      <RecordCard
+        label="⏱ Ø SPIELDAUER"
+        value={summary.averageDurationMs !== null ? formatDuration(summary.averageDurationMs) : "–"}
+        sub={
+          summary.perPlayerDurationMs !== null
+            ? `Ø ${formatDuration(summary.perPlayerDurationMs)} pro Spieler`
+            : "–"
+        }
+      />
+      <RecordCard
+        label="📈 HÖCHSTER Ø"
+        value={summary.bestAverage ? Math.round(summary.bestAverage.average) : "–"}
+        sub={
+          summary.bestAverage
+            ? identity(summary.bestAverage.emoji, summary.bestAverage.name)
+            : "–"
+        }
+      />
+      <RecordCard
+        label="🔥 SERIE"
+        value={
+          summary.streak
+            ? `${summary.streak.length} ${pluralize(summary.streak.length, "Sieg", "Siege")}`
+            : "–"
+        }
+        sub={
+          summary.streak
+            ? `${identity(summary.streak.emoji, summary.streak.name)}${summary.streak.active ? ", läuft" : ""}`
+            : "–"
+        }
+      />
+    </div>
+  );
+}
+
+function RecordCard({
+  label,
+  value,
+  valueClassName,
+  sub,
+}: {
+  label: string;
+  value: ReactNode;
+  valueClassName?: string;
+  sub: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl bg-card p-3.5">
+      <p className="text-[10px] font-extrabold uppercase tracking-[.05em] text-muted-foreground">
         {label}
       </p>
-      <p className={`text-xl font-bold${accent ? " text-brand-accent" : ""}`}>
+      <p className={cn(BALOO, "text-xl font-extrabold text-foreground", valueClassName)}>
         {value}
       </p>
+      <p className="text-[11px] font-bold text-foreground">{sub}</p>
+    </div>
+  );
+}
+
+function FurtherPlayers({ standings }: { standings: PlayerStanding[] }) {
+  return (
+    <div className="flex flex-col gap-2.5 rounded-2xl bg-card px-4 py-3.5">
+      <p className="text-[10px] font-extrabold uppercase tracking-[.05em] text-muted-foreground">
+        Weitere Spieler
+      </p>
+      {standings.slice(3).map((standing, index) => (
+        <div key={standing.name} className="flex items-center justify-between gap-2">
+          <span className="truncate text-[13px] font-bold text-foreground">
+            {index + 4}. {identity(standing.emoji, standing.name)}
+          </span>
+          <span className="shrink-0 text-[13px] font-bold text-muted-foreground">
+            {standing.wins} {pluralize(standing.wins, "Sieg", "Siege")} / {standing.games}{" "}
+            {pluralize(standing.games, "Spiel", "Spiele")} · {formatWinRate(standing.winRate)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
   RecentMatches,
 } from "@/games/shared/components/RecentMatches";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
-import { FLIP7_EMOJI, buildStats } from "../config";
+import { FLIP7_EMOJI } from "../config";
 import { flip7Gamemodes, gamemodeSlug } from "../gamemodes";
 import {
   DEFAULT_TARGET_SCORE,
@@ -62,7 +62,7 @@ export function Lobby() {
         <>
           <GamemodeStats
             matches={history.filter((m) => m.gamemode === selectedGamemode)}
-            buildStats={buildStats}
+            modeName={flip7Gamemodes[selectedGamemode].name}
           />
           <RecentMatches
             matches={history}

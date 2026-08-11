@@ -26,6 +26,10 @@
   --ring: #2F9161;
   --brand-accent: #2F9161;
   --brand-badge: #D9A93C;
+  --hairline: #E3EEE5;
+  --gold: #F2C230;
+  --silver: #C9D2CC;
+  --bronze: #CD7F32;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -62,6 +66,7 @@
   --ring: #4CB37E;
   --brand-accent: #4CB37E;
   --brand-badge: #D9A93C;
+  --hairline: rgba(241, 247, 242, 0.12);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -102,6 +107,10 @@
   --color-ring: var(--ring);
   --color-brand-accent: var(--brand-accent);
   --color-brand-badge: var(--brand-badge);
+  --color-hairline: var(--hairline);
+  --color-gold: var(--gold);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
