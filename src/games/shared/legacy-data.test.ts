@@ -53,6 +53,7 @@ describe("a browser upgrading from the pre-refactor app", () => {
     expect(yatzyStorage.loadSettings()).toEqual({
       missionEveryRound: true,
       balancedMode: false,
+      compactMode: false,
     });
   });
 

@@ -12,6 +12,8 @@ type YatzySettings = {
   missionEveryRound: boolean;
   /** Chaoswunder: draw a fixed difficulty mix instead of a free draw. */
   balancedMode: boolean;
+  /** Denser player cards so a full sheet fits on screen without scrolling. */
+  compactMode: boolean;
 };
 
 /**
@@ -23,7 +25,11 @@ export const yatzyStorage = createGameStorage<
   YatzyMatch,
   YatzySettings
 >("yatzy", {
-  defaultSettings: { missionEveryRound: false, balancedMode: false },
+  defaultSettings: {
+    missionEveryRound: false,
+    balancedMode: false,
+    compactMode: false,
+  },
 });
 
 const PLAYERS_KEY = "yatzy:players";
@@ -60,3 +66,9 @@ export const saveChaosSetting = (
   key: keyof YatzySettings,
   value: boolean,
 ): void => yatzyStorage.saveSettings({ [key]: value });
+
+export const loadCompactMode = (): boolean =>
+  yatzyStorage.loadSettings().compactMode;
+
+export const saveCompactMode = (value: boolean): void =>
+  yatzyStorage.saveSettings({ compactMode: value });

@@ -21,7 +21,13 @@ import {
 import { Mission, selectMissions } from "../gamemodes/chaoswunder";
 import { useGame } from "../hooks/useGame";
 import { isMatchComplete } from "../scoring";
-import { loadChaosSettings, saveChaosSetting, yatzyStorage } from "../storage";
+import {
+  loadChaosSettings,
+  loadCompactMode,
+  saveChaosSetting,
+  saveCompactMode,
+  yatzyStorage,
+} from "../storage";
 import { Points } from "../types";
 import { ChaosMissions } from "./ChaosMissions";
 import { Menu } from "./Menu";
@@ -125,6 +131,14 @@ export function Board() {
     () => loadChaosSettings().balancedMode,
   );
   const chaosRoundInterval = missionEveryRound ? 1 : 2;
+  const [compactMode, setCompactMode] = useState(() => loadCompactMode());
+  const toggleCompactMode = () => {
+    setCompactMode((prev) => {
+      const next = !prev;
+      saveCompactMode(next);
+      return next;
+    });
+  };
 
   const handleResetAll = () => {
     resetAll();
@@ -251,6 +265,24 @@ export function Board() {
     if (gameFinished) setGameEndTime((prev) => prev ?? Date.now());
   }, [gameFinished]);
 
+  const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
+  // Only nudges on the transition to finished, not on mount — reopening a
+  // completed match from "Letzte Spiele" shouldn't nag the moment it loads.
+  const wasGameFinishedRef = useRef(gameFinished);
+  useEffect(() => {
+    if (gameFinished && !wasGameFinishedRef.current) {
+      toast.success("Alle Felder ausgefüllt!", {
+        description: "Das Spiel ist fertig ausgewertet.",
+        action: {
+          label: "Punkte ansehen",
+          onClick: () => setScoreDialogOpen(true),
+        },
+        duration: 10000,
+      });
+    }
+    wasGameFinishedRef.current = gameFinished;
+  }, [gameFinished]);
+
   const elapsedMs =
     gameStartTime !== null && gameEndTime !== null
       ? gameEndTime - gameStartTime
@@ -301,7 +333,11 @@ export function Board() {
               players={scoringPlayers}
               shareConfig={shareConfig(gamemode)}
               elapsedMs={elapsedMs}
-              onOpenChange={(open) => open && saveMatch()}
+              open={scoreDialogOpen}
+              onOpenChange={(open) => {
+                setScoreDialogOpen(open);
+                if (open) saveMatch();
+              }}
               trigger={
                 <Button
                   variant="outline"
@@ -341,6 +377,8 @@ export function Board() {
               seasonalTheme={theme}
               isThemeActive={isThemeActive}
               onToggleTheme={() => setIsThemeActive?.(!isThemeActive)}
+              compactMode={compactMode}
+              onToggleCompactMode={toggleCompactMode}
             />
           </>
         }
@@ -393,7 +431,13 @@ export function Board() {
                 ref={(el) => {
                   playerRefs.current[index] = el;
                 }}
-                style={{ width: "calc(50% - 8px)" }}
+                // vw-based, not %: a %-based width is resolved against this
+                // flex row's own content-driven size (it's forced wider than
+                // the viewport via min-w-max for 3+ players), so a card's
+                // width would shift as its own field labels shrink/grow when
+                // filled in. vw pins it to the viewport instead, so it can
+                // never change on its own.
+                style={{ width: "calc(50vw - 24px)" }}
               >
                 <PlayerCard
                   playerName={player.name}
@@ -423,6 +467,7 @@ export function Board() {
                   doubledFields={
                     isBattle ? playerDoubledSet(player.id) : undefined
                   }
+                  compact={compactMode}
                 />
               </div>
             );

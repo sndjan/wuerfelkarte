@@ -1,6 +1,6 @@
 "use client";
 
-import { DarkModeToggle } from "@/components/common/DarkModeToggle";
+import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { games } from "@/games/registry";
 import { GameTile } from "@/games/GameTile";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -18,8 +18,8 @@ export default function GamesOverview() {
             <span className="text-brand-accent">.com</span>
           </span>
         }
-        right={<DarkModeToggle />}
       />
+      <InstallPwaBanner />
       <div className="mx-auto max-w-md px-4 py-6">
         <div className="grid grid-cols-2 gap-4">
           {games.map((game) => (

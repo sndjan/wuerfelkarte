@@ -5,13 +5,11 @@ import {
   Eye,
   EyeOff,
   Info,
-  Moon,
   Palette,
   RotateCcw,
-  Sun,
+  Rows3,
   Trash2,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +49,8 @@ type GameMenuProps = {
   /** Rules text; omitted or empty hides the "Regeln anzeigen" entry. */
   gamemodeInfo?: string[];
   hideScores?: { value: boolean; onToggle: () => void };
+  /** Denser player cards so a full sheet fits on screen without scrolling. */
+  compactMode?: { value: boolean; onToggle: () => void };
   /** Clears the entered results but keeps the players — label varies per game. */
   resetRounds?: { label: string; onSelect: () => void };
   onResetAll?: () => void;
@@ -63,11 +63,11 @@ export function GameMenu({
   actions = [],
   gamemodeInfo,
   hideScores,
+  compactMode,
   resetRounds,
   onResetAll,
   seasonalTheme,
 }: GameMenuProps) {
-  const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
 
   const row = (icon: ReactNode, label: ReactNode) => (
@@ -140,6 +140,17 @@ export function GameMenu({
             </DropdownMenuItem>
           )}
 
+          {compactMode && (
+            <DropdownMenuItem onSelect={compactMode.onToggle}>
+              <Rows3 />
+              <span>
+                {compactMode.value
+                  ? "Kompakte Ansicht deaktivieren"
+                  : "Kompakte Ansicht aktivieren"}
+              </span>
+            </DropdownMenuItem>
+          )}
+
           {resetRounds && (
             <DropdownMenuItem onSelect={resetRounds.onSelect}>
               <RotateCcw />
@@ -164,22 +175,6 @@ export function GameMenu({
               </span>
             </DropdownMenuItem>
           )}
-
-          <DropdownMenuItem
-            onSelect={() => setTheme(theme === "light" ? "dark" : "light")}
-          >
-            {theme === "light" ? (
-              <>
-                <Moon className="h-[1.2rem] w-[1.2rem] scale-100 transition-all" />
-                <span>Dunkler Modus</span>
-              </>
-            ) : (
-              <>
-                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-                <span>Heller Modus</span>
-              </>
-            )}
-          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>

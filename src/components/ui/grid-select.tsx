@@ -24,12 +24,12 @@ interface PanelPosition {
   columns: number;
 }
 
-// [minimum panel width in px, number of grid columns at/above that width]
+// [minimum available width in px, number of grid columns at/above that width]
 const COLUMN_BREAKPOINTS: Array<[number, number]> = [
   [0, 3],
   [280, 4],
-  [400, 5],
-  [520, 6],
+  [380, 5],
+  [480, 6],
 ];
 
 function columnsForWidth(width: number) {
@@ -45,15 +45,53 @@ function columnsForWidth(width: number) {
 // without needing to measure the rendered panel.
 const CIRCLE_SIZE = 40;
 const GRID_GAP = 8;
+const GRID_HORIZONTAL_PADDING = 24;
 const GRID_VERTICAL_PADDING = 24;
 const ACTIONS_ROW_HEIGHT = 44;
 const VIEWPORT_MARGIN = 8;
+// The panel is intentionally allowed to grow past the (often narrow, two-up
+// on mobile) trigger card, but capped so it doesn't sprawl on wide screens.
+const MAX_PANEL_WIDTH = 480;
 
 function estimatePanelHeight(optionCount: number, columns: number) {
   const rows = Math.ceil(optionCount / columns);
   const gridHeight =
     rows * CIRCLE_SIZE + Math.max(rows - 1, 0) * GRID_GAP + GRID_VERTICAL_PADDING;
   return gridHeight + ACTIONS_ROW_HEIGHT;
+}
+
+function widthForColumns(columns: number) {
+  return columns * CIRCLE_SIZE + (columns - 1) * GRID_GAP + GRID_HORIZONTAL_PADDING;
+}
+
+// Panel is sized to fit its content (up to MAX_PANEL_WIDTH), not clamped to
+// the trigger's width, then centered on the trigger and nudged back inside
+// the viewport if it would otherwise overflow.
+function computePanelLayout(triggerRect: DOMRect, optionCount: number) {
+  const viewportWidth = window.innerWidth;
+  const available = Math.min(
+    viewportWidth - VIEWPORT_MARGIN * 2,
+    MAX_PANEL_WIDTH,
+  );
+
+  let columns: number;
+  let width: number;
+  if (optionCount === 1) {
+    columns = 1;
+    width = triggerRect.width;
+  } else {
+    columns = Math.min(columnsForWidth(available), optionCount);
+    width = Math.max(widthForColumns(columns), triggerRect.width);
+    width = Math.min(width, available);
+  }
+
+  const idealLeft = triggerRect.left + triggerRect.width / 2 - width / 2;
+  const left = Math.max(
+    VIEWPORT_MARGIN,
+    Math.min(idealLeft, viewportWidth - width - VIEWPORT_MARGIN),
+  );
+
+  return { width, left, columns };
 }
 
 function GridSelect({
@@ -76,9 +114,10 @@ function GridSelect({
       const rect = triggerRef.current?.getBoundingClientRect();
       if (!rect) return;
 
-      // A single option gets its own full-width row instead of a lone circle.
-      const columns =
-        options.length === 1 ? 1 : columnsForWidth(rect.width);
+      const { width, left, columns } = computePanelLayout(
+        rect,
+        options.length,
+      );
       const estimatedHeight = estimatePanelHeight(options.length, columns);
       const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_MARGIN;
       const spaceAbove = rect.top - VIEWPORT_MARGIN;
@@ -90,16 +129,16 @@ function GridSelect({
           rect.top - Math.min(estimatedHeight, maxHeight) - 4;
         setPosition({
           top: Math.max(VIEWPORT_MARGIN, top),
-          left: rect.left,
-          width: rect.width,
+          left,
+          width,
           maxHeight,
           columns,
         });
       } else {
         setPosition({
           top: rect.bottom + 4,
-          left: rect.left,
-          width: rect.width,
+          left,
+          width,
           maxHeight: spaceBelow,
           columns,
         });
