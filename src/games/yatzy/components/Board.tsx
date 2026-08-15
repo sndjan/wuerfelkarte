@@ -410,11 +410,7 @@ export function Board() {
         style={{ scrollbarWidth: "none" }}
         id="player-container"
       >
-        <div
-          className={`flex flex-row gap-4 ${
-            players.length > 2 ? "min-w-max" : ""
-          }`}
-        >
+        <div className="flex flex-row gap-4">
           {players.map((player, index) => {
             const battleFieldStatus = isBattle
               ? (Object.fromEntries(
@@ -426,18 +422,18 @@ export function Board() {
               : undefined;
             return (
               <div
-                className="snap-center"
+                // flex-1 with a basis of 0 divides all available row width
+                // evenly among the visible cards, so they always fill the
+                // full width — 2 stretched-out cards on a phone, 6 modestly
+                // sized ones on a desktop. min-w is the floor: once cards
+                // would drop below a comfortable size (more players than
+                // fit at that width), they stop shrinking and the row
+                // overflows into the horizontal scroll/snap instead.
+                className="snap-center flex-1 basis-0 min-w-[150px]"
                 key={player.id}
                 ref={(el) => {
                   playerRefs.current[index] = el;
                 }}
-                // vw-based, not %: a %-based width is resolved against this
-                // flex row's own content-driven size (it's forced wider than
-                // the viewport via min-w-max for 3+ players), so a card's
-                // width would shift as its own field labels shrink/grow when
-                // filled in. vw pins it to the viewport instead, so it can
-                // never change on its own.
-                style={{ width: "calc(50vw - 24px)" }}
               >
                 <PlayerCard
                   playerName={player.name}

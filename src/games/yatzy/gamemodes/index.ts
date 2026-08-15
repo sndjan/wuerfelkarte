@@ -17,6 +17,8 @@ export type GamemodeConfig = {
   bonus?: BonusConfig;
   description?: string;
   information?: string[];
+  /** Field key -> value to fill in when the "apply most likely" quick action is used. */
+  quickFill?: Record<string, number | string>;
 };
 
 const standardOptions = [
@@ -58,6 +60,21 @@ const wunderPlusBonus: BonusConfig = {
   bonus: 35,
 };
 
+// "Most likely" quick-fill values: three of a kind for the number fields,
+// the base score for the bottom fields that have one obvious outcome.
+const wunderQuickFill: Record<string, number> = {
+  Einser: 3,
+  Zweier: 6,
+  Dreier: 9,
+  Vierer: 12,
+  Fünfer: 15,
+  Sechser: 18,
+  "Full House": 25,
+  "Kleine Straße": 30,
+  "Große Straße": 40,
+  Wunder: 50,
+};
+
 export const gamemodes: Record<string, GamemodeConfig> = {
   Wunder: {
     name: "Wunder",
@@ -91,6 +108,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       minSum: 63,
       bonus: 35,
     },
+    quickFill: wunderQuickFill,
   },
   WunderPlus: {
     name: "Wunder+",
@@ -107,6 +125,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     ],
     fields: wunderPlusFields,
     bonus: wunderPlusBonus,
+    quickFill: wunderQuickFill,
   },
   Battle: {
     name: "Battle",
