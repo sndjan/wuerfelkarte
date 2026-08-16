@@ -13,7 +13,6 @@ import {
 } from "@/components/common/seasonal/useSeasonalTheme";
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { GridSelect } from "@/components/ui/grid-select";
 import { Progress } from "@/components/ui/progress";
 import { Zap } from "lucide-react";
@@ -104,7 +103,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         // In compact mode this stacks with the card's own space-y-[-4px] gap
         // (flex items don't collapse margins), pulling the first field a bit
         // closer than the roomier gap used between the rest of the fields.
-        className={`flex flex-row justify-between w-full items-center ${compact ? "mb-[-4px]" : "mb-1"}`}
+        className={`flex flex-row justify-between w-full items-center ${compact ? "mb-[-4px]" : ""}`}
       >
         <button
           className={`z-20 min-w-0 flex-1 font-bold bg-white dark:bg-card rounded-md hover:bg-gray-100 dark:hover:bg-secondary transition-colors cursor-pointer text-left ${
@@ -170,10 +169,28 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     ? "bg-amber-100 hover:bg-amber-200 ring-2 ring-amber-400 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 dark:ring-amber-500"
                     : "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
           const quickFillValue = config.quickFill?.[key];
+          // Most fields only offer the quick-fill while empty. A field whose
+          // options ladder includes "current + quickFillValue" (e.g. the
+          // Wunder+/Battle "Wunder" box: 50, 100, 150, …) stays quick-
+          // fillable after being set, stacking another step each click.
+          const nextQuickFillValue =
+            typeof quickFillValue === "number"
+              ? isOpen
+                ? quickFillValue
+                : typeof own === "number"
+                  ? own + quickFillValue
+                  : undefined
+              : isOpen
+                ? quickFillValue
+                : undefined;
           const showQuickFill =
-            quickFillValue !== undefined && isOpen && !readOnly;
+            nextQuickFillValue !== undefined &&
+            !readOnly &&
+            (selectOptions ?? []).some(
+              (opt) => String(opt) === String(nextQuickFillValue),
+            );
           const fieldElement = (
-            <div key={key} className="w-full flex items-center gap-2">
+            <div key={key} className="w-full flex items-center">
               <div className="min-w-0 flex-1 flex flex-col items-center z-10 relative">
                 <GridSelect
                   value={
@@ -185,9 +202,19 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   options={selectOptions ?? []}
                   label={label}
                   disabled={readOnly}
-                  className={`w-full h-2 transition-colors pr-2 ${
-                    compact ? "px-3 py-2 text-sm" : ""
-                  } ${cellClass}`}
+                  compact={compact}
+                  className={`w-full transition-colors ${cellClass}`}
+                  quickFill={
+                    showQuickFill
+                      ? {
+                          icon: <Zap className="size-4" />,
+                          onClick: () =>
+                            onValueChange(String(nextQuickFillValue), key),
+                          title: `Wahrscheinlichsten Wert übernehmen (${nextQuickFillValue})`,
+                          ariaLabel: `Wahrscheinlichsten Wert für ${label} übernehmen (${nextQuickFillValue})`,
+                        }
+                      : undefined
+                  }
                 />
                 {isDoubled && (
                   <Badge className="absolute right-8 top-1/2 -translate-y-1/2 z-20 bg-green-700 font-bold pointer-events-none">
@@ -205,19 +232,6 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   </span>
                 )}
               </div>
-              {showQuickFill && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="z-20 shrink-0 rounded-full size-[34px]"
-                  title={`Wahrscheinlichsten Wert übernehmen (${quickFillValue})`}
-                  aria-label={`Wahrscheinlichsten Wert für ${label} übernehmen (${quickFillValue})`}
-                  onClick={() => onValueChange(quickFillValue.toString(), key)}
-                >
-                  <Zap className="size-4" />
-                </Button>
-              )}
             </div>
           );
           // Show bonus after the last bonus field
@@ -252,7 +266,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2 font-bold">
-                    <span>{sum}</span>
+                    <span>
+                      {sum}
+                      {!bonusReached && (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          /{config.bonus.minSum}
+                        </span>
+                      )}
+                    </span>
                     {bonusReached && (
                       <Badge className="bg-green-800 font-bold">
                         +{config.bonus.bonus}
@@ -268,11 +289,6 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                         : "bg-green-700 dark:bg-green-400"
                     }
                   />
-                  <div
-                    className={`text-xs text-muted-foreground ${compact ? "mt-0.5" : "mt-1"}`}
-                  >
-                    {sum} / {config.bonus.minSum} für Bonus
-                  </div>
                 </div>
               </div>
             );

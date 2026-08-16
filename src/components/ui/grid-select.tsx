@@ -14,6 +14,15 @@ interface GridSelectProps {
   label: string;
   disabled?: boolean;
   className?: string;
+  /** Denser padding, matching the player card's compact mode. */
+  compact?: boolean;
+  /** Renders a divider + icon button fused onto the pill's trailing edge. */
+  quickFill?: {
+    icon: React.ReactNode;
+    onClick: () => void;
+    title: string;
+    ariaLabel: string;
+  };
 }
 
 interface PanelPosition {
@@ -101,6 +110,8 @@ function GridSelect({
   label,
   disabled,
   className,
+  compact,
+  quickFill,
 }: GridSelectProps) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<PanelPosition | null>(null);
@@ -189,28 +200,56 @@ function GridSelect({
 
   return (
     <>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => !disabled && setOpen((o) => !o)}
+      <div
         className={cn(
-          "border-input flex w-fit items-center justify-between gap-2 rounded-full border bg-transparent px-4 py-4 text-base shadow-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+          "border-input flex w-fit items-stretch rounded-full border bg-transparent shadow-xs outline-none transition-colors has-[:focus-visible]:border-ring has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50 has-[:disabled]:opacity-50",
           className,
         )}
       >
-        <span
+        <button
+          ref={triggerRef}
+          type="button"
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => !disabled && setOpen((o) => !o)}
           className={cn(
-            "truncate",
-            displayValue === null && "text-muted-foreground",
+            "flex min-w-0 flex-1 items-center justify-between gap-2 rounded-full text-base outline-none disabled:cursor-not-allowed",
+            compact ? "px-3 py-1.5 text-sm" : "px-4 py-1.5",
           )}
         >
-          {displayValue ?? label}
-        </span>
-        <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
-      </button>
+          <span
+            className={cn(
+              "truncate",
+              displayValue === null && "text-muted-foreground",
+            )}
+          >
+            {displayValue ?? label}
+          </span>
+          <ChevronDownIcon className="hidden sm:block size-4 shrink-0 opacity-50" />
+        </button>
+        {quickFill && (
+          <>
+            <div
+              aria-hidden="true"
+              className={cn("w-px shrink-0 bg-input", compact ? "my-1.5" : "my-2")}
+            />
+            <button
+              type="button"
+              disabled={disabled}
+              title={quickFill.title}
+              aria-label={quickFill.ariaLabel}
+              onClick={quickFill.onClick}
+              className={cn(
+                "flex shrink-0 items-center justify-center rounded-full text-foreground outline-none disabled:cursor-not-allowed",
+                compact ? "px-2.5" : "px-3",
+              )}
+            >
+              {quickFill.icon}
+            </button>
+          </>
+        )}
+      </div>
 
       {open &&
         position &&

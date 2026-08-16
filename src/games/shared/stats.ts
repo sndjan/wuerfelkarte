@@ -44,6 +44,69 @@ const emptySummary: GamemodeStatsSummary = {
   streak: null,
 };
 
+export type OverallStatsSummary = {
+  gamesPlayed: number;
+  totalDurationMs: number;
+  /** Consecutive weeks (Mon–Sun) with at least one match, counting back from the current week. */
+  weeklyStreak: number;
+};
+
+const pad = (n: number) => n.toString().padStart(2, "0");
+
+/** Local-calendar key for the Monday of the week containing `date`. */
+function weekKey(date: Date): string {
+  const d = new Date(date);
+  const dayIndex = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - dayIndex);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** `key` shifted by `delta` weeks, done via calendar arithmetic so DST never skews it. */
+function shiftWeeks(key: string, delta: number): string {
+  const [year, month, day] = key.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  d.setDate(d.getDate() + delta * 7);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * Length of the current weekly streak: consecutive weeks with at least one
+ * match, walking back from the current week. The current week counts as a
+ * candidate start even if it has no match yet — it isn't over — but any
+ * earlier gap ends the streak.
+ */
+export function computeWeeklyStreak(timestamps: string[], now: Date = new Date()): number {
+  if (timestamps.length === 0) return 0;
+
+  const weeksPlayed = new Set(timestamps.map((timestamp) => weekKey(new Date(timestamp))));
+  const currentWeek = weekKey(now);
+  let cursor = weeksPlayed.has(currentWeek) ? currentWeek : shiftWeeks(currentWeek, -1);
+  if (!weeksPlayed.has(cursor)) return 0;
+
+  let streak = 0;
+  while (weeksPlayed.has(cursor)) {
+    streak += 1;
+    cursor = shiftWeeks(cursor, -1);
+  }
+  return streak;
+}
+
+/** Totals across every game and gamemode — what the overview page's stats card needs. */
+export function buildOverallStatsSummary<TMatch extends StoredMatch<MatchPlayer>>(
+  matches: TMatch[],
+  now: Date = new Date(),
+): OverallStatsSummary {
+  const totalDurationMs = matches.reduce((sum, match) => sum + (match.durationMs ?? 0), 0);
+  return {
+    gamesPlayed: matches.length,
+    totalDurationMs,
+    weeklyStreak: computeWeeklyStreak(
+      matches.map((match) => match.timestamp),
+      now,
+    ),
+  };
+}
+
 /** Whichever gamemode has the most matches on record, or `null` with no history yet. */
 export function mostPlayedGamemode<TMatch extends StoredMatch<MatchPlayer>>(
   matches: TMatch[],

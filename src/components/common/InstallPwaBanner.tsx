@@ -72,7 +72,15 @@ export function InstallPwaBanner() {
   if (dismissed || (!deferredPrompt && !showIosHint)) return null;
 
   return (
-    <Card className="mx-4 mb-4 flex items-center gap-3 p-3">
+    <Card className="relative mx-4 flex items-center gap-3 p-3 pr-8">
+      <button
+        type="button"
+        aria-label="Hinweis schließen"
+        onClick={dismiss}
+        className="text-muted-foreground absolute top-2 right-2"
+      >
+        <X size={18} />
+      </button>
       <span className="text-2xl">📲</span>
       <div className="flex-1 text-sm">
         {showIosHint ? (
@@ -90,14 +98,6 @@ export function InstallPwaBanner() {
           Installieren
         </Button>
       )}
-      <button
-        type="button"
-        aria-label="Hinweis schließen"
-        onClick={dismiss}
-        className="text-muted-foreground"
-      >
-        <X size={18} />
-      </button>
     </Card>
   );
 }
