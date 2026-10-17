@@ -1,3 +1,4 @@
+import { flip7Rules } from "./gamemodes";
 import {
   Flip7Game,
   Flip7GamemodeKey,
@@ -70,33 +71,90 @@ const entryOf = (
 export const isEntryComplete = (entry: Flip7RoundEntry | undefined): boolean =>
   entry != null && (entry.absent === true || entry.busted || entry.points != null);
 
-/** `null` while the entry is still open — distinct from a scored 0. */
+/**
+ * What the entry itself is worth — the Flip-7-Malus another player may have
+ * aimed at this one is added by `playerRoundScore`, which can see the table.
+ *
+ * `null` while the entry is still open — distinct from a scored 0.
+ */
 export const entryScore = (
   entry: Flip7RoundEntry | undefined,
+  gamemode: Flip7GamemodeKey,
 ): number | null => {
   if (!entry || entry.absent) return null;
-  if (entry.busted) return 0;
+  if (entry.busted) {
+    // Mega-Fies allows Maluskarten against someone who already verzockt hat,
+    // so their round ends on the malus; everywhere else a bust is a hard 0.
+    return flip7Rules(gamemode).allowsNegative
+      ? Math.min(entry.points ?? 0, 0)
+      : 0;
+  }
   if (entry.points == null) return null;
-  return entry.points + (entry.flip7 ? FLIP7_BONUS : 0);
+  // A Flip 7 that was cashed in against someone else pays its owner nothing.
+  const keepsBonus = entry.flip7 && entry.flip7PenaltyOn == null;
+  return entry.points + (keepsBonus ? FLIP7_BONUS : 0);
 };
 
+/** –15 for whoever a Flip 7 was traded against this round (Mega-Fies only). */
+const flip7Penalty = (
+  round: Flip7Round | undefined,
+  playerId: string,
+  gamemode: Flip7GamemodeKey,
+): number =>
+  flip7Rules(gamemode).allowsFlip7Penalty &&
+  isFlip7Penalised(round, playerId)
+    ? -FLIP7_BONUS
+    : 0;
+
+/** Whether someone traded their Flip 7 against this player in this round. */
+export const isFlip7Penalised = (
+  round: Flip7Round | undefined,
+  playerId: string,
+): boolean =>
+  Object.values(round?.entries ?? {}).some(
+    (entry) => entry.flip7 && entry.flip7PenaltyOn === playerId,
+  );
+
 /**
- * What a keypad answer means for the stored entry. A round worth nothing is
- * exactly what busting looks like on the scoresheet, so a typed 0 is recorded
- * as "Verzockt" instead of being a second way to write the same result.
+ * What a keypad answer means for the stored entry.
+ *
+ * Where a bust is worth exactly 0, a typed 0 is just a longer way of writing
+ * the same result, so it is recorded as "Verzockt" instead. Mega-Fies tells the
+ * two apart — Maluskarten still hit a busted player there — so the bust flag
+ * survives a typed score and 0 stays a plain 0.
  */
 export const entryPatchFromPoints = (
   points: number | null,
   flip7: boolean,
-): Partial<Flip7RoundEntry> =>
-  points === 0
-    ? { points: null, busted: true, flip7: false }
-    : { points, flip7, busted: false };
+  gamemode: Flip7GamemodeKey,
+  options: { flip7PenaltyOn?: string | null; busted?: boolean } = {},
+): Partial<Flip7RoundEntry> => {
+  const { flip7PenaltyOn = null, busted = false } = options;
+  const rules = flip7Rules(gamemode);
+
+  if (points === 0 && !rules.allowsNegative) {
+    return { points: null, busted: true, flip7: false, flip7PenaltyOn: null };
+  }
+
+  const keepsBust = busted && rules.allowsNegative;
+  return {
+    points,
+    busted: keepsBust,
+    // A bust has no Flip 7 to keep or to give away.
+    flip7: keepsBust ? false : flip7,
+    flip7PenaltyOn:
+      keepsBust || !flip7 || !rules.allowsFlip7Penalty ? null : flip7PenaltyOn,
+  };
+};
 
 export const playerRoundScore = (
   round: Flip7Round | undefined,
   playerId: string,
-): number | null => entryScore(entryOf(round, playerId));
+  gamemode: Flip7GamemodeKey,
+): number | null => {
+  const score = entryScore(entryOf(round, playerId), gamemode);
+  return score == null ? null : score + flip7Penalty(round, playerId, gamemode);
+};
 
 export const isRoundComplete = (
   round: Flip7Round | undefined,
@@ -116,12 +174,16 @@ export const hasAnyEntry = (round: Flip7Round | undefined): boolean =>
 export const roundTotal = (
   round: Flip7Round | undefined,
   players: Flip7Player[],
+  gamemode: Flip7GamemodeKey,
 ): number =>
-  players.reduce((sum, p) => sum + (playerRoundScore(round, p.id) ?? 0), 0);
+  players.reduce(
+    (sum, p) => sum + (playerRoundScore(round, p.id, gamemode) ?? 0),
+    0,
+  );
 
 export const totalScore = (game: Flip7Game, playerId: string): number =>
   game.rounds.reduce(
-    (sum, round) => sum + (playerRoundScore(round, playerId) ?? 0),
+    (sum, round) => sum + (playerRoundScore(round, playerId, game.gamemode) ?? 0),
     0,
   );
 
@@ -132,7 +194,10 @@ export const scoreAfterRound = (
 ): number =>
   game.rounds
     .slice(0, roundIndex + 1)
-    .reduce((sum, round) => sum + (playerRoundScore(round, playerId) ?? 0), 0);
+    .reduce(
+      (sum, round) => sum + (playerRoundScore(round, playerId, game.gamemode) ?? 0),
+      0,
+    );
 
 export const roundsPlayedBy = (game: Flip7Game, playerId: string): number =>
   game.rounds.filter((round) => {
@@ -148,7 +213,8 @@ export const bustCount = (game: Flip7Game, playerId: string): number =>
 
 export const bestRoundScore = (game: Flip7Game, playerId: string): number =>
   game.rounds.reduce(
-    (best, round) => Math.max(best, playerRoundScore(round, playerId) ?? 0),
+    (best, round) =>
+      Math.max(best, playerRoundScore(round, playerId, game.gamemode) ?? 0),
     0,
   );
 

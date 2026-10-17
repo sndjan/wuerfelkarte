@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { playerRoundScore, totalScore } from "../scoring";
+import { isFlip7Penalised, playerRoundScore, totalScore } from "../scoring";
 import { Flip7Game } from "../types";
 
 interface HistoryTableProps {
@@ -57,20 +57,26 @@ export function HistoryTable({
                 <td className="px-3 py-2 font-semibold">{index + 1}</td>
                 {game.players.map((player) => {
                   const entry = round.entries[player.id];
-                  const score = playerRoundScore(round, player.id);
+                  const score = playerRoundScore(round, player.id, game.gamemode);
                   return (
                     <td key={player.id} className="px-3 py-2 whitespace-nowrap">
                       {entry?.absent ? (
                         <span className="text-muted-foreground">–</span>
-                      ) : entry?.busted ? (
-                        <span className="font-semibold text-red-700 dark:text-red-400">
-                          💥 0
-                        </span>
                       ) : score == null ? (
                         <span className="text-muted-foreground">·</span>
+                      ) : entry?.busted ? (
+                        <span className="font-semibold text-red-700 dark:text-red-400">
+                          💥 {score}
+                        </span>
                       ) : (
-                        <span className="font-semibold">
+                        <span
+                          className={cn(
+                            "font-semibold",
+                            score < 0 && "text-red-700 dark:text-red-400",
+                          )}
+                        >
                           {entry?.flip7 && "7️⃣ "}
+                          {isFlip7Penalised(round, player.id) && "💔 "}
                           {score}
                         </span>
                       )}

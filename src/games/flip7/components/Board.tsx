@@ -204,8 +204,8 @@ export function Board() {
         <RoundCard
           game={game}
           roundIndex={viewRoundIndex}
-          onSetEntry={(playerId, value, flip7) =>
-            setEntry(viewRoundIndex, playerId, value, flip7)
+          onSetEntry={(playerId, value, flip7, flip7PenaltyOn) =>
+            setEntry(viewRoundIndex, playerId, value, flip7, flip7PenaltyOn)
           }
           onSetBusted={(playerId, busted) =>
             setBusted(viewRoundIndex, playerId, busted)

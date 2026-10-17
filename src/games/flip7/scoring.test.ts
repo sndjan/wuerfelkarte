@@ -18,12 +18,14 @@ import {
   flip7Count,
   hasAnyEntry,
   isEntryComplete,
+  isFlip7Penalised,
   isGameFinished,
   isRoundComplete,
   isTiedAtTop,
   leaderScore,
   minAllowedRounds,
   minTargetScore,
+  playerRoundScore,
   roundTotal,
   roundsPlayedBy,
   scoreAfterRound,
@@ -58,58 +60,70 @@ const gameWith = (rounds: Flip7Round[], targetScore = DEFAULT_TARGET_SCORE) => {
 
 describe("entryScore", () => {
   it("adds the Flip 7 bonus on top of the entered points", () => {
-    expect(entryScore(entry({ points: 63, flip7: true }))).toBe(63 + FLIP7_BONUS);
+    expect(entryScore(entry({ points: 63, flip7: true }), "Standard")).toBe(
+      63 + FLIP7_BONUS,
+    );
   });
 
   it("scores a bust as a hard 0 regardless of points", () => {
-    expect(entryScore(entry({ points: 42, busted: true }))).toBe(0);
+    expect(entryScore(entry({ points: 42, busted: true }), "Standard")).toBe(0);
   });
 
   it("returns null for an absent player, never 0", () => {
-    expect(entryScore(absentEntry())).toBeNull();
+    expect(entryScore(absentEntry(), "Standard")).toBeNull();
   });
 
   it("returns null while the entry is still open", () => {
-    expect(entryScore(emptyEntry())).toBeNull();
-    expect(entryScore(undefined)).toBeNull();
+    expect(entryScore(emptyEntry(), "Standard")).toBeNull();
+    expect(entryScore(undefined, "Standard")).toBeNull();
   });
 
   it("distinguishes a scored 0 from an open entry", () => {
-    expect(entryScore(entry({ points: 0 }))).toBe(0);
+    expect(entryScore(entry({ points: 0 }), "Standard")).toBe(0);
   });
 });
 
 describe("entryPatchFromPoints", () => {
   it("records a typed 0 as a bust", () => {
-    expect(entryPatchFromPoints(0, false)).toEqual({
+    expect(entryPatchFromPoints(0, false, "Standard")).toEqual({
       points: null,
       busted: true,
       flip7: false,
+      flip7PenaltyOn: null,
     });
   });
 
   it("drops a Flip 7 that came with a 0 — a bust scores nothing", () => {
-    expect(entryPatchFromPoints(0, true)).toEqual({
+    expect(entryPatchFromPoints(0, true, "Standard")).toEqual({
       points: null,
       busted: true,
       flip7: false,
+      flip7PenaltyOn: null,
     });
   });
 
   it("keeps points and the Flip 7 for any other score", () => {
-    expect(entryPatchFromPoints(63, true)).toEqual({
+    expect(entryPatchFromPoints(63, true, "Standard")).toEqual({
       points: 63,
       busted: false,
       flip7: true,
+      flip7PenaltyOn: null,
     });
   });
 
   it("clears a bust when the entry is emptied again", () => {
-    expect(entryPatchFromPoints(null, false)).toEqual({
+    expect(entryPatchFromPoints(null, false, "Standard")).toEqual({
       points: null,
       busted: false,
       flip7: false,
+      flip7PenaltyOn: null,
     });
+  });
+
+  it("ignores a Flip-7-Malus in modes that do not know one", () => {
+    expect(
+      entryPatchFromPoints(40, true, "Voll Fies", { flip7PenaltyOn: "b" }),
+    ).toEqual({ points: 40, busted: false, flip7: true, flip7PenaltyOn: null });
   });
 });
 
@@ -164,7 +178,7 @@ describe("rounds", () => {
       b: entry({ busted: true }),
       c: entry({ points: 30, flip7: true }),
     });
-    expect(roundTotal(r, players)).toBe(20 + 0 + 45);
+    expect(roundTotal(r, players, "Standard")).toBe(20 + 0 + 45);
   });
 });
 
@@ -301,5 +315,125 @@ describe("game state", () => {
       createRound(players),
     ]);
     expect(minAllowedRounds(game)).toBe(1);
+  });
+});
+
+describe("Voll Fies", () => {
+  const fiesGame = (rounds: Flip7Round[]) => {
+    const game = createFlip7Game(players, DEFAULT_TARGET_SCORE, "Voll Fies");
+    game.rounds = rounds;
+    return game;
+  };
+
+  it("still floors a round at 0 — the Mali take no more than the cards gave", () => {
+    expect(entryPatchFromPoints(0, false, "Voll Fies")).toEqual({
+      points: null,
+      busted: true,
+      flip7: false,
+      flip7PenaltyOn: null,
+    });
+  });
+
+  it("scores a bust as 0 even with points typed in", () => {
+    expect(entryScore(entry({ points: 20, busted: true }), "Voll Fies")).toBe(0);
+  });
+
+  it("pays the Flip 7 bonus like the Grundspiel", () => {
+    const r = round({ a: entry({ points: 42, flip7: true }) });
+    expect(playerRoundScore(r, "a", "Voll Fies")).toBe(42 + FLIP7_BONUS);
+  });
+
+  it("ignores a Flip-7-Malus that a stored game still carries", () => {
+    const r = round({
+      a: entry({ points: 42, flip7: true, flip7PenaltyOn: "b" }),
+      b: entry({ points: 10 }),
+    });
+    expect(playerRoundScore(r, "b", "Voll Fies")).toBe(10);
+    expect(totalScore(fiesGame([r]), "b")).toBe(10);
+  });
+});
+
+describe("Mega Fies", () => {
+  const megaGame = (rounds: Flip7Round[]) => {
+    const game = createFlip7Game(players, DEFAULT_TARGET_SCORE, "Mega Fies");
+    game.rounds = rounds;
+    return game;
+  };
+
+  it("keeps a typed 0 a 0 — there a bust and an empty round differ", () => {
+    expect(entryPatchFromPoints(0, false, "Mega Fies")).toEqual({
+      points: 0,
+      busted: false,
+      flip7: false,
+      flip7PenaltyOn: null,
+    });
+  });
+
+  it("lets Maluskarten drag a busted player below zero", () => {
+    expect(entryScore(entry({ points: -12, busted: true }), "Mega Fies")).toBe(
+      -12,
+    );
+  });
+
+  it("never credits a busted player with their number cards", () => {
+    expect(entryScore(entry({ points: 30, busted: true }), "Mega Fies")).toBe(0);
+  });
+
+  it("keeps the bust when a score is typed for it", () => {
+    expect(
+      entryPatchFromPoints(-10, false, "Mega Fies", { busted: true }),
+    ).toEqual({
+      points: -10,
+      busted: true,
+      flip7: false,
+      flip7PenaltyOn: null,
+    });
+  });
+
+  it("takes 15 off the person a Flip 7 was traded against", () => {
+    const r = round({
+      a: entry({ points: 42, flip7: true, flip7PenaltyOn: "b" }),
+      b: entry({ points: 30 }),
+      c: entry({ points: 10 }),
+    });
+    // The scorer gives up the bonus, so 42 stays 42.
+    expect(playerRoundScore(r, "a", "Mega Fies")).toBe(42);
+    expect(playerRoundScore(r, "b", "Mega Fies")).toBe(30 - FLIP7_BONUS);
+    expect(playerRoundScore(r, "c", "Mega Fies")).toBe(10);
+    expect(roundTotal(r, players, "Mega Fies")).toBe(42 + 15 + 10);
+  });
+
+  it("hits a busted target too, which puts their round in the minus", () => {
+    const r = round({
+      a: entry({ points: 20, flip7: true, flip7PenaltyOn: "b" }),
+      b: entry({ busted: true }),
+    });
+    expect(playerRoundScore(r, "b", "Mega Fies")).toBe(-FLIP7_BONUS);
+  });
+
+  it("subtracts a negative round from the running total", () => {
+    const game = megaGame([
+      round({ a: entry({ points: 40 }) }),
+      round({ a: entry({ points: -10, busted: true }) }),
+    ]);
+    expect(totalScore(game, "a")).toBe(30);
+    expect(scoreAfterRound(game, "a", 0)).toBe(40);
+  });
+
+  it("leaves a still-open entry open, penalty or not", () => {
+    const r = round({
+      a: entry({ points: 20, flip7: true, flip7PenaltyOn: "b" }),
+      b: emptyEntry(),
+    });
+    expect(playerRoundScore(r, "b", "Mega Fies")).toBeNull();
+  });
+
+  it("flags who a Flip 7 was traded against", () => {
+    const r = round({
+      a: entry({ points: 20, flip7: true, flip7PenaltyOn: "b" }),
+      b: entry({ points: 5 }),
+    });
+    expect(isFlip7Penalised(r, "b")).toBe(true);
+    expect(isFlip7Penalised(r, "c")).toBe(false);
   });
 });

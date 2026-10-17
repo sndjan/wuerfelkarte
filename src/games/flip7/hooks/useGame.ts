@@ -8,6 +8,7 @@ import {
   Flip7RoundEntry,
   StoredFlip7Match,
 } from "../types";
+import { flip7Rules } from "../gamemodes";
 import {
   DEFAULT_TARGET_SCORE,
   absentEntry,
@@ -83,11 +84,17 @@ export function useGame(gamemode: Flip7GamemodeKey) {
   const updateGame = (updater: (prev: Flip7Game) => Flip7Game) =>
     setGame((prev) => updater(prev));
 
-  /** Every entry edit starts the clock — the first typed number is the kick-off. */
+  /**
+   * Every entry edit starts the clock — the first typed number is the kick-off.
+   * The patch may be derived from the entry it replaces, which is how a
+   * Mega-Fies bust keeps the Maluspunkte already typed in for it.
+   */
   const patchEntry = (
     roundIndex: number,
     playerId: string,
-    patch: Partial<Flip7RoundEntry>,
+    patch:
+      | Partial<Flip7RoundEntry>
+      | ((current: Flip7RoundEntry) => Partial<Flip7RoundEntry>),
   ) => {
     updateGame((prev) => ({
       ...prev,
@@ -95,14 +102,17 @@ export function useGame(gamemode: Flip7GamemodeKey) {
       rounds: prev.rounds.map((round, index) => {
         if (index !== roundIndex) return round;
         const current = round.entries[playerId] ?? emptyEntry();
-        const next: Flip7RoundEntry = { ...current, ...patch, absent: false };
+        const resolved = typeof patch === "function" ? patch(current) : patch;
+        const next: Flip7RoundEntry = { ...current, ...resolved, absent: false };
         // Only one Flip 7 can happen per round — it ends the round instantly.
         const entries =
-          patch.flip7 === true
+          resolved.flip7 === true
             ? Object.fromEntries(
                 Object.entries(round.entries).map(([id, entry]) => [
                   id,
-                  id === playerId ? next : { ...entry, flip7: false },
+                  id === playerId
+                    ? next
+                    : { ...entry, flip7: false, flip7PenaltyOn: null },
                 ]),
               )
             : { ...round.entries, [playerId]: next };
@@ -117,14 +127,31 @@ export function useGame(gamemode: Flip7GamemodeKey) {
     playerId: string,
     points: number | null,
     flip7: boolean,
-  ) => patchEntry(roundIndex, playerId, entryPatchFromPoints(points, flip7));
+    flip7PenaltyOn: string | null = null,
+  ) =>
+    patchEntry(roundIndex, playerId, (current) =>
+      entryPatchFromPoints(points, flip7, gamemode, {
+        flip7PenaltyOn,
+        busted: current.busted,
+      }),
+    );
 
   /** Busting zeroes the round, so any typed points and a Flip 7 go with it. */
   const setBusted = (roundIndex: number, playerId: string, busted: boolean) =>
-    patchEntry(
-      roundIndex,
-      playerId,
-      busted ? { busted: true, points: null, flip7: false } : { busted: false },
+    patchEntry(roundIndex, playerId, (current) =>
+      busted
+        ? {
+            busted: true,
+            // Mega-Fies: Maluskarten are played against busted people too, so
+            // a minus already entered survives; number cards never do.
+            points:
+              flip7Rules(gamemode).allowsNegative && (current.points ?? 0) < 0
+                ? current.points
+                : null,
+            flip7: false,
+            flip7PenaltyOn: null,
+          }
+        : { busted: false },
     );
 
   /** Appends an empty round; used by "Runde abschließen" on the last round. */
