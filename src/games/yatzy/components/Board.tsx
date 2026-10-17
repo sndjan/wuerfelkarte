@@ -273,22 +273,6 @@ export function Board() {
   }, [gameFinished]);
 
   const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
-  // Only nudges on the transition to finished, not on mount — reopening a
-  // completed match from "Letzte Spiele" shouldn't nag the moment it loads.
-  const wasGameFinishedRef = useRef(gameFinished);
-  useEffect(() => {
-    if (gameFinished && !wasGameFinishedRef.current) {
-      toast.success("Alle Felder ausgefüllt!", {
-        description: "Das Spiel ist fertig ausgewertet.",
-        action: {
-          label: "Punkte ansehen",
-          onClick: () => setScoreDialogOpen(true),
-        },
-        duration: 10000,
-      });
-    }
-    wasGameFinishedRef.current = gameFinished;
-  }, [gameFinished]);
 
   const elapsedMs =
     gameStartTime !== null && gameEndTime !== null

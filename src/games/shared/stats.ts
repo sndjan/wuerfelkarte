@@ -22,7 +22,9 @@ export type GamemodeStatsSummary = {
   gamesPlayed: number;
   /**
    * Ranked by adjusted win rate (ties broken by raw win count). Solo matches
-   * have no real winner, so they don't count towards this ranking.
+   * have no real winner, so they don't count towards this ranking. Players
+   * below MIN_GAMES_FOR_RANKING are left out entirely — too few games for
+   * the win rate to mean anything.
    */
   standings: PlayerStanding[];
   highscore: { name: string; emoji?: string; score: number } | null;
@@ -202,6 +204,10 @@ export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer
     return (wins + PRIOR_GAMES * baseline) / (games + PRIOR_GAMES);
   };
 
+  // Too few games and the win rate is mostly noise, so those players don't
+  // show up in the ranking at all.
+  const MIN_GAMES_FOR_RANKING = 3;
+
   const standings: PlayerStanding[] = [...players.entries()]
     .map(([name, { emoji, games, wins, totalScore, expectedWins }]) => ({
       name,
@@ -211,6 +217,7 @@ export function buildGamemodeStatsSummary<TMatch extends StoredMatch<MatchPlayer
       averageScore: totalScore / games,
       winRate: adjustedWinRate(wins, games, expectedWins),
     }))
+    .filter((standing) => standing.games >= MIN_GAMES_FOR_RANKING)
     .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
 
   const topAverage = standings.reduce<PlayerStanding | null>(

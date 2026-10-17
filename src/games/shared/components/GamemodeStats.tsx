@@ -187,7 +187,8 @@ function RankingInfo() {
           </p>
           <p className="text-muted-foreground">
             Solo-Partien zählen nicht mit, da es dort keinen Gegner zu schlagen
-            gibt.
+            gibt. Spieler mit weniger als 3 Spielen tauchen in der Rangliste
+            noch gar nicht auf.
           </p>
         </div>
       </DialogContent>

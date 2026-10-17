@@ -75,10 +75,21 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     }
   }, []);
 
+  // Base value of a single "Wunder" for each gamemode's wonder field. Any
+  // multiple of it (reached via repeated/stacked Wunders) counts as an
+  // achievement, not just the first one.
+  const wunderBase: Record<string, number> = {
+    Wunder: 50,
+    "Mini Wunder": 30,
+    "Super Wunder": 100,
+  };
+
   const onValueChange = (value: string, key: string) => {
     // Trigger confetti for special achievements
+    const base = wunderBase[key];
+    const numValue = parseInt(value, 10);
     if (
-      (key.includes("Wunder") && ["30", "50", "100"].includes(value)) ||
+      (base && !isNaN(numValue) && numValue > 0 && numValue % base === 0) ||
       (key === "Große Straße" && value === "40" && playerName === "Mama")
     ) {
       jsConfetti?.addConfetti({ emojis: confettiEmojis });
@@ -169,12 +180,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     ? "bg-amber-100 hover:bg-amber-200 ring-2 ring-amber-400 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 dark:ring-amber-500"
                     : "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
           const quickFillValue = config.quickFill?.[key];
-          // Most fields only offer the quick-fill while empty. A field whose
-          // options ladder includes "current + quickFillValue" (e.g. the
-          // Wunder+/Battle "Wunder" box: 50, 100, 150, …) stays quick-
-          // fillable after being set, stacking another step each click.
+          // Most fields only offer the quick-fill while empty, and disappear
+          // once a value is entered. Only the "Wunder" box (50, 100, 150, …)
+          // stays quick-fillable after being set, stacking another step
+          // each click.
           const nextQuickFillValue =
-            typeof quickFillValue === "number"
+            key === "Wunder" && typeof quickFillValue === "number"
               ? isOpen
                 ? quickFillValue
                 : typeof own === "number"
