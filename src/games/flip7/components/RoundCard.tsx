@@ -60,7 +60,9 @@ export function RoundCard({
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
+      {/* One column per player on a phone; wider screens get more columns so a
+          name never drifts a tablet's width away from its own score field. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {game.players.map((player) => {
           const entry = round.entries[player.id];
           const score = playerRoundScore(round, player.id);
@@ -77,7 +79,7 @@ export function RoundCard({
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate font-semibold">
+                <span className="min-w-0 flex-1 truncate font-semibold">
                   {player.emoji ? `${player.emoji} ` : ""}
                   {player.name}
                 </span>

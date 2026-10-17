@@ -41,7 +41,7 @@ export function ChaosMissions({
   const mission = missions[currentIndex];
 
   return (
-    <Card className="relative mx-4 mb-4 flex h-full flex-col items-center justify-between space-y-[-15px] overflow-clip p-4">
+    <Card className="relative mx-4 mb-4 flex flex-col items-center gap-3 overflow-clip p-4">
       <Dialog>
         <DialogTrigger asChild>
           <Button

@@ -80,6 +80,19 @@ export const entryScore = (
   return entry.points + (entry.flip7 ? FLIP7_BONUS : 0);
 };
 
+/**
+ * What a keypad answer means for the stored entry. A round worth nothing is
+ * exactly what busting looks like on the scoresheet, so a typed 0 is recorded
+ * as "Verzockt" instead of being a second way to write the same result.
+ */
+export const entryPatchFromPoints = (
+  points: number | null,
+  flip7: boolean,
+): Partial<Flip7RoundEntry> =>
+  points === 0
+    ? { points: null, busted: true, flip7: false }
+    : { points, flip7, busted: false };
+
 export const playerRoundScore = (
   round: Flip7Round | undefined,
   playerId: string,

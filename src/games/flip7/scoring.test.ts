@@ -12,6 +12,7 @@ import {
   createFlip7Game,
   createRound,
   emptyEntry,
+  entryPatchFromPoints,
   entryScore,
   firstOpenRound,
   flip7Count,
@@ -75,6 +76,40 @@ describe("entryScore", () => {
 
   it("distinguishes a scored 0 from an open entry", () => {
     expect(entryScore(entry({ points: 0 }))).toBe(0);
+  });
+});
+
+describe("entryPatchFromPoints", () => {
+  it("records a typed 0 as a bust", () => {
+    expect(entryPatchFromPoints(0, false)).toEqual({
+      points: null,
+      busted: true,
+      flip7: false,
+    });
+  });
+
+  it("drops a Flip 7 that came with a 0 — a bust scores nothing", () => {
+    expect(entryPatchFromPoints(0, true)).toEqual({
+      points: null,
+      busted: true,
+      flip7: false,
+    });
+  });
+
+  it("keeps points and the Flip 7 for any other score", () => {
+    expect(entryPatchFromPoints(63, true)).toEqual({
+      points: 63,
+      busted: false,
+      flip7: true,
+    });
+  });
+
+  it("clears a bust when the entry is emptied again", () => {
+    expect(entryPatchFromPoints(null, false)).toEqual({
+      points: null,
+      busted: false,
+      flip7: false,
+    });
   });
 });
 

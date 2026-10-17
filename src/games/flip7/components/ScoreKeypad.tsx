@@ -62,8 +62,13 @@ export function ScoreKeypad({
       ? null
       : Math.min(parsed, MAX_ROUND_POINTS);
 
+  // 0 points is recorded as "Verzockt", which rules out a Flip 7 — the toggle
+  // stays untouched so clearing the 0 brings the draft back as it was.
+  const busts = points === 0;
+  const flip7Active = draftFlip7 && !busts;
+
   const commit = () => {
-    onSubmit(points, draftFlip7);
+    onSubmit(points, flip7Active);
     onOpenChange(false);
   };
 
@@ -83,7 +88,12 @@ export function ScoreKeypad({
           ) : (
             draft
           )}
-          {draftFlip7 && (
+          {busts && (
+            <span className="text-base font-semibold text-red-700 dark:text-red-400">
+              💥 Verzockt
+            </span>
+          )}
+          {flip7Active && (
             <span className="text-base font-semibold text-muted-foreground">
               + {FLIP7_BONUS} = {(points ?? 0) + FLIP7_BONUS}
             </span>
@@ -92,19 +102,21 @@ export function ScoreKeypad({
 
         <button
           type="button"
-          aria-pressed={draftFlip7}
+          aria-pressed={flip7Active}
+          disabled={busts}
           onClick={() => setDraftFlip7((prev) => !prev)}
           className={cn(
             // Border kept in both states so toggling doesn't resize the row.
             "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold",
-            draftFlip7
+            flip7Active
               ? "border-brand-accent bg-brand-accent text-white"
               : "border-border bg-card text-muted-foreground",
+            busts && "opacity-50",
           )}
         >
           <span>7️⃣ Flip 7</span>
           <span className="text-xs font-semibold">
-            {draftFlip7 ? `+${FLIP7_BONUS} Extrapunkte` : "7 verschiedene Zahlen"}
+            {flip7Active ? `+${FLIP7_BONUS} Extrapunkte` : "7 verschiedene Zahlen"}
           </span>
         </button>
 

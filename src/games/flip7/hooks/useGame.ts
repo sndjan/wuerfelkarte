@@ -17,6 +17,7 @@ import {
   createFlip7Game,
   createRound,
   emptyEntry,
+  entryPatchFromPoints,
   flip7Count,
   isRoundComplete,
   minAllowedRounds,
@@ -116,7 +117,7 @@ export function useGame(gamemode: Flip7GamemodeKey) {
     playerId: string,
     points: number | null,
     flip7: boolean,
-  ) => patchEntry(roundIndex, playerId, { points, flip7, busted: false });
+  ) => patchEntry(roundIndex, playerId, entryPatchFromPoints(points, flip7));
 
   /** Busting zeroes the round, so any typed points and a Flip 7 go with it. */
   const setBusted = (roundIndex: number, playerId: string, busted: boolean) =>
