@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { CABO_EMOJI } from "@/games/cabo/config";
 import { caboGamemodes } from "@/games/cabo/gamemodes";
 import { caboStorage } from "@/games/cabo/storage";
+import { DARTS_EMOJI } from "@/games/darts/config";
+import { dartsGamemodes } from "@/games/darts/gamemodes";
+import { dartsStorage } from "@/games/darts/storage";
 import { FLIP7_EMOJI } from "@/games/flip7/config";
 import { flip7Gamemodes } from "@/games/flip7/gamemodes";
 import { flip7Storage } from "@/games/flip7/storage";
@@ -48,6 +51,7 @@ export function AllMatches() {
   const wizardMatches = useMatchHistory(wizardStorage.loadMatches);
   const flip7Matches = useMatchHistory(flip7Storage.loadMatches);
   const caboMatches = useMatchHistory(caboStorage.loadMatches);
+  const dartsMatches = useMatchHistory(dartsStorage.loadMatches);
 
   const rows: Row[] = [
     ...yatzyMatches.map((match) => {
@@ -96,6 +100,16 @@ export function AllMatches() {
       players: match.players,
       action: null,
       lowerIsBetter: true,
+    })),
+    ...dartsMatches.map((match) => ({
+      id: `darts:${match.id}`,
+      gameEmoji: DARTS_EMOJI,
+      gameName: "Darts",
+      gamemodeName: dartsGamemodes[match.gamemode]?.name ?? match.gamemode,
+      timestamp: match.timestamp,
+      players: match.players,
+      action: null,
+      lowerIsBetter: false,
     })),
   ].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),

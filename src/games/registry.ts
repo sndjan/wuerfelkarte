@@ -28,6 +28,14 @@ export const games: GameSummary[] = [
   { key: "wizard", name: "Wizard", emoji: "🧙‍♂️", href: "/wizard", locked: false },
   { key: "flip7", name: "Flip 7", emoji: "7️⃣", href: "/flip7", locked: false },
   { key: "cabo", name: "Cabo", emoji: "🃏", href: "/cabo", locked: false },
+  {
+    key: "darts",
+    name: "Darts",
+    emoji: "🎯",
+    href: "/darts",
+    locked: false,
+    alternativeNames: ["Dart", "501", "X01"],
+  },
   { key: "skullking", name: "Skull King", emoji: "💀", locked: true },
   { key: "uno", name: "Uno", emoji: "🃏", locked: true },
   {

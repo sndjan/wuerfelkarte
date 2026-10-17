@@ -1,8 +1,8 @@
 # Würfelkarte
 
-Score tracking for dice and card games you play at a real table — Yatzy, Wizard
-and Flip 7, with more on the way. No account, no backend: every roster, running
-game and result stays in the browser.
+Score tracking for dice, card and pub games you play at a real table — Yatzy,
+Wizard, Flip 7, Cabo and Darts, with more on the way. No account, no backend:
+every roster, running game and result stays in the browser.
 
 Live at [würfelkarte.com](https://www.würfelkarte.com).
 
@@ -29,6 +29,9 @@ npm run dev          # http://localhost:3000
   Chaoswunder variants.
 - **Wizard** — trick prediction, including the 25 Jahre Edition Sonderkarten.
 - **Flip 7** — press your luck to seven different number cards.
+- **Cabo** — the lowest hand wins.
+- **Darts** — X01 on a clickable board, with legs, checkout suggestions and
+  three-dart averages.
 
 Seasonal decoration (Halloween, Christmas, Easter) appears in every game during
 its window and can be switched off from any game's menu.

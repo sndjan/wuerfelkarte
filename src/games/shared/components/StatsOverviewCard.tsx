@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { formatTotalDuration } from "@/lib/utils";
 import { caboStorage } from "@/games/cabo/storage";
+import { dartsStorage } from "@/games/darts/storage";
 import { flip7Storage } from "@/games/flip7/storage";
 import { wizardStorage } from "@/games/wizard/storage";
 import { yatzyStorage } from "@/games/yatzy/storage";
@@ -19,6 +20,7 @@ export function StatsOverviewCard() {
   const wizardMatches = useMatchHistory(wizardStorage.loadMatches);
   const flip7Matches = useMatchHistory(flip7Storage.loadMatches);
   const caboMatches = useMatchHistory(caboStorage.loadMatches);
+  const dartsMatches = useMatchHistory(dartsStorage.loadMatches);
 
   const summary = useMemo(() => {
     const allMatches: StoredMatch<MatchPlayer>[] = [
@@ -26,9 +28,10 @@ export function StatsOverviewCard() {
       ...wizardMatches,
       ...flip7Matches,
       ...caboMatches,
+      ...dartsMatches,
     ];
     return buildOverallStatsSummary(allMatches);
-  }, [yatzyMatches, wizardMatches, flip7Matches, caboMatches]);
+  }, [yatzyMatches, wizardMatches, flip7Matches, caboMatches, dartsMatches]);
 
   return (
     <div className="col-span-2 grid grid-cols-3 gap-3 rounded-[20px] bg-card p-5">
