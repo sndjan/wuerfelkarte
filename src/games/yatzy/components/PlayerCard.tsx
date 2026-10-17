@@ -96,14 +96,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   return (
     <Card
       className={`flex flex-col justify-between items-center h-full relative overflow-clip ${
-        compact ? "p-3 space-y-[-4px]" : "p-4 space-y-[-15px]"
+        compact ? "p-3 space-y-[-16px]" : "p-4 space-y-[-15px]"
       }`}
     >
       <div
-        // In compact mode this stacks with the card's own space-y-[-4px] gap
+        // In compact mode this stacks with the card's own space-y-[-10px] gap
         // (flex items don't collapse margins), pulling the first field a bit
         // closer than the roomier gap used between the rest of the fields.
-        className={`flex flex-row justify-between w-full items-center ${compact ? "mb-[-4px]" : ""}`}
+        className={`flex flex-row justify-between w-full items-center ${compact ? "mb-[-14px]" : ""}`}
       >
         <button
           className={`z-20 min-w-0 flex-1 font-bold bg-white dark:bg-card rounded-md hover:bg-gray-100 dark:hover:bg-secondary transition-colors cursor-pointer text-left ${

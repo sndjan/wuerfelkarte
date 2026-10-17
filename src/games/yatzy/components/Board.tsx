@@ -22,6 +22,7 @@ import { Mission, selectMissions } from "../gamemodes/chaoswunder";
 import { useGame } from "../hooks/useGame";
 import { isMatchComplete } from "../scoring";
 import {
+  hasStoredCompactMode,
   loadChaosSettings,
   loadCompactMode,
   saveChaosSetting,
@@ -132,6 +133,12 @@ export function Board() {
   );
   const chaosRoundInterval = missionEveryRound ? 1 : 2;
   const [compactMode, setCompactMode] = useState(() => loadCompactMode());
+  useEffect(() => {
+    // Compact is the standard on mobile, but only as a soft default: once
+    // the player has explicitly toggled it, that choice always wins.
+    if (hasStoredCompactMode()) return;
+    if (window.innerWidth < 640) setCompactMode(true);
+  }, []);
   const toggleCompactMode = () => {
     setCompactMode((prev) => {
       const next = !prev;

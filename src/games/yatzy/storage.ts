@@ -72,3 +72,16 @@ export const loadCompactMode = (): boolean =>
 
 export const saveCompactMode = (value: boolean): void =>
   yatzyStorage.saveSettings({ compactMode: value });
+
+/** Whether the player has ever explicitly set compact mode, vs. just seeing the default. */
+export const hasStoredCompactMode = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(yatzyStorage.settingsKey);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as Partial<YatzySettings>;
+    return typeof parsed.compactMode === "boolean";
+  } catch {
+    return false;
+  }
+};
