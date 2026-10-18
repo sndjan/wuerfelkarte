@@ -94,11 +94,12 @@ export function PlayerPanel({
                     const thrown = openTurn?.darts[index];
                     return (
                       <span
-                        key={index}
+                        // Re-keyed once thrown so the chip pops in on the tap.
+                        key={thrown ? `${index}:${dartLabel(thrown)}` : index}
                         className={cn(
-                          "min-w-10 rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums",
+                          "min-w-14 rounded-full px-3 py-1 text-center text-base font-extrabold tabular-nums",
                           thrown
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-primary text-primary-foreground animate-in zoom-in-50 duration-200"
                             : "border border-dashed border-border text-muted-foreground",
                         )}
                       >

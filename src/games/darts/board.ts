@@ -22,8 +22,8 @@ export const R_DOUBLE_OUTER = 190;
 export const R_DOUBLE_INNER = 170;
 export const R_TRIPLE_OUTER = 123;
 export const R_TRIPLE_INNER = 103;
-export const R_OUTER_BULL = 30;
-export const R_INNER_BULL = 15;
+export const R_OUTER_BULL = 38;
+export const R_INNER_BULL = 19;
 /** Where the printed numbers sit, just outside the double ring. */
 export const R_NUMBERS = 206;
 

@@ -2,11 +2,15 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import JSConfetti from "js-confetti";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
-import { useSeasonalTheme } from "@/components/common/seasonal/useSeasonalTheme";
+import {
+  THEME_EMOJIS,
+  useSeasonalTheme,
+} from "@/components/common/seasonal/useSeasonalTheme";
 import { Button } from "@/components/ui/button";
 import { ScoreDialog } from "@/games/shared/components/ScoreDialog";
 import { formatDuration } from "@/lib/utils";
@@ -27,6 +31,7 @@ import {
   standings,
 } from "../scoring";
 import { loadInputModeSetting, saveInputModeSetting } from "../storage";
+import { Dart } from "../types";
 import { Dartboard } from "./Dartboard";
 import { DartKeypad } from "./DartKeypad";
 import { LegWonDialog } from "./LegWonDialog";
@@ -89,6 +94,26 @@ export function Board() {
     setAnnouncedLeg(decidedKey);
     setLegDialogOpen(true);
   }, [decidedKey, announcedLeg]);
+
+  const confetti = useRef<JSConfetti | null>(null);
+  useEffect(() => {
+    confetti.current = new JSConfetti();
+  }, []);
+
+  // A treble 20 is worth celebrating, whichever way it was entered.
+  const handleThrow = (dart: Dart) => {
+    if (dart.segment === 20 && dart.multiplier === 3) {
+      const thrower = game.players.find((p) => p.id === state.currentPlayerId);
+      confetti.current?.addConfetti({
+        emojis: [
+          "🎯",
+          ...(isThemeActive ? THEME_EMOJIS[theme] : []),
+          ...(thrower?.emoji ? [thrower.emoji] : []),
+        ],
+      });
+    }
+    throwDart(dart);
+  };
 
   const toggleInputMode = () =>
     setInputMode((prev) => {
@@ -257,12 +282,12 @@ export function Board() {
                 {/* A phone never gets the board, so the keypad is always there;
                     on a wide screen it only shows when it was chosen. */}
                 <div className={inputMode === "board" ? "lg:hidden" : undefined}>
-                  <DartKeypad onThrow={throwDart} />
+                  <DartKeypad onThrow={handleThrow} />
                 </div>
                 {inputMode === "board" && (
                   <div className="hidden justify-center lg:flex lg:min-h-0 lg:min-w-0 lg:flex-1">
                     <Dartboard
-                      onThrow={throwDart}
+                      onThrow={handleThrow}
                       highlight={
                         state.currentPlayerId
                           ? checkoutRoute(

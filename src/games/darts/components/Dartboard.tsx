@@ -25,6 +25,7 @@ const TONE_FILL: Record<BoardTone, string> = {
 const SURROUND = "#141412";
 const NUMBER_COLOR = "#e8d8b2";
 const WIRE = "rgba(0,0,0,0.5)";
+const HIGHLIGHT = "#f2c230";
 
 const sameDart = (a: Dart, b: Dart) =>
   a.segment === b.segment && a.multiplier === b.multiplier;
@@ -101,8 +102,8 @@ export function Dartboard({ onThrow, disabled = false, highlight = [] }: Dartboa
             key={segment.id}
             d={segment.path}
             fill={TONE_FILL[segment.tone]}
-            stroke={isHighlighted(segment.dart) ? "#f2c230" : WIRE}
-            strokeWidth={isHighlighted(segment.dart) ? 3 : 0.75}
+            stroke={WIRE}
+            strokeWidth={0.75}
             {...segmentProps(segment.dart, dartAriaLabel(segment.dart))}
           />
         ))}
@@ -114,11 +115,32 @@ export function Dartboard({ onThrow, disabled = false, highlight = [] }: Dartboa
             cy={CENTER}
             r={ring.radius}
             fill={TONE_FILL[ring.tone]}
-            stroke={isHighlighted(ring.dart) ? "#f2c230" : WIRE}
-            strokeWidth={isHighlighted(ring.dart) ? 3 : 0.75}
+            stroke={WIRE}
+            strokeWidth={0.75}
             {...segmentProps(ring.dart, dartAriaLabel(ring.dart))}
           />
         ))}
+
+        {/* Highlights are painted last, on top of every bed: drawn on the beds
+            themselves, the neighbours painted later would cover half the line. */}
+        <g pointerEvents="none" fill="none" stroke={HIGHLIGHT} strokeWidth={3}>
+          {BOARD_SEGMENTS.filter((segment) => isHighlighted(segment.dart)).map(
+            (segment) => (
+              <path key={segment.id} d={segment.path} strokeLinejoin="round" />
+            ),
+          )}
+          {BULL_RINGS.map((ring, index) => {
+            if (!isHighlighted(ring.dart)) return null;
+            // The 25 is a ring around the 50: outline its inner edge, too.
+            const inner = BULL_RINGS[index + 1];
+            return (
+              <g key={ring.id}>
+                <circle cx={CENTER} cy={CENTER} r={ring.radius} />
+                {inner && <circle cx={CENTER} cy={CENTER} r={inner.radius} />}
+              </g>
+            );
+          })}
+        </g>
 
         <g pointerEvents="none">
           {BOARD_LABELS.map((label) => (
