@@ -12,6 +12,11 @@ import {
   type Theme,
 } from "@/components/common/seasonal/useSeasonalTheme";
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
+import {
+  WunderBurst,
+  wunderStyleFor,
+  type WunderShout,
+} from "@/components/common/seasonal/WunderBurst";
 import { Badge } from "@/components/ui/badge";
 import { GridSelect } from "@/components/ui/grid-select";
 import { Progress } from "@/components/ui/progress";
@@ -64,6 +69,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
   const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [wunderShout, setWunderShout] = useState<WunderShout | null>(null);
 
   const confettiEmojis = playerEmoji
     ? [...THEME_EMOJIS[theme], playerEmoji]
@@ -88,9 +94,20 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
     // Trigger confetti for special achievements
     const base = wunderBase[key];
     const numValue = parseInt(value, 10);
-    if (
-      (base && !isNaN(numValue) && numValue > 0 && numValue % base === 0) ||
-      (key === "Große Straße" && value === "40" && playerName === "Mama")
+    const isWunder =
+      base && !isNaN(numValue) && numValue > 0 && numValue % base === 0;
+    if (isWunder) {
+      // The burst throws the confetti itself once it pops.
+      setWunderShout({
+        key: Date.now(),
+        name: playerName,
+        emoji: playerEmoji,
+        style: wunderStyleFor(theme, isThemeActive),
+      });
+    } else if (
+      key === "Große Straße" &&
+      value === "40" &&
+      playerName === "Mama"
     ) {
       jsConfetti?.addConfetti({ emojis: confettiEmojis });
     }
@@ -148,6 +165,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           />
         ) : null}
       </div>
+
+      <WunderBurst
+        shout={wunderShout}
+        onBurst={() => jsConfetti?.addConfetti({ emojis: confettiEmojis })}
+        onDone={() => setWunderShout(null)}
+      />
 
       <ThemeManager
         theme={theme}
