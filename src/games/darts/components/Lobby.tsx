@@ -23,6 +23,7 @@ import {
   MIN_PLAYERS,
   createDartsGame,
 } from "../scoring";
+import { runningDartsGame } from "../resume";
 import { dartsStorage, loadSetupSettings, saveSetupSettings } from "../storage";
 import {
   DartsGamemodeKey,
@@ -70,6 +71,7 @@ export function Lobby() {
       emoji={DARTS_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}
+      runningGame={runningDartsGame}
       onStart={(selected) => {
         const players: DartsPlayer[] = selected.map((p) => ({
           id: crypto.randomUUID(),

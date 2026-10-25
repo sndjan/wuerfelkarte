@@ -23,6 +23,7 @@ import {
   suggestedRounds,
 } from "../scoring";
 import { ALL_SPECIAL_CARDS } from "../specialCards";
+import { runningWizardGame } from "../resume";
 import { wizardStorage } from "../storage";
 import {
   WizardGamemodeKey,
@@ -65,6 +66,7 @@ export function Lobby() {
       emoji={WIZARD_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}
+      runningGame={runningWizardGame}
       onStart={(selected) => {
         const players: WizardPlayer[] = selected.map((p) => ({
           id: crypto.randomUUID(),

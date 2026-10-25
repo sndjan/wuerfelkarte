@@ -1,11 +1,50 @@
 import { createGameStorage } from "@/games/shared/storage";
 import { StoredMatch } from "@/games/shared/types";
-import { YatzyMatchPlayer } from "./types";
+import { gamemodes } from "./gamemodes";
+import { Mission } from "./gamemodes/chaoswunder";
+import { Points, YatzyMatchPlayer } from "./types";
 
-/** What Yatzy remembers between sessions: the seating and the two mode toggles. */
+/** The seating the lobby hands to the board for a fresh sheet. */
 export type StoredYatzyPlayer = { name: string; emoji?: string };
 
 export type YatzyMatch = StoredMatch<YatzyMatchPlayer>;
+
+/** The sheet on the table, kept so a reload or a closed browser loses nothing. */
+export type YatzyGame = {
+  /** The match id it is recorded under once the scoreboard is opened. */
+  id: string;
+  gamemode: string;
+  players: {
+    name: string;
+    emoji?: string;
+    points: Points;
+    /** Battle only: field keys that counted double for this player. */
+    doubled?: string[];
+  }[];
+  startedAt: number | null;
+  finishedAt: number | null;
+  /** Chaoswunder: the drawn missions, so a reload does not redraw them. */
+  missions?: Mission[];
+};
+
+/** Reopening a past match from the history turns it back into a sheet. */
+export const gameFromMatch = (match: YatzyMatch): YatzyGame => {
+  const endedAt = new Date(match.timestamp).getTime();
+  return {
+    id: match.id,
+    gamemode: match.gamemode,
+    players: match.players.map((p) => ({
+      name: p.name,
+      emoji: p.emoji,
+      points: p.points as Points,
+      doubled: p.doubled,
+    })),
+    // The original duration is kept until it's played further, instead of
+    // showing none or restarting the clock.
+    startedAt: match.durationMs != null ? endedAt - match.durationMs : null,
+    finishedAt: match.durationMs != null ? endedAt : null,
+  };
+};
 
 type YatzySettings = {
   /** Chaoswunder: rotate the mission every round instead of every second one. */
@@ -16,12 +55,8 @@ type YatzySettings = {
   compactMode: boolean;
 };
 
-/**
- * Yatzy keeps no running game — only who is at the table. The sheet itself
- * lives in the hook and is rebuilt from the player list on load.
- */
 export const yatzyStorage = createGameStorage<
-  StoredYatzyPlayer[],
+  YatzyGame,
   YatzyMatch,
   YatzySettings
 >("yatzy", {
@@ -29,6 +64,11 @@ export const yatzyStorage = createGameStorage<
     missionEveryRound: false,
     balancedMode: false,
     compactMode: false,
+  },
+  reviveGame: (game) => {
+    if (!Array.isArray(game.players) || !(game.gamemode in gamemodes)) return null;
+    if (!game.players.every((p) => p && typeof p.points === "object")) return null;
+    return { ...game, id: game.id ?? crypto.randomUUID() };
   },
 });
 

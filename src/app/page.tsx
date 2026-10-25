@@ -6,7 +6,10 @@ import { useMemo, useState } from "react";
 import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Input } from "@/components/ui/input";
+import { ResumeGameCard } from "@/games/shared/components/ResumeGameCard";
 import { StatsOverviewCard } from "@/games/shared/components/StatsOverviewCard";
+import { useRunningGames } from "@/games/shared/hooks/useRunningGames";
+import { loadRunningGames } from "@/games/runningGames";
 import { games } from "@/games/registry";
 import { GameTile } from "@/games/GameTile";
 
@@ -17,6 +20,7 @@ const matchesQuery = (game: (typeof games)[number], query: string): boolean => {
 
 export default function GamesOverview() {
   const [query, setQuery] = useState("");
+  const runningGames = useRunningGames(loadRunningGames);
 
   const visibleGames = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -39,6 +43,16 @@ export default function GamesOverview() {
       />
       <InstallPwaBanner />
       <div className="mx-auto max-w-md px-4 py-6">
+        {runningGames.length > 0 && (
+          <div className="mb-6 flex flex-col gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+              Weiterspielen
+            </h2>
+            {runningGames.map((game) => (
+              <ResumeGameCard key={game.gameKey} game={game} showGameName />
+            ))}
+          </div>
+        )}
         <div className="relative mb-4">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input

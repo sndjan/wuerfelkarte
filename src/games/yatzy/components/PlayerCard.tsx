@@ -123,7 +123,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
 
   return (
     <Card
-      className={`flex flex-col justify-between items-center h-full relative overflow-clip ${
+      className={`flex flex-col justify-between items-center h-full relative isolate overflow-clip ${
         compact ? "p-3 space-y-[-16px]" : "p-4 space-y-[-15px]"
       }`}
     >

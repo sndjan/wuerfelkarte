@@ -195,7 +195,7 @@ export function Board() {
         onJump={jumpToRound}
       />
 
-      <div className="relative overflow-clip pb-8">
+      <div className="relative isolate overflow-clip pb-8">
         <ThemeManager theme={theme} isThemeActive={isThemeActive ?? false} />
         <RoundCard
           game={game}

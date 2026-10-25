@@ -217,7 +217,7 @@ export function Board() {
         </span>
       </div>
 
-      <div className="relative overflow-clip pb-8 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:pb-4">
+      <div className="relative isolate overflow-clip pb-8 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:pb-4">
         <ThemeManager theme={theme} isThemeActive={isThemeActive ?? false} />
 
         <div className="flex flex-col gap-4 px-4 lg:min-h-0 lg:flex-1 lg:flex-row">

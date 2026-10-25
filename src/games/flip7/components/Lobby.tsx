@@ -20,6 +20,7 @@ import {
   MIN_PLAYERS,
   createFlip7Game,
 } from "../scoring";
+import { runningFlip7Game } from "../resume";
 import {
   flip7Storage,
   loadTargetScoreSetting,
@@ -58,6 +59,7 @@ export function Lobby() {
       emoji={FLIP7_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}
+      runningGame={runningFlip7Game}
       onStart={(selected) => {
         const players: Flip7Player[] = selected.map((p) => ({
           id: crypto.randomUUID(),

@@ -20,6 +20,7 @@ import {
   MIN_PLAYERS,
   createCaboGame,
 } from "../scoring";
+import { runningCaboGame } from "../resume";
 import {
   caboStorage,
   loadTargetScoreSetting,
@@ -58,6 +59,7 @@ export function Lobby() {
       emoji={CABO_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}
+      runningGame={runningCaboGame}
       onStart={(selected) => {
         const players: CaboPlayer[] = selected.map((p) => ({
           id: crypto.randomUUID(),

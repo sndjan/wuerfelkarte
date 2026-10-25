@@ -4,10 +4,13 @@ import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { usePlayerRoster } from "../hooks/usePlayerRoster";
+import { useRunningGames } from "../hooks/useRunningGames";
+import { RunningGame } from "../resume";
 import { activePlayers as sortActive } from "../roster";
 import { RosterPlayer } from "../types";
 import { AddPlayerDialog } from "./AddPlayerDialog";
 import { PlayerChip } from "./PlayerChip";
+import { ResumeGameCard } from "./ResumeGameCard";
 
 /** A titled block in the lobby — every section looks the same. */
 export function LobbySection({
@@ -38,8 +41,12 @@ type LobbyShellProps = {
   children: (players: RosterPlayer[]) => ReactNode;
   /** Statistics and match history, rendered below the start button. */
   footer?: ReactNode;
+  /** The game's unfinished game, offered above the setup as "Weiterspielen". */
+  runningGame?: () => RunningGame | null;
   onStart: (players: RosterPlayer[]) => void;
 };
+
+const noRunningGame = () => null;
 
 /**
  * The frame every lobby shares: the roster picker, the player-count rule, the
@@ -52,8 +59,13 @@ export function LobbyShell({
   maxPlayers,
   children,
   footer,
+  runningGame = noRunningGame,
   onStart,
 }: LobbyShellProps) {
+  const [running] = useRunningGames(() => {
+    const game = runningGame();
+    return game ? [game] : [];
+  });
   const {
     roster,
     addPlayer,
@@ -75,6 +87,15 @@ export function LobbyShell({
     <>
       <PageHeader backHref="/" title={title} />
       <div className="flex flex-col gap-6 px-4 pb-8">
+        {running && (
+          <LobbySection title="Laufendes Spiel">
+            <ResumeGameCard
+              game={running}
+              hint="Ein neues Spiel ersetzt das laufende."
+            />
+          </LobbySection>
+        )}
+
         <LobbySection title="Spieler">
           <div className="flex flex-wrap items-center gap-2">
             {roster.map((player) => (

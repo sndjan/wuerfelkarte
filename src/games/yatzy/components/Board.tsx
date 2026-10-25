@@ -27,6 +27,8 @@ import {
   loadCompactMode,
   saveChaosSetting,
   saveCompactMode,
+  YatzyGame,
+  gameFromMatch,
   yatzyStorage,
 } from "../storage";
 import { Points } from "../types";
@@ -40,27 +42,25 @@ export function Board() {
   const gamemode = gamemodeFromSlug((params.gamemode as string) || "");
   const config = gamemodes[gamemode];
 
-  // Opening a "Letzte Spiele" entry seeds the board with that match's sheet
-  // instead of the default/stored roster, so it can be reviewed or corrected.
+  // A reload picks the running sheet back up. Opening a "Letzte Spiele" entry
+  // seeds the board with that match's sheet instead, so it can be reviewed or
+  // corrected — unless the running sheet already is that match, as it then
+  // holds the newer edits. Without either, the lobby's seating starts fresh.
   const searchParams = useSearchParams();
   const viewMatchId = searchParams.get("matchId");
-  const seedMatch = useMemo(() => {
-    if (!viewMatchId) return null;
+  const seed = useMemo((): YatzyGame | null => {
+    const running = yatzyStorage.loadGame();
+    if (!viewMatchId) {
+      return running?.gamemode === gamemode ? running : null;
+    }
+    if (running?.id === viewMatchId) return running;
     const match = yatzyStorage
       .loadMatches()
       .find((m) => m.id === viewMatchId);
     if (!match || !match.players.every((p) => p.points)) return null;
-    return match;
-  }, [viewMatchId]);
-  const seedPlayers = useMemo(
-    () =>
-      seedMatch?.players.map((p) => ({
-        name: p.name,
-        emoji: p.emoji,
-        points: p.points as Points,
-      })),
-    [seedMatch],
-  );
+    return gameFromMatch(match);
+  }, [viewMatchId, gamemode]);
+  const seedPlayers = seed?.players;
 
   const {
     players,
@@ -83,9 +83,9 @@ export function Board() {
   // Battle: composite keys `${playerId}::${fieldKey}` flagging doubled fields.
   const dkey = (playerId: number, field: string) => `${playerId}::${field}`;
   const [doubled, setDoubled] = useState<Set<string>>(() => {
-    if (!seedMatch) return new Set();
+    if (!seed) return new Set();
     const seeded = new Set<string>();
-    seedMatch.players.forEach((mp, index) => {
+    seed.players.forEach((mp, index) => {
       const player = players[index];
       if (!player || !mp.doubled) return;
       mp.doubled.forEach((field) => seeded.add(dkey(player.id, field)));
@@ -105,25 +105,21 @@ export function Board() {
       return next;
     });
 
-  // Reopening a past match keeps its original duration until it's played
-  // further, instead of showing none or restarting the clock.
-  const [gameStartTime, setGameStartTime] = useState<number | null>(() =>
-    seedMatch?.durationMs != null
-      ? new Date(seedMatch.timestamp).getTime() - seedMatch.durationMs
-      : null,
+  const [gameStartTime, setGameStartTime] = useState<number | null>(
+    () => seed?.startedAt ?? null,
   );
-  const [gameEndTime, setGameEndTime] = useState<number | null>(() =>
-    seedMatch?.durationMs != null
-      ? new Date(seedMatch.timestamp).getTime()
-      : null,
+  const [gameEndTime, setGameEndTime] = useState<number | null>(
+    () => seed?.finishedAt ?? null,
   );
   // Identifies this sitting in the history, so re-opening the scoreboard
   // updates the entry instead of adding another one.
   const [matchId, setMatchId] = useState(
-    () => seedMatch?.id ?? crypto.randomUUID(),
+    () => seed?.id ?? crypto.randomUUID(),
   );
 
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [missions, setMissions] = useState<Mission[]>(
+    () => seed?.missions ?? [],
+  );
   const [currentMissionIndex, setCurrentMissionIndex] = useState(0);
   const [missionEveryRound, setMissionEveryRound] = useState(
     () => loadChaosSettings().missionEveryRound,
@@ -172,12 +168,21 @@ export function Board() {
       ?.scrollTo({ left: 0, behavior: "auto" });
   }, []);
 
+  // The settings the current missions were drawn under. A restored sheet keeps
+  // its missions; only changing a setting draws new ones.
+  const missionsDrawnFor = useRef<string | null>(
+    seed?.missions?.length ? `${chaosRoundInterval}:${balancedMode}` : null,
+  );
+
   useEffect(() => {
     if (gamemode !== "Chaoswunder") {
       setCurrentMissionIndex(0);
       setMissions([]);
       return;
     }
+    const drawKey = `${chaosRoundInterval}:${balancedMode}`;
+    if (missionsDrawnFor.current === drawKey) return;
+    missionsDrawnFor.current = drawKey;
     setCurrentMissionIndex(0);
     prevMissionIndexRef.current = -1;
     setMissions(selectMissions(chaosRoundInterval, balancedMode));
@@ -294,6 +299,22 @@ export function Board() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isBattle, players, config, doubled],
   );
+
+  useEffect(() => {
+    yatzyStorage.saveGame({
+      id: matchId,
+      gamemode,
+      players: scoringPlayers.map(({ name, emoji, points, doubled }) => ({
+        name,
+        emoji,
+        points,
+        ...(doubled.length > 0 ? { doubled } : {}),
+      })),
+      startedAt: gameStartTime,
+      finishedAt: gameEndTime,
+      ...(missions.length > 0 ? { missions } : {}),
+    });
+  }, [matchId, gamemode, scoringPlayers, gameStartTime, gameEndTime, missions]);
 
   /** Records the result, upserting so a correction updates its own entry. */
   const saveMatch = () => {

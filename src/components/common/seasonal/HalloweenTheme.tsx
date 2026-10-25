@@ -9,7 +9,7 @@ export default function HalloweenTheme({ compact = false }: HalloweenThemeProps)
   return (
     <>
       {!compact && (
-        <div className="absolute -right-20 -bottom-20 transform rotate-330 z-0">
+        <div className="absolute -right-20 -bottom-20 transform rotate-330">
           <Image
             src="/images/pumpkin.png"
             alt="Pumpkin background"
@@ -19,7 +19,7 @@ export default function HalloweenTheme({ compact = false }: HalloweenThemeProps)
         </div>
       )}
 
-      <div className="absolute left-[-120px] top-[180px] transform rotate-30 z-0">
+      <div className="absolute left-[-120px] top-[180px] transform rotate-30">
         <Image
           src="/images/pumpkin.png"
           alt="Pumpkin background"
@@ -28,7 +28,7 @@ export default function HalloweenTheme({ compact = false }: HalloweenThemeProps)
         />
       </div>
 
-      <div className="absolute -right-20 top-[-140px] transform rotate-330 z-0">
+      <div className="absolute -right-20 top-[-140px] transform rotate-330">
         <Image
           src="/images/pumpkin.png"
           alt="Pumpkin background"

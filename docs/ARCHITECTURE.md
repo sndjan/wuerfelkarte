@@ -37,6 +37,7 @@ Each playable game is one folder with the same shape:
 | `gamemodes.ts` | The modes, their rules text and the slug ↔ key mapping |
 | `storage.ts` | `createGameStorage("<key>")` plus any named setting helpers |
 | `config.ts` | Share text and statistics config — what the shared UI needs |
+| `resume.ts` | `running<Game>Game()` — the stored game as a "Weiterspielen" card, or `null` |
 | `hooks/useGame.ts` | The state machine: load, mutate, persist, record the match |
 | `components/Lobby.tsx` | Setup screen, built on `LobbyShell` |
 | `components/Board.tsx` | The playing screen — the one genuinely game-specific UI |
@@ -53,13 +54,17 @@ Everything around the board:
   (match history upserts by id) and `loadSettings/saveSettings`. Keys are
   `<namespace>:game`, `<namespace>:matches`, `<namespace>:settings`.
 - **`roster.ts`** — the app-wide player roster, shared by all three lobbies.
+- **`resume.ts`** — the `RunningGame` shape behind the "Weiterspielen" card that
+  `LobbyShell` (via its `runningGame` prop) and the home page show for an
+  unfinished game. `src/games/runningGames.ts` collects every game's.
 - **`migrations.ts`** — one-time move of the pre-refactor localStorage keys.
 - **`stats.ts`** — `tallyWins`, `sumByPlayer`, `rateDetail`, `topThree`.
 - **`components/`** — `LobbyShell`, `GameShell` pieces (`RoundNav`), `GameMenu`,
   `ManagePlayersDialog`, `PlayerChip`, `PlayerIdentityDialog`, `GamemodePills`,
-  `GamemodeStats`, `RecentMatches`, `ScoreDialog`, `ScoreDiagram`,
-  `ShareResult`.
-- **`hooks/`** — `usePlayerRoster`, `useMatchHistory`, `useHideScores`.
+  `GamemodeStats`, `RecentMatches`, `ResumeGameCard`, `ScoreDialog`,
+  `ScoreDiagram`, `ShareResult`.
+- **`hooks/`** — `usePlayerRoster`, `useMatchHistory`, `useRunningGames`,
+  `useHideScores`.
 
 The board is deliberately **not** shared: Wizard predicts tricks, Flip 7 enters
 round points, Yatzy fills a 13-category grid. Generalising those would produce a
@@ -72,10 +77,10 @@ configuration language, not less code.
 | `wuerfelkarte:roster` | The player roster every lobby picks from |
 | `wuerfelkarte:themeActive` | Seasonal decoration on/off |
 | `wuerfelkarte:schema` | Migration marker |
-| `<game>:game` | The running game (Wizard, Flip 7) |
+| `<game>:game` | The running game — survives reloads and closed browsers |
 | `<game>:matches` | Finished matches, keyed by match id |
 | `<game>:settings` | Per-game preferences |
-| `yatzy:players` | Who is at the Yatzy table |
+| `yatzy:players` | The seating the lobby hands to a fresh Yatzy sheet |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -98,7 +103,8 @@ finds the data.
 4. **Add `config.ts`** with `shareConfig(...)` and, if the game has interesting
    numbers, `buildStats(matches)` returning `{ tiles, sections }`.
 5. **Write `hooks/useGame.ts`** — load on mount, save on change, and write the
-   match into the history when the game finishes.
+   match into the history when the game finishes. Add `resume.ts`, pass it to
+   `LobbyShell` as `runningGame` and list it in `src/games/runningGames.ts`.
 6. **Build the two screens.** `Lobby.tsx` wraps `LobbyShell` and fills the
    `children` slot with the game's setup controls. `Board.tsx` is yours, but use
    `RoundNav`, `GameMenu` and `ScoreDialog` from the kit.

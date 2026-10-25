@@ -21,6 +21,7 @@ import { mostPlayedGamemode } from "@/games/shared/stats";
 import { YATZY_EMOJI, gamemodeSlug } from "../config";
 import { gamemodes } from "../gamemodes";
 import { yatzyMatchActionInfo } from "../matchAction";
+import { runningYatzyGame } from "../resume";
 import { savePlayers, yatzyStorage } from "../storage";
 
 /** Yatzy has no upper limit — everyone who fits around the table can play. */
@@ -51,7 +52,10 @@ export function Lobby() {
       emoji={YATZY_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}
+      runningGame={runningYatzyGame}
       onStart={(selected) => {
+        // A fresh sheet for the new seating, not the one left running.
+        yatzyStorage.clearGame();
         savePlayers(
           selected.map((player) => ({
             name: player.name,
