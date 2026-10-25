@@ -46,6 +46,18 @@ export function useQuiz() {
   const [attempt, setAttempt] = useState(0);
   const [day, setDay] = useState<QuizDay | null>(null);
   const [matches, setMatches] = useState<StoredQuizMatch[]>([]);
+  // Whether today's quiz already has a decision — known from storage before
+  // the solver arrives, so a returning player never sees the intro flash.
+  // null until read (storage does not exist during the server render).
+  const [startedToday, setStartedToday] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const stored = quizStorage.loadGame();
+    setStartedToday(
+      stored?.date === dateKey() && stored.progress.some((p) => p.steps.length > 0),
+    );
+    setMatches(quizStorage.loadMatches());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,6 +113,7 @@ export function useQuiz() {
     status,
     solver,
     day,
+    startedToday,
     matches,
     streak: currentStreak(
       matches.map((m) => m.id),

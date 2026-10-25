@@ -7,18 +7,37 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QUIZ_NAME } from "../config";
 import { useQuiz } from "../hooks/useQuiz";
-import { puzzlePoints } from "../puzzles";
+import { dateKey, puzzlePoints } from "../puzzles";
 import { DaySummary } from "./DaySummary";
 import { PuzzleResult, pointsColor } from "./PuzzleResult";
 import { PuzzleView } from "./PuzzleView";
+import { QuizIntro } from "./QuizIntro";
 
 /** The quiz page: today's three puzzles, then the day's summary. */
 export function Quiz() {
-  const { status, solver, day, matches, streak, retry, keep, score } = useQuiz();
+  const { status, solver, day, startedToday, matches, streak, retry, keep, score } = useQuiz();
   // A puzzle that was just finished stays on screen until "Weiter".
   const [reviewing, setReviewing] = useState<number | null>(null);
+  const [introDone, setIntroDone] = useState(false);
 
   const header = <PageHeader backHref="/" title={QUIZ_NAME} />;
+
+  // The explanation comes first, until the day's first decision; it can be
+  // read while the solver table is still loading.
+  const started = startedToday || (day?.progress.some((p) => p.steps.length > 0) ?? false);
+  if (!introDone && !started && startedToday !== null && status !== "error") {
+    return (
+      <>
+        {header}
+        <QuizIntro
+          date={day?.date ?? dateKey()}
+          streak={streak}
+          ready={status === "ready"}
+          onStart={() => setIntroDone(true)}
+        />
+      </>
+    );
+  }
 
   if (status === "error") {
     return (
