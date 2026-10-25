@@ -17,5 +17,6 @@ export function runningDartsGame(): RunningGame | null {
     modeName: `${dartsGamemodes[game.gamemode].name} · ${game.startScore}`,
     players: game.players,
     progress: `Leg ${currentLegIndex(game) + 1} · First to ${game.legsToWin}`,
+    discard: dartsStorage.clearGame,
   };
 }

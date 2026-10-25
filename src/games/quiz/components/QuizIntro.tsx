@@ -1,6 +1,9 @@
-import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
+import type { ReactNode } from "react";
+
 import { QUIZ_EMOJI } from "../config";
-import { POINTS_PERFECT, PUZZLES_PER_DAY } from "../puzzles";
+import { Die } from "./Die";
+import { ScreenTour } from "./ScreenTour";
 
 type QuizIntroProps = {
   /** YYYY-MM-DD of today's quiz. */
@@ -8,52 +11,82 @@ type QuizIntroProps = {
   streak: number;
   /** False while the solver table is still loading. */
   ready: boolean;
+  /** The tour's last button: "Quiz starten", or a way back when reopened. */
+  startLabel: string;
   onStart: () => void;
 };
 
-const RULES: [emoji: string, title: string, text: string][] = [
-  ["📅", `${PUZZLES_PER_DAY} Aufgaben am Tag`, "Jeden Tag neu – und für alle dieselben."],
-  ["🃏", "Mitten im Spiel", "Du bekommst eine Karte und einen Wurf. Mal hast du noch 2 Würfe, mal 1, mal keinen."],
-  ["✋", "Halten, würfeln, eintragen", "Tippe Würfel zum Halten und würfle neu – oder trag direkt ein. Jede Aufgabe endet mit einem Eintrag."],
-  ["🤖", "Gegen das perfekte Spiel", "Jede Entscheidung wird mit dem besten Zug verglichen. Es gelten die Regeln der Deutschen Kniffel-Meisterschaft."],
-  ["🎯", `Bis zu ${POINTS_PERFECT} Punkte pro Aufgabe`, "Je weniger Punkte du im Schnitt verschenkst, desto mehr bekommst du. Danach siehst du die besten Züge."],
-];
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+// The example from "Worum geht's": checked against the solver — entering
+// 25 now gives away about 17 points on average against keeping 6 6 6 6.
+const EXAMPLE_DICE = [6, 6, 6, 6, 1];
 
 /**
- * The full-screen explanation before the day's first decision: what the quiz
- * is and how it scores. The start button stays at the bottom of the screen.
+ * The full-screen explanation before the day's first decision: the goal (the
+ * best move, not the most points now) and a tour of the screen, whose last
+ * step starts the quiz.
  */
-export function QuizIntro({ date, streak, ready, onStart }: QuizIntroProps) {
+export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntroProps) {
   const [year, month, day] = date.split("-");
   return (
-    // 100dvh minus the page header, so the button sits at the screen's bottom.
-    <div className="flex min-h-[calc(100dvh-5rem)] flex-col gap-6 px-4 pb-6">
+    <div className="flex flex-col gap-7 px-4 pb-8">
       <div className="flex flex-col items-center gap-1 pt-2 text-center">
         <span className="text-6xl">{QUIZ_EMOJI}</span>
-        <h2 className="mt-2 text-2xl font-extrabold">So funktioniert das Tagesquiz</h2>
+        <h2 className="mt-2 text-2xl font-extrabold">
+          So funktioniert das Tagesquiz
+        </h2>
         <p className="text-sm text-muted-foreground">
           {day}.{month}.{year}
-          {streak > 0 && ` · 🔥 ${streak} ${streak === 1 ? "Tag" : "Tage"} Serie`}
+          {streak > 0 &&
+            ` · 🔥 ${streak} ${streak === 1 ? "Tag" : "Tage"} Serie`}
         </p>
       </div>
 
-      <ol className="flex flex-col gap-4">
-        {RULES.map(([emoji, title, text]) => (
-          <li key={title} className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-xl shadow-xs">
-              {emoji}
-            </span>
-            <div>
-              <p className="font-bold">{title}</p>
-              <p className="text-sm text-muted-foreground">{text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <Section title="Worum geht's">
+        <p>
+          Du spielst <b>einen Zug</b> aus einem laufenden Kniffel-Spiel. Gesucht
+          ist der <b>beste Zug</b> – nicht der, der jetzt die meisten Punkte
+          bringt.
+        </p>
+        <details className="group">
+          <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
+            <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+            Was ist der beste Zug?
+          </summary>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Der beste Zug ist der, mit dem du am Ende des Spiels im Schnitt die
+            höchste Punktzahl erreichst. Dafür lohnt es sich manchmal, Punkte
+            liegen zu lassen oder sogar ein Feld zu streichen.
+          </p>
+        </details>
+        <div className="flex flex-col gap-2 rounded-xl border bg-card p-3">
+          <div className="grid max-w-60 grid-cols-5 gap-1.5">
+            {EXAMPLE_DICE.map((value, i) => (
+              <Die key={i} value={value} held={i < 4} />
+            ))}
+          </div>
+          <p className="text-sm">
+            <b>Beispiel:</b> Noch 2 Würfe. Viererpasch sofort eintragen bringt
+            25 Punkte – und ist trotzdem ein Fehler. Besser:{" "}
+            <b>6 6 6 6 halten</b> und auf den Wunder oder sechs Sechser würfeln.
+            Das bringt im Schnitt rund 17 Punkte mehr.
+          </p>
+        </div>
+      </Section>
 
-      <Button size="lg" className="sticky bottom-6 mt-auto w-full" disabled={!ready} onClick={onStart}>
-        {ready ? "Quiz starten" : "Lädt…"}
-      </Button>
+      <Section title="Wie wird gespielt?">
+        <ScreenTour ready={ready} startLabel={startLabel} onStart={onStart} />
+      </Section>
     </div>
   );
 }

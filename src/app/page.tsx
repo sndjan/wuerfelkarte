@@ -21,7 +21,7 @@ const matchesQuery = (game: (typeof games)[number], query: string): boolean => {
 
 export default function GamesOverview() {
   const [query, setQuery] = useState("");
-  const runningGames = useRunningGames(loadRunningGames);
+  const { running: runningGames, discard } = useRunningGames(loadRunningGames);
 
   const visibleGames = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -50,7 +50,12 @@ export default function GamesOverview() {
               Weiterspielen
             </h2>
             {runningGames.map((game) => (
-              <ResumeGameCard key={game.gameKey} game={game} showGameName />
+              <ResumeGameCard
+                key={game.gameKey}
+                game={game}
+                showGameName
+                onDiscard={discard}
+              />
             ))}
           </div>
         )}

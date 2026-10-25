@@ -62,7 +62,10 @@ export function LobbyShell({
   runningGame = noRunningGame,
   onStart,
 }: LobbyShellProps) {
-  const [running] = useRunningGames(() => {
+  const {
+    running: [running],
+    discard,
+  } = useRunningGames(() => {
     const game = runningGame();
     return game ? [game] : [];
   });
@@ -92,6 +95,7 @@ export function LobbyShell({
             <ResumeGameCard
               game={running}
               hint="Ein neues Spiel ersetzt das laufende."
+              onDiscard={discard}
             />
           </LobbySection>
         )}

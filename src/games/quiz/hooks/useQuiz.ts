@@ -12,7 +12,7 @@ import {
   puzzlePoints,
   startProgress,
 } from "../puzzles";
-import { quizStorage } from "../storage";
+import { loadTutorialSeen, quizStorage, saveTutorialSeen } from "../storage";
 import { QuizDay, StoredQuizMatch } from "../types";
 
 function createDay(solver: Solver, date: string): QuizDay {
@@ -50,13 +50,18 @@ export function useQuiz() {
   // the solver arrives, so a returning player never sees the intro flash.
   // null until read (storage does not exist during the server render).
   const [startedToday, setStartedToday] = useState<boolean | null>(null);
+  // Whether the tutorial still has to open by itself; null until read.
+  const [tutorialSeen, setTutorialSeen] = useState<boolean | null>(null);
 
   useEffect(() => {
     const stored = quizStorage.loadGame();
-    setStartedToday(
-      stored?.date === dateKey() && stored.progress.some((p) => p.steps.length > 0),
-    );
-    setMatches(quizStorage.loadMatches());
+    const started =
+      stored?.date === dateKey() && stored.progress.some((p) => p.steps.length > 0);
+    const history = quizStorage.loadMatches();
+    setStartedToday(started);
+    setMatches(history);
+    // Anyone who already played knows the quiz, even from before the flag.
+    setTutorialSeen(loadTutorialSeen() || started || history.length > 0);
   }, []);
 
   useEffect(() => {
@@ -114,6 +119,11 @@ export function useQuiz() {
     solver,
     day,
     startedToday,
+    tutorialSeen,
+    markTutorialSeen: () => {
+      saveTutorialSeen();
+      setTutorialSeen(true);
+    },
     matches,
     streak: currentStreak(
       matches.map((m) => m.id),

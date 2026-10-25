@@ -19,11 +19,12 @@ type ScorecardProps = {
 
 const UPPER = CATEGORIES.slice(0, 6);
 
-// The same pill states as the Yatzy player card's fields.
-const pill = "flex w-full items-center justify-between gap-2 rounded-full border border-input px-4 py-1.5 text-base shadow-xs transition-colors";
-const filledPill = "bg-gray-100 dark:bg-[#2f2f2f]";
-const crossedPill = "bg-red-100 dark:bg-[#950606]";
-const openPill = "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
+// The same pill states as the Yatzy player card's fields. Exported for the
+// intro's preview of the card.
+export const pill = "flex w-full items-center justify-between gap-2 rounded-full border border-input px-4 py-1.5 text-base shadow-xs transition-colors";
+export const filledPill = "bg-gray-100 dark:bg-[#2f2f2f]";
+export const crossedPill = "bg-red-100 dark:bg-[#950606]";
+export const openPill = "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
 
 /** The puzzle's scorecard, styled like a player's Wunder sheet. */
 export function Scorecard({ card, options, selected, onSelect, bare = false }: ScorecardProps) {

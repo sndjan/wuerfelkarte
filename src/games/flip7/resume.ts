@@ -17,5 +17,6 @@ export function runningFlip7Game(): RunningGame | null {
     modeName: flip7Gamemodes[game.gamemode].name,
     players: game.players,
     progress: `Runde ${firstOpenRound(game) + 1} · Ziel ${game.targetScore}`,
+    discard: flip7Storage.clearGame,
   };
 }

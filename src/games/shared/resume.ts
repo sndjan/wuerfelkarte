@@ -15,4 +15,9 @@ export type RunningGame = {
   players: { name: string; emoji?: string }[];
   /** Where the group left off, e.g. "Runde 4 von 15". */
   progress: string;
+  /**
+   * Throws the stored game away. Missing where that would not end anything —
+   * the daily quiz would just hand out the same puzzles again.
+   */
+  discard?: () => void;
 };

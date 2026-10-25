@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleHelp } from "lucide-react";
 import { useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -15,17 +16,52 @@ import { QuizIntro } from "./QuizIntro";
 
 /** The quiz page: today's three puzzles, then the day's summary. */
 export function Quiz() {
-  const { status, solver, day, startedToday, matches, streak, retry, keep, score } = useQuiz();
+  const {
+    status,
+    solver,
+    day,
+    startedToday,
+    tutorialSeen,
+    markTutorialSeen,
+    matches,
+    streak,
+    retry,
+    keep,
+    score,
+  } = useQuiz();
   // A puzzle that was just finished stays on screen until "Weiter".
   const [reviewing, setReviewing] = useState<number | null>(null);
-  const [introDone, setIntroDone] = useState(false);
+  // Opened from the "?" button; first timers get the tutorial by themselves.
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
-  const header = <PageHeader backHref="/" title={QUIZ_NAME} />;
-
-  // The explanation comes first, until the day's first decision; it can be
-  // read while the solver table is still loading.
   const started = startedToday || (day?.progress.some((p) => p.steps.length > 0) ?? false);
-  if (!introDone && !started && startedToday !== null && status !== "error") {
+  const showTutorial =
+    tutorialOpen || (tutorialSeen === false && !started && status !== "error");
+
+  const header = (
+    <PageHeader
+      backHref="/"
+      title={QUIZ_NAME}
+      right={
+        !showTutorial && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Tutorial anzeigen"
+            onClick={() => setTutorialOpen(true)}
+            className="rounded-full bg-white"
+          >
+            <CircleHelp />
+          </Button>
+        )
+      }
+    />
+  );
+
+  // The tutorial can be read while the solver table is still loading.
+  if (showTutorial) {
+    const finished = day?.finishedAt != null;
     return (
       <>
         {header}
@@ -33,7 +69,11 @@ export function Quiz() {
           date={day?.date ?? dateKey()}
           streak={streak}
           ready={status === "ready"}
-          onStart={() => setIntroDone(true)}
+          startLabel={finished ? "Zurück zum Ergebnis" : started ? "Zurück zum Quiz" : "Quiz starten"}
+          onStart={() => {
+            markTutorialSeen();
+            setTutorialOpen(false);
+          }}
         />
       </>
     );

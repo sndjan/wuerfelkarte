@@ -8,7 +8,7 @@ import { RunningGame } from "../resume";
  * Reads the unfinished games after mount — localStorage is not available
  * during SSR, so the first render never shows a card.
  */
-export function useRunningGames(load: () => RunningGame[]): RunningGame[] {
+export function useRunningGames(load: () => RunningGame[]) {
   const [running, setRunning] = useState<RunningGame[]>([]);
 
   useEffect(() => {
@@ -18,5 +18,11 @@ export function useRunningGames(load: () => RunningGame[]): RunningGame[] {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return running;
+  /** Throws one game away and re-reads storage, so its card disappears. */
+  const discard = (game: RunningGame) => {
+    game.discard?.();
+    setRunning(load());
+  };
+
+  return { running, discard };
 }

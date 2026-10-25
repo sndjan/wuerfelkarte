@@ -17,5 +17,6 @@ export function runningCaboGame(): RunningGame | null {
     modeName: caboGamemodes[game.gamemode].name,
     players: game.players,
     progress: `Runde ${firstOpenRound(game) + 1} · Ziel ${game.targetScore}`,
+    discard: caboStorage.clearGame,
   };
 }

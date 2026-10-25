@@ -17,5 +17,6 @@ export function runningWizardGame(): RunningGame | null {
     modeName: wizardGamemodes[game.gamemode].name,
     players: game.players,
     progress: `Runde ${firstOpenRound(game) + 1} von ${game.totalRounds}`,
+    discard: wizardStorage.clearGame,
   };
 }

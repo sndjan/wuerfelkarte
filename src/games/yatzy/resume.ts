@@ -31,5 +31,6 @@ export function runningYatzyGame(): RunningGame | null {
     modeName: gamemodes[gamemode].name,
     players: game.players,
     progress: `Runde ${Math.min(roundsPlayed + 1, fields.length)} von ${fields.length}`,
+    discard: yatzyStorage.clearGame,
   };
 }

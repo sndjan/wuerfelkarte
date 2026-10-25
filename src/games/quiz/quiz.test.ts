@@ -4,7 +4,7 @@ import { shareText } from "./config";
 import { describeStep, formatLoss } from "./feedback";
 import { dateKey } from "./puzzles";
 import { runningQuizGame } from "./resume";
-import { quizStorage } from "./storage";
+import { loadTutorialSeen, quizStorage, saveTutorialSeen } from "./storage";
 import type { QuizDay, QuizStep } from "./types";
 
 describe("describeStep", () => {
@@ -93,5 +93,13 @@ describe("runningQuizGame", () => {
     expect(runningQuizGame()).toBeNull();
     quizStorage.saveGame(day({ date: "2000-01-01" }));
     expect(runningQuizGame()).toBeNull();
+  });
+});
+
+describe("tutorial flag", () => {
+  it("is unset for first timers and remembered once seen", () => {
+    expect(loadTutorialSeen()).toBe(false);
+    saveTutorialSeen();
+    expect(loadTutorialSeen()).toBe(true);
   });
 });
