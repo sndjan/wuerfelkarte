@@ -12,6 +12,7 @@ import { useRunningGames } from "@/games/shared/hooks/useRunningGames";
 import { loadRunningGames } from "@/games/runningGames";
 import { games } from "@/games/registry";
 import { GameTile } from "@/games/GameTile";
+import { QuizTile } from "@/games/quiz/components/QuizTile";
 
 const matchesQuery = (game: (typeof games)[number], query: string): boolean => {
   const haystack = [game.name, ...(game.alternativeNames ?? [])];
@@ -63,10 +64,17 @@ export default function GamesOverview() {
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
+          {visibleGames
+            .filter((game) => game.featured)
+            .map((game) => (
+              <QuizTile key={game.key} game={game} />
+            ))}
           {!query.trim() && <StatsOverviewCard />}
-          {visibleGames.map((game) => (
-            <GameTile key={game.key} game={game} />
-          ))}
+          {visibleGames
+            .filter((game) => !game.featured)
+            .map((game) => (
+              <GameTile key={game.key} game={game} />
+            ))}
           {visibleGames.length === 0 && (
             <p className="col-span-2 py-6 text-center text-sm text-muted-foreground">
               Kein Spiel gefunden.

@@ -14,9 +14,20 @@ export type GameSummary = {
   locked: boolean;
   /** Names people also search for; kept for a future search box. */
   alternativeNames?: string[];
+  /** Shown first on the home page with its own wide tile (the daily quiz). */
+  featured?: boolean;
 };
 
 export const games: GameSummary[] = [
+  {
+    key: "quiz",
+    name: "Kniffel-Quiz",
+    emoji: "🧠",
+    href: "/quiz",
+    locked: false,
+    featured: true,
+    alternativeNames: ["Tagesquiz", "Yatzy-Quiz", "Kniffel-Trainer"],
+  },
   {
     key: "yatzy",
     name: "Yatzy",

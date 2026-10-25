@@ -1,0 +1,113 @@
+import { useCallback, useEffect, useState } from "react";
+
+import type { Category, Solver } from "@/games/yatzy/solver";
+import { loadSolver } from "@/games/yatzy/solverTable";
+import {
+  applyKeep,
+  applyScore,
+  currentStreak,
+  dateKey,
+  generateDailyQuiz,
+  puzzleLoss,
+  puzzlePoints,
+  startProgress,
+} from "../puzzles";
+import { quizStorage } from "../storage";
+import { QuizDay, StoredQuizMatch } from "../types";
+
+function createDay(solver: Solver, date: string): QuizDay {
+  const puzzles = generateDailyQuiz(solver, date);
+  return { date, puzzles, progress: puzzles.map(startProgress), startedAt: Date.now() };
+}
+
+function buildMatch(day: QuizDay): StoredQuizMatch {
+  const points = day.progress.map(puzzlePoints);
+  return {
+    id: day.date,
+    gamemode: "daily",
+    timestamp: new Date(day.finishedAt ?? Date.now()).toISOString(),
+    durationMs: day.finishedAt != null ? day.finishedAt - day.startedAt : undefined,
+    players: [{ name: "Du", score: points.reduce((a, b) => a + b, 0) }],
+    points,
+    losses: day.progress.map(puzzleLoss),
+  };
+}
+
+export type QuizStatus = "loading" | "error" | "ready";
+
+/**
+ * Today's quiz: fetches the solver table, restores or generates the day's
+ * puzzles, grades each decision and writes the result into the history once
+ * the last puzzle is done.
+ */
+export function useQuiz() {
+  const [solver, setSolver] = useState<Solver | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [day, setDay] = useState<QuizDay | null>(null);
+  const [matches, setMatches] = useState<StoredQuizMatch[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFailed(false);
+    loadSolver().then(
+      (loaded) => !cancelled && setSolver(loaded),
+      () => !cancelled && setFailed(true),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  useEffect(() => {
+    if (!solver) return;
+    const today = dateKey();
+    const stored = quizStorage.loadGame();
+    if (stored?.date === today) {
+      setDay(stored);
+    } else {
+      const fresh = createDay(solver, today);
+      quizStorage.saveGame(fresh);
+      setDay(fresh);
+    }
+    setMatches(quizStorage.loadMatches());
+  }, [solver]);
+
+  const commit = useCallback((next: QuizDay) => {
+    if (next.finishedAt == null && next.progress.every((p) => p.done)) {
+      next = { ...next, finishedAt: Date.now() };
+      quizStorage.saveMatch(buildMatch(next));
+      setMatches(quizStorage.loadMatches());
+    }
+    quizStorage.saveGame(next);
+    setDay(next);
+  }, []);
+
+  const updatePuzzle = (index: number, action: "keep" | "score", arg: boolean[] | Category) => {
+    if (!solver || !day) return;
+    const puzzle = day.puzzles[index];
+    const current = day.progress[index];
+    const next =
+      action === "keep"
+        ? applyKeep(solver, puzzle, current, arg as boolean[])
+        : applyScore(solver, puzzle, current, arg as Category);
+    commit({ ...day, progress: day.progress.map((p, i) => (i === index ? next : p)) });
+  };
+
+  const today = day?.date ?? dateKey();
+  const status: QuizStatus = failed ? "error" : solver && day ? "ready" : "loading";
+
+  return {
+    status,
+    solver,
+    day,
+    matches,
+    streak: currentStreak(
+      matches.map((m) => m.id),
+      today,
+    ),
+    retry: () => setAttempt((n) => n + 1),
+    keep: (index: number, held: boolean[]) => updatePuzzle(index, "keep", held),
+    score: (index: number, category: Category) => updatePuzzle(index, "score", category),
+  };
+}
