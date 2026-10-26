@@ -37,6 +37,8 @@ export function Quiz({ date }: { date?: string }) {
   } = useQuiz(date);
   // A puzzle that was just finished stays on screen until "Weiter".
   const [reviewing, setReviewing] = useState<number | null>(null);
+  // The dice the last roll threw, so the next step's view can shake them.
+  const [rolling, setRolling] = useState<boolean[] | null>(null);
   // Opened from the "?" button; first timers get the tutorial by themselves.
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
@@ -182,9 +184,17 @@ export function Quiz({ date }: { date?: string }) {
             dots={dots}
             puzzle={day.puzzles[current]}
             progress={day.progress[current]}
-            onRoll={() => roll(current)}
-            onKeep={(held) => keep(current, held)}
+            rolling={rolling}
+            onRoll={() => {
+              setRolling(day.progress[current].dice.map(() => true));
+              roll(current);
+            }}
+            onKeep={(held) => {
+              setRolling(held.map((h) => !h));
+              keep(current, held);
+            }}
             onScore={(category) => {
+              setRolling(null);
               score(current, category);
               setReviewing(current);
             }}

@@ -1,7 +1,8 @@
 "use client";
 
 import { Dices } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useReducedMotion } from "motion/react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import type { Category, Solver } from "@/games/yatzy/solver";
 import { categoryLabel, describeStep, formatLoss } from "../feedback";
 import { toTurnState } from "../puzzles";
 import type { PuzzleProgress, QuizPuzzle } from "../types";
-import { Die } from "./Die";
+import { Die, ROLL_MS } from "./Die";
 import { Scorecard } from "./Scorecard";
 
 type PuzzleViewProps = {
@@ -20,6 +21,11 @@ type PuzzleViewProps = {
   progress: PuzzleProgress;
   /** The day's progress dots, shown at the bottom of the dice card. */
   dots: ReactNode;
+  /**
+   * The dice the roll that led to this step threw, to animate them; null when
+   * the view did not open on a fresh roll (resumed, or a new puzzle).
+   */
+  rolling: boolean[] | null;
   /** The turn's first roll, all five dice. */
   onRoll: () => void;
   onKeep: (held: boolean[]) => void;
@@ -41,8 +47,28 @@ const hintText = (rolled: boolean, rollsLeft: number) =>
  * Held dice and the selected field are local — the parent keys this view by
  * step, so both reset after every decision.
  */
-export function PuzzleView({ solver, title, puzzle, progress, dots, onRoll, onKeep, onScore }: PuzzleViewProps) {
+export function PuzzleView({
+  solver,
+  title,
+  puzzle,
+  progress,
+  dots,
+  rolling,
+  onRoll,
+  onKeep,
+  onScore,
+}: PuzzleViewProps) {
   const [held, setHeld] = useState<boolean[]>(() => progress.dice.map(() => false));
+  // The dice are settled up front; the shake is only for show.
+  const reduceMotion = useReducedMotion() ?? false;
+  const [shaking, setShaking] = useState(rolling !== null);
+  const animating = shaking && !reduceMotion;
+
+  useEffect(() => {
+    if (!shaking) return;
+    const id = setTimeout(() => setShaking(false), ROLL_MS);
+    return () => clearTimeout(id);
+  }, [shaking]);
   const [selected, setSelected] = useState<Category | null>(null);
 
   // Before the first roll the turn has three rolls and no dice yet.
@@ -95,8 +121,9 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onRoll, onKe
               key={i}
               value={rolled ? value : undefined}
               held={held[i]}
+              rolling={animating && (rolling?.[i] ?? false)}
               onToggle={
-                rolled && progress.rollsLeft > 0
+                rolled && progress.rollsLeft > 0 && !animating
                   ? () => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))
                   : undefined
               }
@@ -109,14 +136,14 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onRoll, onKe
             <Button
               variant={rolled ? "outline" : "default"}
               className="flex-1"
-              disabled={!canRoll}
+              disabled={!canRoll || animating}
               onClick={() => (rolled ? onKeep(held) : onRoll())}
             >
               <Dices />
               Würfeln
             </Button>
           )}
-          <Button className="flex-1" disabled={!selected} onClick={() => selected && onScore(selected)}>
+          <Button className="flex-1" disabled={!selected || animating} onClick={() => selected && onScore(selected)}>
             {selected ? `${categoryLabel(selected)} eintragen` : "Feld wählen"}
           </Button>
         </div>

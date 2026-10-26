@@ -1,3 +1,8 @@
+"use client";
+
+import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+
 import { cn } from "@/lib/utils";
 
 // Pip centres on a 24×24 face.
@@ -12,6 +17,9 @@ const PIPS: Record<number, [number, number][]> = {
   5: [[L, L], [R, L], [M, M], [L, R], [R, R]],
   6: [[L, L], [R, L], [L, M], [R, M], [L, R], [R, R]],
 };
+
+/** How long a roll shakes the dice. */
+export const ROLL_MS = 450;
 
 /** A die face with large pips — the icon set's pips are too small to read. */
 function Face({ value, className }: { value?: number; className?: string }) {
@@ -29,11 +37,23 @@ type DieProps = {
   /** Without a value the die is blank: not rolled yet. */
   value?: number;
   held?: boolean;
+  /** Shaking and flicking through random faces before showing `value`. */
+  rolling?: boolean;
   /** Without a handler the die is shown in the same frame, but not tappable. */
   onToggle?: () => void;
 };
 
-export function Die({ value, held = false, onToggle }: DieProps) {
+const randomFace = () => 1 + Math.floor(Math.random() * 6);
+
+export function Die({ value, held = false, rolling = false, onToggle }: DieProps) {
+  const [face, setFace] = useState(randomFace);
+
+  useEffect(() => {
+    if (!rolling) return;
+    const id = setInterval(() => setFace(randomFace()), 70);
+    return () => clearInterval(id);
+  }, [rolling]);
+
   return (
     <button
       type="button"
@@ -48,7 +68,13 @@ export function Die({ value, held = false, onToggle }: DieProps) {
           : "border-border bg-card text-foreground",
       )}
     >
-      <Face value={value} className="size-full" />
+      <motion.span
+        className="size-full"
+        animate={rolling ? { rotate: [0, -14, 12, -8, 6, 0], y: [0, -4, 0, -3, 0, 0] } : { rotate: 0, y: 0 }}
+        transition={{ duration: rolling ? ROLL_MS / 1000 : 0.1, ease: "easeInOut" }}
+      >
+        <Face value={rolling ? face : value} className="size-full" />
+      </motion.span>
     </button>
   );
 }
