@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, tournamentRules, type Category } from "@/games/yatzy/solver";
 import { cn } from "@/lib/utils";
 import { QUIZ_EMOJI } from "../config";
+import { categoryLabel } from "../feedback";
 import type { QuizCard } from "../types";
 
 type ScorecardProps = {
@@ -38,7 +39,7 @@ export function Scorecard({ card, options, selected, onSelect, bare = false }: S
       return (
         <div key={category} className={cn(pill, filled === 0 ? crossedPill : filledPill)}>
           <span>{filled === 0 ? "❌" : filled}</span>
-          <span className="truncate text-xs text-muted-foreground">{category}</span>
+          <span className="truncate text-xs text-muted-foreground">{categoryLabel(category)}</span>
         </div>
       );
     }
@@ -63,7 +64,7 @@ export function Scorecard({ card, options, selected, onSelect, bare = false }: S
             selected === category && "border-brand-accent ring-2 ring-brand-accent",
           )}
         >
-          <span className="truncate text-muted-foreground">{category}</span>
+          <span className="truncate text-muted-foreground">{categoryLabel(category)}</span>
           {pointsLabel}
         </div>
       );
@@ -82,7 +83,7 @@ export function Scorecard({ card, options, selected, onSelect, bare = false }: S
           selected === category && "border-brand-accent ring-2 ring-brand-accent",
         )}
       >
-        <span className="truncate text-muted-foreground">{category}</span>
+        <span className="truncate text-muted-foreground">{categoryLabel(category)}</span>
         {pointsLabel}
       </button>
     );

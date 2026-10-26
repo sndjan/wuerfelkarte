@@ -74,7 +74,7 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
           <p className="text-sm">
             <b>Beispiel:</b> Noch 2 Würfe. Viererpasch sofort eintragen bringt
             25 Punkte – und ist trotzdem ein Fehler. Besser:{" "}
-            <b>6 6 6 6 halten</b> und auf den Wunder oder sechs Sechser würfeln.
+            <b>6 6 6 6 halten</b> und auf den Kniffel würfeln.
             Das bringt im Schnitt rund 17 Punkte mehr.
           </p>
         </div>

@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Category, Solver } from "@/games/yatzy/solver";
-import { describeStep, formatLoss } from "../feedback";
+import { categoryLabel, describeStep, formatLoss } from "../feedback";
 import { toTurnState } from "../puzzles";
 import type { PuzzleProgress, QuizPuzzle } from "../types";
 import { Die } from "./Die";
@@ -117,7 +117,7 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onRoll, onKe
             </Button>
           )}
           <Button className="flex-1" disabled={!selected} onClick={() => selected && onScore(selected)}>
-            {selected ? `${selected} eintragen` : "Feld wählen"}
+            {selected ? `${categoryLabel(selected)} eintragen` : "Feld wählen"}
           </Button>
         </div>
 
