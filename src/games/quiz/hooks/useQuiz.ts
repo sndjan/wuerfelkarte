@@ -15,6 +15,7 @@ import {
   puzzlePoints,
   startProgress,
 } from "../puzzles";
+import { queueSubmission } from "../distribution";
 import { loadDay, loadTutorialSeen, quizStorage, saveDay, saveTutorialSeen } from "../storage";
 import { PuzzleProgress, QuizDay, QuizPuzzle, StoredQuizMatch } from "../types";
 
@@ -106,6 +107,8 @@ export function useQuiz(date?: string) {
       const match = buildMatch(next);
       if (!quizStorage.loadMatches().some((m) => m.id === match.id)) {
         quizStorage.saveMatch(match);
+        // Only a day played on its own date counts for everyone's distribution.
+        if (match.gamemode === "daily") queueSubmission(match.id, match.points);
       }
       setMatches(quizStorage.loadMatches());
     }

@@ -10,6 +10,7 @@ import { shareText } from "../config";
 import { POINTS_PERFECT, puzzlePoints } from "../puzzles";
 import type { QuizDay, StoredQuizMatch } from "../types";
 import { PuzzleResult } from "./PuzzleResult";
+import { ScoreDistribution } from "./ScoreDistribution";
 
 type DaySummaryProps = {
   day: QuizDay;
@@ -78,6 +79,8 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
           </Card>
         ))}
       </div>
+
+      <ScoreDistribution date={day.date} total={total} />
 
       {day.progress.map((progress, i) => (
         <PuzzleResult

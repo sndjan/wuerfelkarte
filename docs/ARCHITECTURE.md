@@ -1,8 +1,9 @@
 # Architecture
 
 Würfelkarte is a Next.js App Router app that tracks scores for physical dice and
-card games. There is no backend and no account: everything a group plays lives
-in their browser's localStorage.
+card games. There is no account: everything a group plays lives in their
+browser's localStorage. The one exception is the daily quiz's global score
+distribution, see [Quiz distribution](#quiz-distribution).
 
 ## Layout
 
@@ -81,11 +82,32 @@ configuration language, not less code.
 | `<game>:matches` | Finished matches, keyed by match id |
 | `<game>:settings` | Per-game preferences |
 | `yatzy:players` | The seating the lobby hands to a fresh Yatzy sheet |
+| `quiz:days` | Every quiz day played, so the archive can show and resume it |
+| `quiz:submission` | Today's quiz result until the server has it |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
 only when it does not exist and never deletes the old one, so a rollback still
 finds the data.
+
+## Quiz distribution
+
+After a daily quiz the summary shows how everyone did that day
+(`src/games/quiz/distribution.ts`, `components/ScoreDistribution.tsx`). The
+results live in Supabase, in a `quiz_results` table that RLS closes to the API;
+the browser only calls two functions from
+`supabase/migrations/20261026120000_quiz_results.sql`:
+
+- `submit_quiz_result(date, token, points)` — only for today (±1 day for time
+  zones), once per token. The token is random and made up per day, so nothing
+  links one player's days together; no IP or user data is stored.
+- `get_quiz_distribution(date)` — players per day total; the app groups them
+  into bars.
+
+Only a day finished on its own date is submitted; archive days just show the
+chart. The client (`src/lib/supabase.ts`) reads `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Without them, or offline, the chart is
+left out and a queued result waits for the next visit.
 
 ## Adding a game
 

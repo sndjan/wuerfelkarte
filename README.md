@@ -1,8 +1,9 @@
 # Würfelkarte
 
 Score tracking for dice, card and pub games you play at a real table — Yatzy,
-Wizard, Flip 7, Cabo and Darts, with more on the way. No account, no backend:
-every roster, running game and result stays in the browser.
+Wizard, Flip 7, Cabo and Darts, with more on the way. No account: every
+roster, running game and result stays in the browser. Only the daily quiz
+sends its day total, anonymously, for the global score distribution.
 
 Live at [würfelkarte.com](https://www.würfelkarte.com).
 
@@ -12,6 +13,10 @@ Live at [würfelkarte.com](https://www.würfelkarte.com).
 npm install
 npm run dev          # http://localhost:3000
 ```
+
+The quiz's score distribution needs `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local`; without them the app
+runs as before, just without the chart.
 
 ## Scripts
 
