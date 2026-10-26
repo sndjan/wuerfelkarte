@@ -54,7 +54,7 @@ function MoveRanking({ moves }: { moves: QuizMove[] }) {
               {move.chosen && <span className="ml-1 text-xs text-brand-accent">· Du</span>}
             </span>
             <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-              {move.loss === 0 ? "beste" : `−${formatLoss(move.loss)}`}
+              {move.loss === 0 ? "beste" : `−${formatLoss(move.loss)} Pkt.`}
             </span>
           </li>
         ))}
@@ -113,14 +113,14 @@ export function PuzzleResult({
                 )}
                 <span>
                   {chosen}
-                  {better && (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      – besser: <b className="text-foreground">{better}</b> (−{formatLoss(loss)})
-                    </span>
-                  )}
+                  {better && <span className="text-muted-foreground"> (−{formatLoss(loss)} Pkt.)</span>}
                 </span>
               </p>
+              {better && (
+                <p className="pl-5 text-sm text-muted-foreground">
+                  besser: <b className="text-foreground">{better}</b>
+                </p>
+              )}
               {step.moves && <MoveRanking moves={step.moves} />}
             </li>
           );

@@ -12,6 +12,7 @@ import type {
   QuizPuzzle,
   QuizStep,
   RollsLeft,
+  StoredQuizMatch,
 } from "./types";
 
 /**
@@ -21,12 +22,13 @@ import type {
 
 export const PUZZLES_PER_DAY = 3;
 /** Points for a puzzle without a single loss; a day is worth three times that. */
-export const POINTS_PERFECT = 10;
+export const POINTS_PERFECT = 100;
 /**
- * How fast points fall with the expected points given away: 0.5 → 8,
- * 1 → 6, 2 → 3, 3 → 2, 5 → 1, from 7 on → 0.
+ * How fast a decision's points fall with the expected points it gives away:
+ * 1 → 88, 3 → 69, 5 → 54, 10 → 29, 20 → 8. Gentle on purpose — a near miss
+ * should still feel like a good turn.
  */
-const POINTS_DECAY = 1.8;
+const POINTS_DECAY = 8;
 /** How many of the best moves a step's ranking shows (plus the player's own). */
 export const TOP_MOVES = 5;
 /**
@@ -36,6 +38,9 @@ export const TOP_MOVES = 5;
 const TIE = 0.05;
 
 const UPPER: readonly Category[] = CATEGORIES.slice(0, 6);
+
+/** The first day the archive offers. */
+export const ARCHIVE_START = "2026-10-01";
 
 /** Local date as YYYY-MM-DD — the quiz changes at local midnight. */
 export function dateKey(date: Date = new Date()): string {
@@ -210,34 +215,45 @@ export function puzzleLoss(progress: PuzzleProgress): number {
 }
 
 /**
- * 10 points minus a smooth penalty for the expected points given away over
- * the whole puzzle. Only a loss-free puzzle gets the full 10.
+ * The average of the puzzle's decisions, each scored by the expected points
+ * it gave away — so one near miss among perfect moves still scores high.
+ * Only a loss-free puzzle gets the full 100.
  */
 export function puzzlePoints(progress: PuzzleProgress): number {
-  return pointsForLoss(puzzleLoss(progress));
+  const { steps } = progress;
+  if (steps.length === 0) return 0;
+  const average =
+    steps.reduce((sum, step) => sum + stepPoints(step.loss), 0) / steps.length;
+  const points = Math.round(average);
+  return puzzleLoss(progress) === 0 ? POINTS_PERFECT : Math.min(points, POINTS_PERFECT - 1);
 }
 
-export function pointsForLoss(loss: number): number {
-  if (loss === 0) return POINTS_PERFECT;
-  const points = Math.round(POINTS_PERFECT * Math.exp(-loss / POINTS_DECAY));
-  return Math.min(points, POINTS_PERFECT - 1);
+/** One decision's points, 0–100, for the expected points it gave away. */
+export function stepPoints(loss: number): number {
+  return POINTS_PERFECT * Math.exp(-loss / POINTS_DECAY);
 }
 
 export type PointsTier = "perfect" | "good" | "close" | "miss";
 
 export function pointsTier(points: number): PointsTier {
   if (points >= POINTS_PERFECT) return "perfect";
-  if (points >= 5) return "good";
-  return points > 0 ? "close" : "miss";
+  if (points >= 75) return "good";
+  return points >= 40 ? "close" : "miss";
 }
 
 export function startProgress(puzzle: QuizPuzzle): PuzzleProgress {
   return {
+    rolled: false,
     dice: [...puzzle.dice],
     rollsLeft: puzzle.rollsLeft,
     steps: [],
     done: false,
   };
+}
+
+/** The turn's first roll: all five dice, nothing to grade. */
+export function applyRoll(progress: PuzzleProgress): PuzzleProgress {
+  return progress.rolled === false ? { ...progress, rolled: true } : progress;
 }
 
 /** Applies a keep decision: grades it and rolls the other dice. */
@@ -247,7 +263,8 @@ export function applyKeep(
   progress: PuzzleProgress,
   held: readonly boolean[],
 ): PuzzleProgress {
-  if (progress.done || progress.rollsLeft === 0) return progress;
+  if (progress.done || progress.rolled === false || progress.rollsLeft === 0)
+    return progress;
   const kept = progress.dice.filter((_, i) => held[i]);
   const step = gradeKeep(
     solver,
@@ -272,7 +289,7 @@ export function applyScore(
   progress: PuzzleProgress,
   category: Category,
 ): PuzzleProgress {
-  if (progress.done) return progress;
+  if (progress.done || progress.rolled === false) return progress;
   const step = gradeScore(
     solver,
     puzzle.card,
@@ -329,11 +346,8 @@ function isInteresting(options: TurnOption[]): boolean {
   return gap >= 0.3 && gap <= 6;
 }
 
-function generatePuzzle(
-  solver: Solver,
-  random: () => number,
-  rollsLeft: RollsLeft,
-): QuizPuzzle {
+/** A whole turn on a lived-in card, judged by its first decision. */
+function generatePuzzle(solver: Solver, random: () => number): QuizPuzzle {
   let fallback: QuizPuzzle | null = null;
   for (let attempt = 0; attempt < 40; attempt++) {
     // Leave at least three open fields so the last decision is a real choice.
@@ -341,39 +355,46 @@ function generatePuzzle(
     let card: QuizCard = {};
     for (let t = 0; t < turns; t++) card = playTurn(solver, card, random);
 
-    const state = toTurnState(card);
-    let dice = rollDice(random);
-    for (let left = 2; left > rollsLeft; left--) {
-      const keep = solver.analyze(state, dice, left as 1 | 2)[0];
-      const kept = keep.kind === "keep" ? keep.dice : dice;
-      dice = [...kept, ...rollDice(random, 5 - kept.length)];
-    }
+    const dice = rollDice(random);
     const puzzle: QuizPuzzle = {
       card,
-      dice: shuffle(dice, random),
-      rollsLeft,
-      nextRolls: Array.from({ length: rollsLeft }, () => rollDice(random)),
+      dice,
+      rollsLeft: 2,
+      nextRolls: [rollDice(random), rollDice(random)],
     };
-    if (isInteresting(rankMoves(solver, card, dice, rollsLeft))) return puzzle;
+    if (isInteresting(rankMoves(solver, card, dice, 2))) return puzzle;
     fallback ??= puzzle;
   }
   return fallback!;
 }
 
-function shuffle<T>(items: readonly T[], random: () => number): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
-
-/** The day's puzzles: one each with 2, 1 and 0 rolls left, in random order. */
+/** The day's puzzles, each a whole turn: one roll of all five, two rerolls. */
 export function generateDailyQuiz(solver: Solver, date: string): QuizPuzzle[] {
   const random = seededRandom(`kniffel-quiz:${date}`);
-  const order = shuffle<RollsLeft>([2, 1, 0], random);
-  return order.map((rollsLeft) => generatePuzzle(solver, random, rollsLeft));
+  return Array.from({ length: PUZZLES_PER_DAY }, () =>
+    generatePuzzle(solver, random),
+  );
+}
+
+/** A real past day the archive offers, from ARCHIVE_START to yesterday. */
+export function isArchiveDate(date: string, today: string = dateKey()): boolean {
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+    dateKey(new Date(`${date}T12:00:00`)) === date &&
+    date >= ARCHIVE_START &&
+    date < today
+  );
+}
+
+/** The streak counts days played on the day itself, not catch-ups from the archive. */
+export function dailyStreak(
+  matches: readonly StoredQuizMatch[],
+  today: string,
+): number {
+  return currentStreak(
+    matches.filter((m) => m.gamemode !== "archive").map((m) => m.id),
+    today,
+  );
 }
 
 /** Consecutive played days ending today, or yesterday if today is still open. */

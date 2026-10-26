@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleHelp } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -14,8 +15,11 @@ import { PuzzleResult, pointsColor } from "./PuzzleResult";
 import { PuzzleView } from "./PuzzleView";
 import { QuizIntro } from "./QuizIntro";
 
-/** The quiz page: today's three puzzles, then the day's summary. */
-export function Quiz() {
+/**
+ * The quiz page: a day's three puzzles, then the day's summary. Today's
+ * without a date, a past day's when opened from the archive.
+ */
+export function Quiz({ date }: { date?: string }) {
   const {
     status,
     solver,
@@ -26,21 +30,25 @@ export function Quiz() {
     matches,
     streak,
     retry,
+    archive,
+    roll,
     keep,
     score,
-  } = useQuiz();
+  } = useQuiz(date);
   // A puzzle that was just finished stays on screen until "Weiter".
   const [reviewing, setReviewing] = useState<number | null>(null);
   // Opened from the "?" button; first timers get the tutorial by themselves.
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
-  const started = startedToday || (day?.progress.some((p) => p.steps.length > 0) ?? false);
+  const started =
+    startedToday || (day?.progress.some((p) => p.steps.length > 0) ?? false);
   const showTutorial =
-    tutorialOpen || (tutorialSeen === false && !started && status !== "error");
+    tutorialOpen ||
+    (tutorialSeen === false && !started && status !== "error" && status !== "missing");
 
   const header = (
     <PageHeader
-      backHref="/"
+      backHref={archive ? "/quiz/archiv" : "/"}
       title={QUIZ_NAME}
       right={
         !showTutorial && (
@@ -66,15 +74,35 @@ export function Quiz() {
       <>
         {header}
         <QuizIntro
-          date={day?.date ?? dateKey()}
+          date={day?.date ?? date ?? dateKey()}
           streak={streak}
           ready={status === "ready"}
-          startLabel={finished ? "Zurück zum Ergebnis" : started ? "Zurück zum Quiz" : "Quiz starten"}
+          startLabel={
+            finished
+              ? "Zum Ergebnis"
+              : started
+                ? "Zum Quiz"
+                : "Quiz starten"
+          }
           onStart={() => {
             markTutorialSeen();
             setTutorialOpen(false);
           }}
         />
+      </>
+    );
+  }
+
+  if (status === "missing") {
+    return (
+      <>
+        {header}
+        <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+          <p>Für diesen Tag gibt es kein Quiz.</p>
+          <Button asChild>
+            <Link href="/quiz/archiv">Zum Archiv</Link>
+          </Button>
+        </div>
       </>
     );
   }
@@ -95,13 +123,15 @@ export function Quiz() {
     return (
       <>
         {header}
-        <p className="px-4 py-12 text-center text-muted-foreground">Quiz wird geladen…</p>
+        <p className="px-4 py-12 text-center text-muted-foreground">
+          Quiz wird geladen…
+        </p>
       </>
     );
   }
 
   const current = day.progress.findIndex((p) => !p.done);
-  const [year, month, date] = day.date.split("-");
+  const [year, month, dayOfMonth] = day.date.split("-");
 
   // Like the Chaoswunder mission dots, coloured by each finished puzzle's result.
   const dots = (
@@ -126,9 +156,9 @@ export function Quiz() {
     <>
       {header}
       <div className="flex flex-col gap-4 px-4 pb-8">
-        {(reviewing !== null || current === -1) && (
+        {(archive || reviewing !== null || current === -1) && (
           <p className="text-center text-sm text-muted-foreground">
-            Tagesquiz vom {date}.{month}.{year}
+            Tagesquiz vom {dayOfMonth}.{month}.{year}
           </p>
         )}
 
@@ -144,15 +174,16 @@ export function Quiz() {
             </Button>
           </>
         ) : current === -1 ? (
-          <DaySummary day={day} matches={matches} streak={streak} />
+          <DaySummary day={day} matches={matches} streak={streak} archive={archive} />
         ) : (
           <PuzzleView
-            key={`${current}-${day.progress[current].steps.length}`}
+            key={`${current}-${day.progress[current].rolled}-${day.progress[current].steps.length}`}
             solver={solver}
             title={`Aufgabe ${current + 1} von ${day.puzzles.length}`}
             dots={dots}
             puzzle={day.puzzles[current]}
             progress={day.progress[current]}
+            onRoll={() => roll(current)}
             onKeep={(held) => keep(current, held)}
             onScore={(category) => {
               score(current, category);

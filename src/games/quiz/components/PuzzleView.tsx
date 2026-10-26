@@ -20,6 +20,8 @@ type PuzzleViewProps = {
   progress: PuzzleProgress;
   /** The day's progress dots, shown at the bottom of the dice card. */
   dots: ReactNode;
+  /** The turn's first roll, all five dice. */
+  onRoll: () => void;
   onKeep: (held: boolean[]) => void;
   onScore: (category: Category) => void;
 };
@@ -27,32 +29,38 @@ type PuzzleViewProps = {
 const rollsText = (rollsLeft: number) =>
   rollsLeft === 0 ? "Kein Wurf mehr" : `Noch ${rollsLeft} ${rollsLeft === 1 ? "Wurf" : "Würfe"}`;
 
-const hintText = (rollsLeft: number) =>
-  rollsLeft === 0
-    ? "Wähle ein Feld auf deiner Karte."
-    : "Halte Würfel und würfle neu – oder trag direkt ein.";
+const hintText = (rolled: boolean, rollsLeft: number) =>
+  !rolled
+    ? "Würfle, um den Zug zu beginnen."
+    : rollsLeft === 0
+      ? "Wähle ein Feld auf deiner Karte."
+      : "Halte Würfel und würfle neu – oder trag direkt ein.";
 
 /**
  * One puzzle turn: a mission-style dice card above a Wunder-style sheet.
  * Held dice and the selected field are local — the parent keys this view by
  * step, so both reset after every decision.
  */
-export function PuzzleView({ solver, title, puzzle, progress, dots, onKeep, onScore }: PuzzleViewProps) {
+export function PuzzleView({ solver, title, puzzle, progress, dots, onRoll, onKeep, onScore }: PuzzleViewProps) {
   const [held, setHeld] = useState<boolean[]>(() => progress.dice.map(() => false));
   const [selected, setSelected] = useState<Category | null>(null);
+
+  // Before the first roll the turn has three rolls and no dice yet.
+  const rolled = progress.rolled !== false;
 
   // The fields these dice may go into, with their points — the solver knows
   // the extra-Wunder restriction, so the card never offers an illegal entry.
   const options = useMemo(() => {
+    if (!rolled) return new Map<Category, number>();
     const entries = solver.analyze(toTurnState(puzzle.card), progress.dice, 0);
     return new Map(
       entries.flatMap((o) => (o.kind === "score" ? [[o.category, o.points] as const] : [])),
     );
-  }, [solver, puzzle.card, progress.dice]);
+  }, [solver, puzzle.card, progress.dice, rolled]);
 
   const lastStep = progress.steps.at(-1);
   const feedback = lastStep ? describeStep(lastStep) : null;
-  const canRoll = progress.rollsLeft > 0 && held.some((h) => !h);
+  const canRoll = !rolled || (progress.rollsLeft > 0 && held.some((h) => !h));
 
   return (
     <div className="flex flex-col gap-4">
@@ -63,13 +71,13 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onKeep, onSc
         <div className="flex w-full flex-col px-2">
           <div className="flex w-full items-start gap-2 px-3 text-sm font-semibold">
             🎲
-            <span>{rollsText(progress.rollsLeft)}</span>
+            <span>{rollsText(rolled ? progress.rollsLeft : progress.rollsLeft + 1)}</span>
           </div>
           <div className="flex min-h-[3.25rem] w-full items-start gap-2 px-3 py-1.5 text-sm">
             {feedback ? (feedback.better ? "💡" : "✅") : "👉"}
             <span>
               {!feedback ? (
-                hintText(progress.rollsLeft)
+                hintText(rolled, progress.rollsLeft)
               ) : feedback.better ? (
                 <>
                   Besser wäre <b>{feedback.better}</b> gewesen (−{formatLoss(feedback.loss)} Punkte).
@@ -85,10 +93,10 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onKeep, onSc
           {progress.dice.map((value, i) => (
             <Die
               key={i}
-              value={value}
+              value={rolled ? value : undefined}
               held={held[i]}
               onToggle={
-                progress.rollsLeft > 0
+                rolled && progress.rollsLeft > 0
                   ? () => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))
                   : undefined
               }
@@ -97,8 +105,13 @@ export function PuzzleView({ solver, title, puzzle, progress, dots, onKeep, onSc
         </div>
 
         <div className="flex w-full gap-2 px-2">
-          {progress.rollsLeft > 0 && (
-            <Button variant="outline" className="flex-1" disabled={!canRoll} onClick={() => onKeep(held)}>
+          {(!rolled || progress.rollsLeft > 0) && (
+            <Button
+              variant={rolled ? "outline" : "default"}
+              className="flex-1"
+              disabled={!canRoll}
+              onClick={() => (rolled ? onKeep(held) : onRoll())}
+            >
               <Dices />
               Würfeln
             </Button>

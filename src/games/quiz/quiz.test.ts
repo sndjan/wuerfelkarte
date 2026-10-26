@@ -4,7 +4,7 @@ import { shareText } from "./config";
 import { describeStep, formatLoss } from "./feedback";
 import { dateKey } from "./puzzles";
 import { runningQuizGame } from "./resume";
-import { loadTutorialSeen, quizStorage, saveTutorialSeen } from "./storage";
+import { loadDay, loadDays, loadTutorialSeen, quizStorage, saveDay, saveTutorialSeen } from "./storage";
 import type { QuizDay, QuizStep } from "./types";
 
 describe("describeStep", () => {
@@ -50,8 +50,8 @@ describe("describeStep", () => {
 
 describe("shareText", () => {
   it("shows one square per puzzle and the total", () => {
-    expect(shareText("2026-10-25", [10, 6, 2])).toBe("🧠 Kniffel-Quiz 25.10.2026\n🟩🟨🟧 18/30");
-    expect(shareText("2026-10-25", [0, 0, 9])).toBe("🧠 Kniffel-Quiz 25.10.2026\n⬛⬛🟨 9/30");
+    expect(shareText("2026-10-25", [100, 89, 52])).toBe("🧠 Kniffel-Quiz 25.10.2026\n🟩🟨🟧 241/300");
+    expect(shareText("2026-10-25", [0, 12, 80])).toBe("🧠 Kniffel-Quiz 25.10.2026\n⬛⬛🟨 92/300");
   });
 });
 
@@ -93,6 +93,28 @@ describe("runningQuizGame", () => {
     expect(runningQuizGame()).toBeNull();
     quizStorage.saveGame(day({ date: "2000-01-01" }));
     expect(runningQuizGame()).toBeNull();
+  });
+});
+
+describe("day storage", () => {
+  const day = (date: string): QuizDay => {
+    const progress = { dice: [1, 2, 3, 4, 5], rollsLeft: 0 as const, steps: [], done: false };
+    const puzzle = { card: {}, dice: [1, 2, 3, 4, 5], rollsLeft: 0 as const, nextRolls: [] };
+    return { date, puzzles: [puzzle, puzzle, puzzle], progress: [progress, progress, progress], startedAt: 0 };
+  };
+
+  it("keeps past days next to today's, which also takes the game slot", () => {
+    saveDay(day("2026-10-01"));
+    saveDay(day(dateKey()));
+    expect(loadDay("2026-10-01")?.date).toBe("2026-10-01");
+    expect(quizStorage.loadGame()?.date).toBe(dateKey());
+    expect(Object.keys(loadDays())).toEqual(expect.arrayContaining(["2026-10-01", dateKey()]));
+  });
+
+  it("still finds a day stored only in the game slot", () => {
+    quizStorage.saveGame(day("2026-10-02"));
+    expect(loadDay("2026-10-02")?.date).toBe("2026-10-02");
+    expect(loadDay("2026-10-03")).toBeNull();
   });
 });
 

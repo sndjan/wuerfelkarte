@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import type { GameSummary } from "@/games/registry";
-import { POINTS_PERFECT, PUZZLES_PER_DAY, currentStreak, dateKey, puzzlePoints } from "../puzzles";
+import { POINTS_PERFECT, PUZZLES_PER_DAY, dailyStreak, dateKey, puzzlePoints } from "../puzzles";
 import { quizStorage } from "../storage";
 
 type TileState = { streak: number; status: string };
@@ -12,10 +12,7 @@ type TileState = { streak: number; status: string };
 function readTileState(): TileState {
   const today = dateKey();
   const matches = quizStorage.loadMatches();
-  const streak = currentStreak(
-    matches.map((m) => m.id),
-    today,
-  );
+  const streak = dailyStreak(matches, today);
   const day = quizStorage.loadGame();
   if (day?.date === today && day.finishedAt != null) {
     const total = day.progress.map(puzzlePoints).reduce((a, b) => a + b, 0);

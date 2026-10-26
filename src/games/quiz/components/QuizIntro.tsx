@@ -1,4 +1,3 @@
-import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { QUIZ_EMOJI } from "../config";
@@ -27,7 +26,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-// The example from "Worum geht's": checked against the solver — entering
+// The example from "Was ist der beste Zug?": checked against the solver — entering
 // 25 now gives away about 17 points on average against keeping 6 6 6 6.
 const EXAMPLE_DICE = [6, 6, 6, 6, 1];
 
@@ -54,21 +53,18 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
 
       <Section title="Worum geht's">
         <p>
-          Du spielst <b>einen Zug</b> aus einem laufenden Kniffel-Spiel. Gesucht
+          Du spielst <b>einen ganzen Zug</b> aus einem laufenden Kniffel-Spiel. Gesucht
           ist der <b>beste Zug</b> – nicht der, der jetzt die meisten Punkte
           bringt.
         </p>
-        <details className="group">
-          <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-sm font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
-            <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-            Was ist der beste Zug?
-          </summary>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Der beste Zug ist der, mit dem du am Ende des Spiels im Schnitt die
-            höchste Punktzahl erreichst. Dafür lohnt es sich manchmal, Punkte
-            liegen zu lassen oder sogar ein Feld zu streichen.
-          </p>
-        </details>
+      </Section>
+
+      <Section title="Was ist der beste Zug?">
+        <p>
+          Der beste Zug ist der, mit dem du am Ende des Spiels im Schnitt die
+          höchste Punktzahl erreichst. Dafür lohnt es sich manchmal, Punkte
+          liegen zu lassen oder sogar ein Feld zu streichen.
+        </p>
         <div className="flex flex-col gap-2 rounded-xl border bg-card p-3">
           <div className="grid max-w-60 grid-cols-5 gap-1.5">
             {EXAMPLE_DICE.map((value, i) => (

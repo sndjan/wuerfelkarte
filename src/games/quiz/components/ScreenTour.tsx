@@ -20,13 +20,13 @@ const STEPS: { part: Part; place: Place; title: string; text: string }[] = [
     part: "rolls",
     place: "below",
     title: "Würfe übrig",
-    text: "So oft darfst du in dieser Aufgabe noch würfeln. Bei „Kein Wurf mehr“ musst du eintragen.",
+    text: "Wie im echten Spiel hast du drei Würfe: einmal alle fünf Würfel, dann zweimal nachwürfeln. Bei „Kein Wurf mehr“ musst du eintragen.",
   },
   {
     part: "dice",
     place: "below",
     title: "Deine Würfel",
-    text: "Tippe einen Würfel, um ihn zu halten – er wird grün. „Würfeln“ wirft nur die anderen neu.",
+    text: "Jede Aufgabe beginnt mit „Würfeln“ – das wirft alle fünf. Danach tippe einen Würfel, um ihn zu halten – er wird grün. „Würfeln“ wirft dann nur die anderen neu.",
   },
   {
     part: "card",

@@ -14,11 +14,11 @@ const PIPS: Record<number, [number, number][]> = {
 };
 
 /** A die face with large pips — the icon set's pips are too small to read. */
-function Face({ value, className }: { value: number; className?: string }) {
+function Face({ value, className }: { value?: number; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
       <rect x="1.5" y="1.5" width="21" height="21" rx="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      {PIPS[value].map(([cx, cy], i) => (
+      {(value ? PIPS[value] : []).map(([cx, cy], i) => (
         <circle key={i} cx={cx} cy={cy} r="2.3" fill="currentColor" />
       ))}
     </svg>
@@ -26,7 +26,8 @@ function Face({ value, className }: { value: number; className?: string }) {
 }
 
 type DieProps = {
-  value: number;
+  /** Without a value the die is blank: not rolled yet. */
+  value?: number;
   held?: boolean;
   /** Without a handler the die is shown in the same frame, but not tappable. */
   onToggle?: () => void;
@@ -39,7 +40,7 @@ export function Die({ value, held = false, onToggle }: DieProps) {
       onClick={onToggle}
       disabled={!onToggle}
       aria-pressed={onToggle ? held : undefined}
-      aria-label={`${value}${held ? ", gehalten" : ""}`}
+      aria-label={value ? `${value}${held ? ", gehalten" : ""}` : "Noch nicht gewürfelt"}
       className={cn(
         "flex aspect-square w-full max-w-16 items-center justify-center rounded-xl border-2 p-1 transition-all disabled:cursor-default",
         held

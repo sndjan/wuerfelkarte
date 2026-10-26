@@ -1,6 +1,7 @@
 "use client";
 
-import { Share2 } from "lucide-react";
+import { CalendarDays, Share2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ type DaySummaryProps = {
   day: QuizDay;
   matches: StoredQuizMatch[];
   streak: number;
+  /** A past day, opened from the archive. */
+  archive?: boolean;
 };
 
 async function share(text: string) {
@@ -30,8 +33,8 @@ async function share(text: string) {
   }
 }
 
-/** Today's total, the streak and every puzzle's review. */
-export function DaySummary({ day, matches, streak }: DaySummaryProps) {
+/** The day's total, the streak and every puzzle's review. */
+export function DaySummary({ day, matches, streak, archive = false }: DaySummaryProps) {
   const points = day.progress.map(puzzlePoints);
   const total = points.reduce((a, b) => a + b, 0);
   const max = points.length * POINTS_PERFECT;
@@ -41,16 +44,26 @@ export function DaySummary({ day, matches, streak }: DaySummaryProps) {
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col items-center gap-2 p-5 text-center">
-        <p className="text-sm font-semibold text-muted-foreground">Heute</p>
+        <p className="text-sm font-semibold text-muted-foreground">
+          {archive ? "Aus dem Archiv" : "Heute"}
+        </p>
         <p className="text-5xl font-extrabold tabular-nums">
           {total}
           <span className="text-2xl text-muted-foreground">/{max}</span>
         </p>
-        <p className="text-sm text-muted-foreground">Morgen gibt es neue Aufgaben.</p>
-        <Button className="mt-2" onClick={() => share(shareText(day.date, points))}>
-          <Share2 />
-          Ergebnis teilen
-        </Button>
+        {!archive && <p className="text-sm text-muted-foreground">Morgen gibt es neue Aufgaben.</p>}
+        <div className="mt-2 flex w-full gap-2">
+          <Button className="flex-1" onClick={() => share(shareText(day.date, points))}>
+            <Share2 />
+            Teilen
+          </Button>
+          <Button variant="outline" className="flex-1" asChild>
+            <Link href="/quiz/archiv">
+              <CalendarDays />
+              Zum Archiv
+            </Link>
+          </Button>
+        </div>
       </Card>
 
       <div className="grid grid-cols-3 gap-2 text-center">

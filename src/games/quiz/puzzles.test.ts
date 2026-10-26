@@ -4,18 +4,21 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { SOLVER_TABLE_PATH, solverFromTable, type Solver } from "@/games/yatzy/solver";
 import {
   applyKeep,
+  applyRoll,
   applyScore,
   currentStreak,
+  dailyStreak,
   dateKey,
+  isArchiveDate,
   generateDailyQuiz,
   gradeKeep,
   gradeScore,
   POINTS_PERFECT,
-  pointsForLoss,
   pointsTier,
   puzzlePoints,
   reroll,
   startProgress,
+  stepPoints,
   toTurnState,
 } from "./puzzles";
 import type { QuizPuzzle } from "./types";
@@ -64,22 +67,26 @@ describe("grading", () => {
   it("scores a puzzle by the expected points given away", () => {
     const puzzle: QuizPuzzle = { card: {}, dice: [1, 2, 3, 3, 3], rollsLeft: 0, nextRolls: [] };
     const best = gradeScore(solver, {}, puzzle.dice, 0, "Dreierpasch");
-    const perfect = applyScore(solver, puzzle, startProgress(puzzle), best.best);
+    const perfect = applyScore(solver, puzzle, applyRoll(startProgress(puzzle)), best.best);
     expect(puzzlePoints(perfect)).toBe(POINTS_PERFECT);
-    const twoSteps = { ...perfect, steps: [perfect.steps[0], { ...perfect.steps[0], loss: 0.4 }, { ...perfect.steps[0], loss: 0.6 }] };
-    expect(puzzlePoints(twoSteps)).toBe(pointsForLoss(1));
+    // Two perfect decisions and one near miss still make a good puzzle.
+    const nearMiss = { ...perfect, steps: [perfect.steps[0], perfect.steps[0], { ...perfect.steps[0], loss: 3.1 }] };
+    expect(puzzlePoints(nearMiss)).toBe(89);
+    expect(pointsTier(puzzlePoints(nearMiss))).toBe("good");
   });
 
-  it("takes points away smoothly with the expected points given away", () => {
-    expect([0, 0.5, 1, 2, 3, 5, 7, 20].map(pointsForLoss)).toEqual([10, 8, 6, 3, 2, 1, 0, 0]);
+  it("takes points away gently with the expected points given away", () => {
+    expect([0, 1, 3, 5, 10, 20].map((loss) => Math.round(stepPoints(loss)))).toEqual([100, 88, 69, 54, 29, 8]);
   });
 
-  it("keeps the full 10 for a loss-free puzzle only", () => {
-    expect(pointsForLoss(0.06)).toBe(9);
+  it("keeps the full 100 for a loss-free puzzle only", () => {
+    const step = gradeScore(solver, {}, [1, 2, 3, 3, 3], 0, "Dreierpasch");
+    const progress = { dice: step.dice, rollsLeft: 0 as const, done: true, steps: [{ ...step, loss: 0.06 }] };
+    expect(puzzlePoints(progress)).toBe(99);
   });
 
   it("sorts points into tiers", () => {
-    expect([10, 9, 5, 4, 1, 0].map(pointsTier)).toEqual(["perfect", "good", "good", "close", "close", "miss"]);
+    expect([100, 99, 75, 74, 40, 39, 0].map(pointsTier)).toEqual(["perfect", "good", "good", "close", "close", "miss", "miss"]);
   });
 });
 
@@ -90,21 +97,25 @@ describe("generateDailyQuiz", () => {
     expect(generateDailyQuiz(solver, "2026-10-26")).not.toEqual(a);
   });
 
-  it("asks one puzzle each with 2, 1 and 0 rolls left on open cards", () => {
+  it("asks three whole turns on open cards", () => {
     for (const date of ["2026-01-01", "2026-06-15", "2026-10-25", "2027-02-28"]) {
       const puzzles = generateDailyQuiz(solver, date);
-      expect(puzzles.map((p) => p.rollsLeft).sort()).toEqual([0, 1, 2]);
+      expect(puzzles).toHaveLength(3);
       for (const puzzle of puzzles) {
+        expect(puzzle.rollsLeft).toBe(2);
         expect(puzzle.dice).toHaveLength(5);
-        expect(puzzle.nextRolls).toHaveLength(puzzle.rollsLeft);
+        expect(puzzle.nextRolls).toHaveLength(2);
         expect(Object.keys(puzzle.card).length).toBeLessThanOrEqual(10);
       }
     }
   });
 
   it("plays through a whole puzzle with the rerolls it ships", () => {
-    const puzzle = generateDailyQuiz(solver, "2026-10-25").find((p) => p.rollsLeft === 2)!;
+    const puzzle = generateDailyQuiz(solver, "2026-10-25")[0];
     let progress = startProgress(puzzle);
+    expect(applyKeep(solver, puzzle, progress, [false, false, false, false, false])).toBe(progress);
+    progress = applyRoll(progress);
+    expect(progress).toMatchObject({ rolled: true, dice: puzzle.dice, rollsLeft: 2, steps: [] });
     progress = applyKeep(solver, puzzle, progress, [true, true, false, false, false]);
     expect(progress.rollsLeft).toBe(1);
     expect(progress.dice.slice(0, 2)).toEqual(puzzle.dice.slice(0, 2));
@@ -127,6 +138,26 @@ describe("currentStreak", () => {
 
   it("crosses month boundaries", () => {
     expect(currentStreak(["2026-09-30", "2026-10-01"], "2026-10-01")).toBe(2);
+  });
+});
+
+describe("dailyStreak", () => {
+  it("leaves out days caught up from the archive", () => {
+    const match = (id: string, gamemode: string) =>
+      ({ id, gamemode, timestamp: "", players: [], points: [], losses: [] });
+    const matches = [match("2026-10-24", "daily"), match("2026-10-25", "archive"), match("2026-10-26", "daily")];
+    expect(dailyStreak(matches, "2026-10-26")).toBe(1);
+  });
+});
+
+describe("isArchiveDate", () => {
+  it("offers real past days from the archive start to yesterday", () => {
+    expect(isArchiveDate("2026-10-25", "2026-10-26")).toBe(true);
+    expect(isArchiveDate("2026-10-01", "2026-10-26")).toBe(true);
+    expect(isArchiveDate("2026-10-26", "2026-10-26")).toBe(false);
+    expect(isArchiveDate("2026-09-30", "2026-10-26")).toBe(false);
+    expect(isArchiveDate("2026-02-30", "2027-01-01")).toBe(false);
+    expect(isArchiveDate("gestern", "2026-10-26")).toBe(false);
   });
 });
 
