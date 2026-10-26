@@ -67,6 +67,7 @@ describe("shareText", () => {
   it("shows one square per puzzle and the total", () => {
     expect(shareText("2026-10-25", [100, 89, 52])).toBe("🧠 Kniffel-Quiz 25.10.2026\n🟩🟨🟧 241/300");
     expect(shareText("2026-10-25", [0, 12, 80])).toBe("🧠 Kniffel-Quiz 25.10.2026\n⬛⬛🟨 92/300");
+    expect(shareText("2026-10-25", [100, 95, 93])).toBe("🧠 Kniffel-Quiz 25.10.2026\n🟩🟩🟩 288/300");
   });
 });
 

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { formatDate, shareText } from "../config";
 import { POINTS_PERFECT, puzzlePoints } from "../puzzles";
 import type { QuizDay, StoredQuizMatch } from "../types";
@@ -36,11 +37,23 @@ async function share(text: string) {
   }
 }
 
+// Where the sparkles of a perfect total fly, as angle (degrees) and colour.
+const SPARKLES = [
+  [-160, "text-gold"],
+  [-110, "text-pink-400"],
+  [-60, "text-sky-400"],
+  [-15, "text-brand-accent"],
+  [20, "text-gold"],
+  [160, "text-sky-400"],
+  [200, "text-brand-accent"],
+] as const;
+
 /**
  * The total, counted up from 0 with a small pop at the end every time the
- * summary opens. The final number reserves its width, so nothing shifts.
+ * summary opens; a perfect total also sweeps through colours and sparkles.
+ * The final number reserves its width, so nothing shifts.
  */
-function CountUp({ value }: { value: number }) {
+function CountUp({ value, perfect }: { value: number; perfect: boolean }) {
   const reduceMotion = useReducedMotion() ?? false;
   const [shown, setShown] = useState(0);
   const [landed, setLanded] = useState(false);
@@ -61,14 +74,38 @@ function CountUp({ value }: { value: number }) {
   }, [value, reduceMotion]);
 
   return (
-    <motion.span
-      className="inline-grid"
-      animate={landed ? { scale: [1, 1.12, 1] } : { scale: 1 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-    >
-      <span className="invisible col-start-1 row-start-1">{value}</span>
-      <span className="col-start-1 row-start-1 text-right">{shown}</span>
-    </motion.span>
+    <span className="relative inline-block">
+      <motion.span
+        className={cn("inline-grid", perfect && (landed || reduceMotion) && "text-shimmer")}
+        animate={landed ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      >
+        <span className="invisible col-start-1 row-start-1">{value}</span>
+        <span className="col-start-1 row-start-1 text-right">{shown}</span>
+      </motion.span>
+      {perfect &&
+        landed &&
+        SPARKLES.map(([angle, color], i) => {
+          const rad = (angle * Math.PI) / 180;
+          return (
+            <motion.span
+              key={i}
+              aria-hidden="true"
+              className={cn("pointer-events-none absolute top-1/2 left-1/2 -mt-2 -ml-1.5 text-base", color)}
+              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0.6],
+                x: Math.cos(rad) * 70,
+                y: Math.sin(rad) * 38,
+              }}
+              transition={{ duration: 0.9, delay: i * 0.03, ease: "easeOut" }}
+            >
+              ✦
+            </motion.span>
+          );
+        })}
+    </span>
   );
 }
 
@@ -77,17 +114,23 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
   const points = day.progress.map(puzzlePoints);
   const total = points.reduce((a, b) => a + b, 0);
   const max = points.length * POINTS_PERFECT;
+  const perfect = points.every((p) => p === POINTS_PERFECT);
   // From the losses, so days scored on an older point scale still count.
   const perfectDays = matches.filter((m) => m.losses.every((loss) => loss === 0)).length;
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="flex flex-col items-center gap-2 p-5 text-center">
+      <Card
+        className={cn(
+          "flex flex-col items-center gap-2 p-5 text-center",
+          perfect && "glow-border border-transparent",
+        )}
+      >
         <p className="text-sm font-semibold text-muted-foreground">
           {archive ? "Aus dem Archiv" : "Heute"} · {formatDate(day.date)}
         </p>
         <p className="text-5xl font-extrabold tabular-nums">
-          <CountUp value={total} />
+          <CountUp value={total} perfect={perfect} />
           <span className="text-2xl text-muted-foreground">/{max}</span>
         </p>
         {!archive && <p className="text-sm text-muted-foreground">Morgen gibt es neue Aufgaben.</p>}

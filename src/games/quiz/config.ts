@@ -5,6 +5,7 @@ export const QUIZ_NAME = "Kniffel-Quiz";
 
 const TIER_EMOJI: Record<PointsTier, string> = {
   perfect: "🟩",
+  great: "🟩",
   good: "🟨",
   close: "🟧",
   miss: "⬛",

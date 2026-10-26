@@ -139,3 +139,78 @@
     font-weight: 700;
   }
 }
+/*
+ * A light running around the border, for perfect quiz days. The rotating
+ * gradient sits behind a fill inset by the border's width; the fill colour
+ * comes from --glow-fill.
+ */
+@keyframes glow-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+.glow-border {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--gold) 55%, transparent));
+}
+
+.glow-border::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  left: 50%;
+  top: 50%;
+  width: 200%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    transparent 0 55%,
+    var(--gold) 80%,
+    #fff8dc 90%,
+    transparent 100%
+  );
+  transform: translate(-50%, -50%);
+  animation: glow-spin 3s linear infinite;
+}
+
+.glow-border::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 2px;
+  border-radius: inherit;
+  background: var(--glow-fill, var(--card));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-border::before {
+    animation: none;
+    background: var(--gold);
+  }
+}
+
+/* A colour sweep through a perfect total, once. */
+@keyframes text-shimmer {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0% 50%;
+  }
+}
+
+.text-shimmer {
+  background-image: linear-gradient(90deg, var(--brand-accent), var(--gold), #f472b6, #60a5fa, var(--brand-accent));
+  background-size: 300% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 1.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer {
+    animation: none;
+  }
+}
