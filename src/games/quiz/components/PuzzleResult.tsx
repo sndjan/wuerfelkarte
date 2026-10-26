@@ -11,6 +11,7 @@ import { Scorecard } from "./Scorecard";
 
 const TIER_COLORS: Record<PointsTier, string> = {
   perfect: "bg-brand-accent text-white",
+  great: "bg-brand-accent text-white",
   good: "bg-brand-badge text-white",
   close: "bg-orange-500 text-white",
   miss: "bg-muted text-muted-foreground",

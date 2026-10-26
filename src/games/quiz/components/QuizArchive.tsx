@@ -45,8 +45,9 @@ const monthOf = (date: string) => {
 function matchColor(match: StoredQuizMatch) {
   if (match.losses.every((loss) => loss === 0)) return pointsColor(POINTS_PERFECT);
   if (match.scale !== POINTS_PERFECT) return "bg-muted-foreground/25 text-foreground";
+  // Rounded down, so a day needs the full 279 (3 × 93) to turn green.
   const average = match.points.reduce((a, b) => a + b, 0) / match.points.length;
-  return pointsColor(Math.min(Math.round(average), POINTS_PERFECT - 1));
+  return pointsColor(Math.min(Math.floor(average), POINTS_PERFECT - 1));
 }
 
 /** Every past quiz day on a month calendar; tapping one plays or reviews it. */

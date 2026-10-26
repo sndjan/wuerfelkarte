@@ -233,10 +233,12 @@ export function stepPoints(loss: number): number {
   return POINTS_PERFECT * Math.exp(-loss / POINTS_DECAY);
 }
 
-export type PointsTier = "perfect" | "good" | "close" | "miss";
+/** "great" is still worded "Gut", but already green — about 280 a day. */
+export type PointsTier = "perfect" | "great" | "good" | "close" | "miss";
 
 export function pointsTier(points: number): PointsTier {
   if (points >= POINTS_PERFECT) return "perfect";
+  if (points >= 93) return "great";
   if (points >= 75) return "good";
   return points >= 40 ? "close" : "miss";
 }

@@ -86,7 +86,9 @@ describe("grading", () => {
   });
 
   it("sorts points into tiers", () => {
-    expect([100, 99, 75, 74, 40, 39, 0].map(pointsTier)).toEqual(["perfect", "good", "good", "close", "close", "miss", "miss"]);
+    expect([100, 99, 93, 92, 75, 74, 40, 39, 0].map(pointsTier)).toEqual([
+      "perfect", "great", "great", "good", "good", "close", "close", "miss", "miss",
+    ]);
   });
 });
 

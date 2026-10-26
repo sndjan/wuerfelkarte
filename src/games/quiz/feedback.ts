@@ -61,6 +61,7 @@ export const formatLoss = (loss: number) =>
 
 const TIER_LABELS: Record<PointsTier, string> = {
   perfect: "Perfekt",
+  great: "Gut",
   good: "Gut",
   close: "Knapp",
   miss: "Daneben",
