@@ -42,6 +42,21 @@ describe("describeStep", () => {
     });
   });
 
+  it("calls the Wunder field Kniffel", () => {
+    const step: QuizStep = {
+      kind: "score",
+      dice: [6, 6, 6, 6, 1],
+      rollsLeft: 0,
+      category: "Chance",
+      points: 25,
+      best: "Wunder",
+      shouldRoll: false,
+      loss: 1.2,
+    };
+    expect(describeStep(step).better).toBe("Kniffel");
+    expect(describeStep({ ...step, category: "Wunder", points: 0 }).chosen).toBe("Kniffel streichen");
+  });
+
   it("formats losses with a German decimal comma", () => {
     expect(formatLoss(2.46)).toBe("2,5");
     expect(formatLoss(0.06)).toBe("0,1");

@@ -68,21 +68,23 @@ export function PuzzleResult({
   title,
   puzzle,
   progress,
+  collapsible = false,
 }: {
   title: string;
   puzzle: QuizPuzzle;
   progress: PuzzleProgress;
+  /** Folded to its title and points until tapped, e.g. on the day's summary. */
+  collapsible?: boolean;
 }) {
   const points = puzzlePoints(progress);
   const entry = progress.steps.findLast((step) => step.kind === "score");
-  return (
-    <Card className="flex flex-col gap-3 p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-bold">{title}</h2>
-        <span className={cn("rounded-full px-3 py-1 text-sm font-bold", pointsColor(points))}>
-          {pointsLabel(points)} · +{points}
-        </span>
-      </div>
+  const badge = (
+    <span className={cn("rounded-full px-3 py-1 text-sm font-bold", pointsColor(points))}>
+      {pointsLabel(points)} · +{points}
+    </span>
+  );
+  const details = (
+    <>
       <Fold label="Karte anzeigen">
         {/* The card as the puzzle gave it, with the player's entry marked. */}
         <Scorecard
@@ -126,6 +128,34 @@ export function PuzzleResult({
           );
         })}
       </ol>
+    </>
+  );
+
+  if (collapsible) {
+    // A named group, so the folds inside keep their own chevrons.
+    return (
+      <Card className="gap-0 p-0">
+        <details className="group/result">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 [&::-webkit-details-marker]:hidden">
+            <h2 className="font-bold">{title}</h2>
+            <span className="flex items-center gap-2">
+              {badge}
+              <ChevronDown className="size-4 text-muted-foreground transition-transform group-open/result:rotate-180" />
+            </span>
+          </summary>
+          <div className="flex flex-col gap-3 px-4 pb-4">{details}</div>
+        </details>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="flex flex-col gap-3 p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-bold">{title}</h2>
+        {badge}
+      </div>
+      {details}
     </Card>
   );
 }

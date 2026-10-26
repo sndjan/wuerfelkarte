@@ -1,3 +1,5 @@
+import type { Category } from "@/games/yatzy/solver";
+
 import { pointsTier, type PointsTier } from "./puzzles";
 import type { QuizMove, QuizStep } from "./types";
 
@@ -10,10 +12,17 @@ export type StepFeedback = {
   loss: number;
 };
 
+/**
+ * How the quiz names a field. The solver's key for five of a kind is "Wunder",
+ * the name from the Yatzy modes; the Kniffel-Quiz calls it Kniffel.
+ */
+export const categoryLabel = (category: Category) =>
+  category === "Wunder" ? "Kniffel" : category;
+
 const diceText = (dice: readonly number[]) => dice.join(" ");
 
-const entryText = (category: string, points: number) =>
-  points === 0 ? `${category} streichen` : `${category} (${points})`;
+const entryText = (category: Category, points: number) =>
+  points === 0 ? `${categoryLabel(category)} streichen` : `${categoryLabel(category)} (${points})`;
 
 const keepText = (kept: readonly number[]) =>
   kept.length === 0 ? "Alle neu würfeln" : `${diceText(kept)} halten`;
@@ -35,7 +44,7 @@ export function describeStep(step: QuizStep): StepFeedback {
       loss: step.loss,
     };
   }
-  const better = step.shouldRoll ? "Weiterwürfeln" : step.best;
+  const better = step.shouldRoll ? "Weiterwürfeln" : categoryLabel(step.best);
   return {
     chosen: entryText(step.category, step.points),
     better: step.loss > 0 ? better : null,

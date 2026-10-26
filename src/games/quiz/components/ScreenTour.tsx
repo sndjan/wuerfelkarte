@@ -184,7 +184,7 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
           </div>
           <div className={cn(pill, crossedPill, "text-sm")}>
             <span>❌</span>
-            <span className="text-xs text-muted-foreground">Wunder</span>
+            <span className="text-xs text-muted-foreground">Kniffel</span>
           </div>
         </div>,
       )}

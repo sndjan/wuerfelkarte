@@ -7,7 +7,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { QUIZ_NAME } from "../config";
+import { QUIZ_NAME, formatDate } from "../config";
 import { useQuiz } from "../hooks/useQuiz";
 import { dateKey, puzzlePoints } from "../puzzles";
 import { DaySummary } from "./DaySummary";
@@ -37,6 +37,8 @@ export function Quiz({ date }: { date?: string }) {
   } = useQuiz(date);
   // A puzzle that was just finished stays on screen until "Weiter".
   const [reviewing, setReviewing] = useState<number | null>(null);
+  // The dice the last roll threw, so the next step's view can shake them.
+  const [rolling, setRolling] = useState<boolean[] | null>(null);
   // Opened from the "?" button; first timers get the tutorial by themselves.
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
@@ -131,7 +133,8 @@ export function Quiz({ date }: { date?: string }) {
   }
 
   const current = day.progress.findIndex((p) => !p.done);
-  const [year, month, dayOfMonth] = day.date.split("-");
+  // Today's puzzles go without a date while they are played.
+  const dated = (title: string) => `${title} · ${formatDate(day.date)}`;
 
   // Like the Chaoswunder mission dots, coloured by each finished puzzle's result.
   const dots = (
@@ -156,16 +159,10 @@ export function Quiz({ date }: { date?: string }) {
     <>
       {header}
       <div className="flex flex-col gap-4 px-4 pb-8">
-        {(archive || reviewing !== null || current === -1) && (
-          <p className="text-center text-sm text-muted-foreground">
-            Tagesquiz vom {dayOfMonth}.{month}.{year}
-          </p>
-        )}
-
         {reviewing !== null ? (
           <>
             <PuzzleResult
-              title={`Aufgabe ${reviewing + 1}`}
+              title={dated(`Aufgabe ${reviewing + 1}`)}
               puzzle={day.puzzles[reviewing]}
               progress={day.progress[reviewing]}
             />
@@ -179,13 +176,25 @@ export function Quiz({ date }: { date?: string }) {
           <PuzzleView
             key={`${current}-${day.progress[current].rolled}-${day.progress[current].steps.length}`}
             solver={solver}
-            title={`Aufgabe ${current + 1} von ${day.puzzles.length}`}
+            title={
+              archive
+                ? dated(`Aufgabe ${current + 1} von ${day.puzzles.length}`)
+                : `Aufgabe ${current + 1} von ${day.puzzles.length}`
+            }
             dots={dots}
             puzzle={day.puzzles[current]}
             progress={day.progress[current]}
-            onRoll={() => roll(current)}
-            onKeep={(held) => keep(current, held)}
+            rolling={rolling}
+            onRoll={() => {
+              setRolling(day.progress[current].dice.map(() => true));
+              roll(current);
+            }}
+            onKeep={(held) => {
+              setRolling(held.map((h) => !h));
+              keep(current, held);
+            }}
             onScore={(category) => {
+              setRolling(null);
               score(current, category);
               setReviewing(current);
             }}
