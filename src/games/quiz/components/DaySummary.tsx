@@ -1,7 +1,9 @@
 "use client";
 
 import { CalendarDays, Share2 } from "lucide-react";
+import { animate, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,42 @@ async function share(text: string) {
   }
 }
 
+/**
+ * The total, counted up from 0 with a small pop at the end every time the
+ * summary opens. The final number reserves its width, so nothing shifts.
+ */
+function CountUp({ value }: { value: number }) {
+  const reduceMotion = useReducedMotion() ?? false;
+  const [shown, setShown] = useState(0);
+  const [landed, setLanded] = useState(false);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setShown(value);
+      return;
+    }
+    setLanded(false);
+    const controls = animate(0, value, {
+      duration: 0.8,
+      ease: "easeOut",
+      onUpdate: (v) => setShown(Math.round(v)),
+      onComplete: () => setLanded(true),
+    });
+    return () => controls.stop();
+  }, [value, reduceMotion]);
+
+  return (
+    <motion.span
+      className="inline-grid"
+      animate={landed ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+    >
+      <span className="invisible col-start-1 row-start-1">{value}</span>
+      <span className="col-start-1 row-start-1 text-right">{shown}</span>
+    </motion.span>
+  );
+}
+
 /** The day's total, the streak and every puzzle's review. */
 export function DaySummary({ day, matches, streak, archive = false }: DaySummaryProps) {
   const points = day.progress.map(puzzlePoints);
@@ -49,7 +87,7 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
           {archive ? "Aus dem Archiv" : "Heute"} · {formatDate(day.date)}
         </p>
         <p className="text-5xl font-extrabold tabular-nums">
-          {total}
+          <CountUp value={total} />
           <span className="text-2xl text-muted-foreground">/{max}</span>
         </p>
         {!archive && <p className="text-sm text-muted-foreground">Morgen gibt es neue Aufgaben.</p>}
