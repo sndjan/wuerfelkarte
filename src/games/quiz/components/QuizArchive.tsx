@@ -38,12 +38,14 @@ const monthOf = (date: string) => {
   return { year, month: month - 1 };
 };
 
+const isPerfect = (match: StoredQuizMatch) => match.losses.every((loss) => loss === 0);
+
 /**
  * A finished day's colour, by its average puzzle. Days from older point
  * scales can not be compared, so they only show whether they were perfect.
  */
 function matchColor(match: StoredQuizMatch) {
-  if (match.losses.every((loss) => loss === 0)) return pointsColor(POINTS_PERFECT);
+  if (isPerfect(match)) return pointsColor(POINTS_PERFECT);
   if (match.scale !== POINTS_PERFECT) return "bg-muted-foreground/25 text-foreground";
   // Rounded down, so a day needs the full 279 (3 × 93) to turn green.
   const average = match.points.reduce((a, b) => a + b, 0) / match.points.length;
@@ -141,7 +143,11 @@ export function QuizArchive() {
                   className={cn(
                     cell,
                     match
-                      ? cn(matchColor(match), "font-bold")
+                      ? cn(
+                          matchColor(match),
+                          "font-bold",
+                          isPerfect(match) && "glow-border [--glow-fill:var(--brand-accent)]",
+                        )
                       : started.has(date)
                         ? "border-2 border-dashed border-brand-accent"
                         : "border bg-card",
