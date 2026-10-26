@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { shareText } from "../config";
+import { formatDate, shareText } from "../config";
 import { POINTS_PERFECT, puzzlePoints } from "../puzzles";
 import type { QuizDay, StoredQuizMatch } from "../types";
 import { PuzzleResult } from "./PuzzleResult";
@@ -46,7 +46,7 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col items-center gap-2 p-5 text-center">
         <p className="text-sm font-semibold text-muted-foreground">
-          {archive ? "Aus dem Archiv" : "Heute"}
+          {archive ? "Aus dem Archiv" : "Heute"} · {formatDate(day.date)}
         </p>
         <p className="text-5xl font-extrabold tabular-nums">
           {total}
@@ -86,6 +86,7 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
         <PuzzleResult
           key={i}
           title={`Aufgabe ${i + 1}`}
+          collapsible
           puzzle={day.puzzles[i]}
           progress={progress}
         />

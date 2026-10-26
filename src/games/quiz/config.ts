@@ -12,12 +12,17 @@ const TIER_EMOJI: Record<PointsTier, string> = {
 
 const pointEmoji = (points: number) => TIER_EMOJI[pointsTier(points)];
 
+/** "26.10.2026" for a YYYY-MM-DD date key. */
+export function formatDate(date: string): string {
+  const [year, month, day] = date.split("-");
+  return `${day}.${month}.${year}`;
+}
+
 /** The Wordle-style result line people paste into their group chat. */
 export function shareText(date: string, points: readonly number[]): string {
   const total = points.reduce((a, b) => a + b, 0);
-  const [year, month, day] = date.split("-");
   return [
-    `${QUIZ_EMOJI} ${QUIZ_NAME} ${day}.${month}.${year}`,
+    `${QUIZ_EMOJI} ${QUIZ_NAME} ${formatDate(date)}`,
     `${points.map(pointEmoji).join("")} ${total}/${PUZZLES_PER_DAY * POINTS_PERFECT}`,
   ].join("\n");
 }
