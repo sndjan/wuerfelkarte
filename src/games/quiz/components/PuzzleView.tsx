@@ -44,8 +44,8 @@ const hintText = (rolled: boolean, rollsLeft: number) =>
 
 /**
  * One puzzle turn: a mission-style dice card above a Wunder-style sheet.
- * Held dice and the selected field are local — the parent keys this view by
- * step, so both reset after every decision.
+ * The selected field is local — the parent keys this view by step, so it
+ * resets after every decision; held dice start from the last reroll's.
  */
 export function PuzzleView({
   solver,
@@ -58,7 +58,9 @@ export function PuzzleView({
   onKeep,
   onScore,
 }: PuzzleViewProps) {
-  const [held, setHeld] = useState<boolean[]>(() => progress.dice.map(() => false));
+  const [held, setHeld] = useState<boolean[]>(
+    () => progress.held ?? progress.dice.map(() => false),
+  );
   // The dice are settled up front; the shake is only for show.
   const reduceMotion = useReducedMotion() ?? false;
   const [shaking, setShaking] = useState(rolling !== null);

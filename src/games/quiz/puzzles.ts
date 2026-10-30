@@ -75,14 +75,25 @@ export function toTurnState(card: QuizCard): TurnState {
   };
 }
 
-/** Rerolls every die that is not held, taking faces from `faces` in order. */
+/**
+ * Rerolls every die that is not held. The faces go to the dice in order of
+ * their values — held dice first among equal ones — so a rerolled die lands
+ * the same for everyone, and which of several equal dice is held makes no
+ * difference.
+ */
 export function reroll(
   dice: readonly number[],
   held: readonly boolean[],
   faces: readonly number[],
 ) {
-  let next = 0;
-  return dice.map((die, i) => (held[i] ? die : faces[next++]));
+  const order = dice
+    .map((_, i) => i)
+    .sort((a, b) => dice[a] - dice[b] || Number(!held[a]) - Number(!held[b]) || a - b);
+  const next = [...dice];
+  order.forEach((i, slot) => {
+    if (!held[i]) next[i] = faces[slot];
+  });
+  return next;
 }
 
 const sameDice = (a: readonly number[], b: readonly number[]) =>
@@ -279,6 +290,7 @@ export function applyKeep(
   return {
     ...progress,
     dice: reroll(progress.dice, held, puzzle.nextRolls[rollIndex]),
+    held: [...held],
     rollsLeft: (progress.rollsLeft - 1) as RollsLeft,
     steps: [...progress.steps, step],
   };
