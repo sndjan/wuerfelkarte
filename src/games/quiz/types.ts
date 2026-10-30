@@ -16,8 +16,9 @@ export type QuizPuzzle = {
   dice: number[];
   rollsLeft: RollsLeft;
   /**
-   * The faces of the rolls still to come, one set of five per roll. A rerolled
-   * die takes the face at its own position, so everyone sees the same dice.
+   * The faces of the rolls still to come, one set of five per roll. Rerolled
+   * dice take them by their place among the sorted dice, so everyone keeping
+   * the same values sees the same dice, whichever of equal dice they hold.
    */
   nextRolls: number[][];
 };

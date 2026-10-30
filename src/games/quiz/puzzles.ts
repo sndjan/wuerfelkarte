@@ -76,16 +76,24 @@ export function toTurnState(card: QuizCard): TurnState {
 }
 
 /**
- * Rerolls every die that is not held: die i lands on `faces[i]`, so each die's
- * throws are fixed for the day — whatever the player holds, a rerolled die
- * shows the same face for everyone.
+ * Rerolls every die that is not held. The faces go to the dice in order of
+ * their values — held dice first among equal ones — so a rerolled die lands
+ * the same for everyone, and which of several equal dice is held makes no
+ * difference.
  */
 export function reroll(
   dice: readonly number[],
   held: readonly boolean[],
   faces: readonly number[],
 ) {
-  return dice.map((die, i) => (held[i] ? die : faces[i]));
+  const order = dice
+    .map((_, i) => i)
+    .sort((a, b) => dice[a] - dice[b] || Number(!held[a]) - Number(!held[b]) || a - b);
+  const next = [...dice];
+  order.forEach((i, slot) => {
+    if (!held[i]) next[i] = faces[slot];
+  });
+  return next;
 }
 
 const sameDice = (a: readonly number[], b: readonly number[]) =>

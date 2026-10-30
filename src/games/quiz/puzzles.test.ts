@@ -41,10 +41,23 @@ describe("toTurnState", () => {
 });
 
 describe("reroll", () => {
-  it("replaces only dice that are not held, each with the face at its position", () => {
+  it("replaces only dice that are not held, each with the face at its place by value", () => {
     expect(reroll([1, 2, 3, 4, 5], [true, false, true, false, false], [6, 5, 4, 2, 3])).toEqual([
       1, 5, 3, 2, 3,
     ]);
+    expect(reroll([5, 1, 4, 2, 3], [false, false, false, false, false], [6, 5, 4, 2, 3])).toEqual([
+      3, 6, 2, 5, 4,
+    ]);
+  });
+
+  it("lands the same whichever of equal dice is held", () => {
+    const faces = [1, 6, 3, 4, 5];
+    const a = reroll([5, 5, 2, 2, 3], [false, false, true, false, false], faces);
+    const b = reroll([5, 5, 2, 2, 3], [false, false, false, true, false], faces);
+    const c = reroll([5, 5, 2, 2, 3], [false, true, false, true, false], faces);
+    const d = reroll([5, 5, 2, 2, 3], [true, false, true, false, false], faces);
+    expect([...a].sort()).toEqual([...b].sort());
+    expect([...c].sort()).toEqual([...d].sort());
   });
 });
 
@@ -121,7 +134,9 @@ describe("generateDailyQuiz", () => {
     progress = applyKeep(solver, puzzle, progress, [true, true, false, false, false]);
     expect(progress.rollsLeft).toBe(1);
     expect(progress.dice.slice(0, 2)).toEqual(puzzle.dice.slice(0, 2));
-    expect(progress.dice.slice(2)).toEqual(puzzle.nextRolls[0].slice(2));
+    expect(progress.dice).toEqual(
+      reroll(puzzle.dice, [true, true, false, false, false], puzzle.nextRolls[0]),
+    );
     expect(progress.held).toEqual([true, true, false, false, false]);
     const open = solver.analyze(toTurnState(puzzle.card), progress.dice, 0)[0];
     progress = applyScore(solver, puzzle, progress, open.kind === "score" ? open.category : "Chance");
