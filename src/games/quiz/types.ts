@@ -16,9 +16,8 @@ export type QuizPuzzle = {
   dice: number[];
   rollsLeft: RollsLeft;
   /**
-   * The faces of the rolls still to come, one set of five per roll. Rerolled
-   * dice take them in order, so everyone making the same choice on the same
-   * day sees the same dice.
+   * The faces of the rolls still to come, one set of five per roll. A rerolled
+   * die takes the face at its own position, so everyone sees the same dice.
    */
   nextRolls: number[][];
 };
@@ -75,6 +74,8 @@ export type PuzzleProgress = {
    */
   rolled?: boolean;
   dice: number[];
+  /** The dice held for the last reroll; they stay held until tapped again. */
+  held?: boolean[];
   rollsLeft: RollsLeft;
   steps: QuizStep[];
   done: boolean;

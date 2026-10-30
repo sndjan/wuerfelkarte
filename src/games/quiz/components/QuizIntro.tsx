@@ -1,4 +1,7 @@
+import { ChevronsRight } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { Button } from "@/components/ui/button";
 
 import { QUIZ_EMOJI } from "../config";
 import { Die } from "./Die";
@@ -33,7 +36,7 @@ const EXAMPLE_DICE = [6, 6, 6, 6, 1];
 /**
  * The full-screen explanation before the day's first decision: the goal (the
  * best move, not the most points now) and a tour of the screen, whose last
- * step starts the quiz.
+ * step starts the quiz. It can be skipped right away.
  */
 export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntroProps) {
   const [year, month, day] = date.split("-");
@@ -49,6 +52,10 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
           {streak > 0 &&
             ` · 🔥 ${streak} ${streak === 1 ? "Tag" : "Tage"} Serie`}
         </p>
+        <Button variant="ghost" size="sm" className="mt-1 text-muted-foreground" onClick={onStart}>
+          Tutorial überspringen
+          <ChevronsRight />
+        </Button>
       </div>
 
       <Section title="Worum geht's">
