@@ -35,6 +35,9 @@ runs as before, just without the chart.
 - **Wizard** — trick prediction, including the 25 Jahre Edition Sonderkarten.
 - **Flip 7** — press your luck to seven different number cards.
 - **Cabo** — the lowest hand wins.
+- **Kniffel-Training** — a whole solo game with digital dice; every decision
+  (which dice to keep, when to stop, which field to fill) is graded against the
+  optimal solver as you make it, with the better move and the ranked top moves.
 - **Darts** — X01 on a clickable board, with legs, checkout suggestions and
   three-dart averages.
 

@@ -26,7 +26,15 @@ export const games: GameSummary[] = [
     href: "/quiz",
     locked: false,
     featured: true,
-    alternativeNames: ["Tagesquiz", "Yatzy-Quiz", "Kniffel-Trainer"],
+    alternativeNames: ["Tagesquiz", "Yatzy-Quiz"],
+  },
+  {
+    key: "training",
+    name: "Kniffel-Training",
+    emoji: "🎓",
+    href: "/training",
+    locked: false,
+    alternativeNames: ["Kniffel-Trainer", "Yatzy-Training", "Übung", "Solo"],
   },
   {
     key: "yatzy",

@@ -20,9 +20,17 @@ const TIER_COLORS: Record<PointsTier, string> = {
 export const pointsColor = (points: number) => TIER_COLORS[pointsTier(points)];
 
 /** A folded-away section of the result card. */
-function Fold({ label, children }: { label: string; children: ReactNode }) {
+function Fold({
+  label,
+  children,
+  open = false,
+}: {
+  label: string;
+  children: ReactNode;
+  open?: boolean;
+}) {
   return (
-    <details className="group">
+    <details className="group" open={open || undefined}>
       <summary className="flex w-fit cursor-pointer list-none items-center gap-1 text-xs font-semibold text-muted-foreground [&::-webkit-details-marker]:hidden">
         <ChevronDown className="size-3.5 transition-transform group-open:rotate-180" />
         {label}
@@ -33,9 +41,9 @@ function Fold({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /** A step's best moves and the player's own. */
-function MoveRanking({ moves }: { moves: QuizMove[] }) {
+export function MoveRanking({ moves, open = false }: { moves: QuizMove[]; open?: boolean }) {
   return (
-    <Fold label="Top-Züge">
+    <Fold label="Top-Züge" open={open}>
       <ol className="flex flex-col gap-1">
         {moves.map((move) => (
           <li

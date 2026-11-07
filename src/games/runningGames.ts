@@ -3,6 +3,7 @@ import { runningDartsGame } from "./darts/resume";
 import { runningFlip7Game } from "./flip7/resume";
 import { runningQuizGame } from "./quiz/resume";
 import { RunningGame } from "./shared/resume";
+import { runningTrainingGame } from "./training/resume";
 import { runningWizardGame } from "./wizard/resume";
 import { runningYatzyGame } from "./yatzy/resume";
 
@@ -15,4 +16,5 @@ export const loadRunningGames = (): RunningGame[] =>
     runningCaboGame(),
     runningDartsGame(),
     runningQuizGame(),
+    runningTrainingGame(),
   ].filter((game): game is RunningGame => game !== null);
