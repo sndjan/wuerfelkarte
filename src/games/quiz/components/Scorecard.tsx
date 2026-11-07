@@ -16,6 +16,8 @@ type ScorecardProps = {
   onSelect?: (category: Category) => void;
   /** Just the fields, without the card frame and title — for nesting. */
   bare?: boolean;
+  /** The card's heading; the quiz's by default. */
+  title?: string;
 };
 
 const UPPER = CATEGORIES.slice(0, 6);
@@ -28,7 +30,14 @@ export const crossedPill = "bg-red-100 dark:bg-[#950606]";
 export const openPill = "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
 
 /** The puzzle's scorecard, styled like a player's Wunder sheet. */
-export function Scorecard({ card, options, selected, onSelect, bare = false }: ScorecardProps) {
+export function Scorecard({
+  card,
+  options,
+  selected,
+  onSelect,
+  bare = false,
+  title = `${QUIZ_EMOJI} Deine Karte`,
+}: ScorecardProps) {
   const { upperBonusThreshold, upperBonus } = tournamentRules;
   const upperSum = UPPER.reduce((sum, c) => sum + (card[c] ?? 0), 0);
   const bonusReached = upperSum >= upperBonusThreshold;
@@ -118,7 +127,7 @@ export function Scorecard({ card, options, selected, onSelect, bare = false }: S
   return (
     <Card className="flex flex-col gap-2 p-4">
       <div className="mb-1 flex w-full items-center rounded-md bg-white px-3 py-1.5 font-bold dark:bg-card">
-        {QUIZ_EMOJI} Deine Karte
+        {title}
       </div>
       {fields}
     </Card>
