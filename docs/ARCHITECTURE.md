@@ -84,6 +84,8 @@ configuration language, not less code.
 | `yatzy:players` | The seating the lobby hands to a fresh Yatzy sheet |
 | `quiz:days` | Every quiz day played, so the archive can show and resume it |
 | `quiz:submission` | Today's quiz result until the server has it |
+| `speedrun:daily` | The last day a ranked Tagesrun was started |
+| `speedrun:submission` | Today's ranked Tagesrun until the server has it |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -108,6 +110,15 @@ Only a day finished on its own date is submitted; archive days just show the
 chart. The client (`src/lib/supabase.ts`) reads `NEXT_PUBLIC_SUPABASE_URL` and
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Without them, or offline, the chart is
 left out and a queued result waits for the next visit.
+
+## Speedrun distribution
+
+The speedrun's Tagesrun works the same way (`src/games/speedrun/distribution.ts`,
+`supabase/migrations/20261108120000_speedrun_results.sql`): the day's first
+finished run sends its time and penalty with a one-day token through
+`submit_speedrun_result`, and `get_speedrun_distribution` returns players per
+second of Wertungszeit. The server cannot check the clock, so its checks are
+plausibility only.
 
 ## Adding a game
 

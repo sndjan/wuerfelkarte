@@ -37,6 +37,14 @@ export const games: GameSummary[] = [
     alternativeNames: ["Kniffel-Trainer", "Yatzy-Training", "Übung", "Solo"],
   },
   {
+    key: "speedrun",
+    name: "Kniffel-Speedrun",
+    emoji: "⏱️",
+    href: "/speedrun",
+    locked: false,
+    alternativeNames: ["Speedrun", "Yatzy-Speedrun", "Zeitrennen", "Tagesrun"],
+  },
+  {
     key: "yatzy",
     name: "Yatzy",
     emoji: "🎲",
