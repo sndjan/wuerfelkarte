@@ -32,7 +32,9 @@ export function Speedrun() {
 
   // Start, run and finish are separate screens: each opens at the top.
   const screen = !game ? "start" : isFinished(game) ? "finish" : "run";
-  useEffect(() => window.scrollTo(0, 0), [screen]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
 
   const header = <PageHeader backHref="/" title={SPEEDRUN_NAME} />;
 

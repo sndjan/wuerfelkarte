@@ -144,100 +144,105 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
         </div>
       </section>
 
-      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4">
-        <div className="grid grid-cols-2 gap-2">
-          <Button className="h-12 rounded-full bg-brand-accent text-lg text-white hover:bg-brand-accent/90" onClick={onAgain}>
-            <RotateCcw className="size-5" />
-            Nochmal
-          </Button>
-          <Button variant="outline" className="h-12 rounded-full text-lg" onClick={() => share(shareText(match))}>
-            <Share2 className="size-5" />
-            Teilen
+      <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 lg:max-w-5xl lg:px-8">
+        <div className="flex flex-col gap-4 lg:mx-auto lg:w-full lg:max-w-md">
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="h-12 rounded-full bg-brand-accent text-lg text-white hover:bg-brand-accent/90" onClick={onAgain}>
+              <RotateCcw className="size-5" />
+              Nochmal
+            </Button>
+            <Button variant="outline" className="h-12 rounded-full text-lg" onClick={() => share(shareText(match))}>
+              <Share2 className="size-5" />
+              Teilen
+            </Button>
+          </div>
+          <Button variant="ghost" className="-mt-2 self-center text-muted-foreground" onClick={onLeave}>
+            Andere Kategorie
           </Button>
         </div>
-        <Button variant="ghost" className="-mt-2 self-center text-muted-foreground" onClick={onLeave}>
-          Andere Kategorie
-        </Button>
 
-        {game.category === "daily" && game.date && game.ranked && (
-          <SpeedrunDistribution date={game.date} wertungMs={match.wertungMs} />
-        )}
-
-        <Card className="gap-0 overflow-hidden p-0">
-          <div className="flex items-baseline px-4 pt-4 pb-2">
-            <h2 className="flex-1 text-lg font-bold">Splits</h2>
-            <span className="text-xs text-muted-foreground">
-              {counted ? "inkl. Strafe · " : ""}Δ zur {oldPb ? "Bestzeit" : "Zeit"}
-            </span>
-          </div>
-          {match.splits.map((split, i) => {
-            const turn = game.turns[i];
-            const isGold = gold[i] !== null && segment(match.splits, i) < gold[i]!;
-            const delta = oldPb ? split - oldPb.splits[i] : null;
-            return (
-              <div key={i} className="flex h-9 items-center gap-2.5 border-t border-hairline px-4 tabular-nums">
-                <span className="w-5 text-right text-xs text-muted-foreground">{i + 1}</span>
-                <span className="flex-1 truncate text-[15px] font-semibold">
-                  {categoryLabel(turn.category)}
-                  {turn.points === 0 && <span className="text-muted-foreground"> ✕</span>}
-                </span>
-                <span className="flex w-5 justify-center">
-                  {isGold && <Star className="size-4 fill-gold text-yellow-600" aria-label="Goldsplit" />}
-                </span>
-                <span className="w-14 text-right text-[15px] font-bold">{formatTime(split)}</span>
-                <span
-                  className={cn(
-                    "w-12 text-right text-sm font-extrabold",
-                    delta === null ? "text-muted-foreground" : delta < 0 ? "text-brand-accent" : "text-orange-600",
-                  )}
-                >
-                  {delta === null ? "" : formatDelta(delta)}
-                </span>
-              </div>
-            );
-          })}
-        </Card>
-
-        <Card className="gap-3 p-4">
-          <div className="flex items-baseline">
-            <h2 className="flex-1 text-lg font-bold">Analyse</h2>
-            <span className="text-xs text-muted-foreground">vom Solver</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Stat label="Ø Zugqualität" value={`${stats.rating}`} className="text-brand-accent" />
-            <Stat label="beste Züge" value={`${stats.optimal}/${stats.decisions}`} />
-            <Stat
-              label={counted ? "Punkte verschenkt = Strafe" : "Punkte verschenkt"}
-              value={formatSeconds(stats.loss * 1000)}
-              className="text-orange-600"
-            />
-          </div>
-          <h3 className="mt-1 font-bold">Größte Fehler</h3>
-          {mistakes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Kein einziger Fehler – jeder Zug war optimal. 🏆</p>
-          ) : (
-            <ol className="flex flex-col gap-4">
-              {mistakes.map(({ step, turn }, i) => (
-                <li key={i} className="flex flex-col gap-1">
-                  <span className="flex text-xs font-semibold text-muted-foreground">
-                    Zug {turn}
-                    {counted && (
-                      <span className="ml-auto font-extrabold text-orange-600 tabular-nums">
-                        +{formatSeconds(step.loss * STRAFE_MS_PER_POINT)} s
-                      </span>
-                    )}
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <Card className="gap-0 overflow-hidden p-0">
+            <div className="flex items-baseline px-4 pt-4 pb-2">
+              <h2 className="flex-1 text-lg font-bold">Splits</h2>
+              <span className="text-xs text-muted-foreground">
+                {counted ? "inkl. Strafe · " : ""}Δ zur {oldPb ? "Bestzeit" : "Zeit"}
+              </span>
+            </div>
+            {match.splits.map((split, i) => {
+              const turn = game.turns[i];
+              const isGold = gold[i] !== null && segment(match.splits, i) < gold[i]!;
+              const delta = oldPb ? split - oldPb.splits[i] : null;
+              return (
+                <div key={i} className="flex h-9 items-center gap-2.5 border-t border-hairline px-4 tabular-nums">
+                  <span className="w-5 text-right text-xs text-muted-foreground">{i + 1}</span>
+                  <span className="flex-1 truncate text-[15px] font-semibold">
+                    {categoryLabel(turn.category)}
+                    {turn.points === 0 && <span className="text-muted-foreground"> ✕</span>}
                   </span>
-                  <StepRow step={step} />
-                </li>
-              ))}
-            </ol>
-          )}
-          <p className="text-xs text-muted-foreground">
-            Gewertet wird jede Entscheidung, nicht der Wurf: jeder verschenkte erwartete Punkt kostet eine
-            Sekunde. Ein Kniffel aus Glück macht den Lauf nicht besser, eine verpasste Straße nach richtigem
-            Halten nicht schlechter.
-          </p>
-        </Card>
+                  <span className="flex w-5 justify-center">
+                    {isGold && <Star className="size-4 fill-gold text-yellow-600" aria-label="Goldsplit" />}
+                  </span>
+                  <span className="w-14 text-right text-[15px] font-bold">{formatTime(split)}</span>
+                  <span
+                    className={cn(
+                      "w-12 text-right text-sm font-extrabold",
+                      delta === null ? "text-muted-foreground" : delta < 0 ? "text-brand-accent" : "text-orange-600",
+                    )}
+                  >
+                    {delta === null ? "" : formatDelta(delta)}
+                  </span>
+                </div>
+              );
+            })}
+          </Card>
+
+          <div className="flex flex-col gap-4">
+            {game.category === "daily" && game.date && game.ranked && (
+              <SpeedrunDistribution date={game.date} wertungMs={match.wertungMs} />
+            )}
+            <Card className="gap-3 p-4">
+              <div className="flex items-baseline">
+                <h2 className="flex-1 text-lg font-bold">Analyse</h2>
+                <span className="text-xs text-muted-foreground">vom Solver</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Stat label="Ø Zugqualität" value={`${stats.rating}`} className="text-brand-accent" />
+                <Stat label="beste Züge" value={`${stats.optimal}/${stats.decisions}`} />
+                <Stat
+                  label={counted ? "Punkte verschenkt = Strafe" : "Punkte verschenkt"}
+                  value={formatSeconds(stats.loss * 1000)}
+                  className="text-orange-600"
+                />
+              </div>
+              <h3 className="mt-1 font-bold">Größte Fehler</h3>
+              {mistakes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Kein einziger Fehler – jeder Zug war optimal. 🏆</p>
+              ) : (
+                <ol className="flex flex-col gap-4">
+                  {mistakes.map(({ step, turn }, i) => (
+                    <li key={i} className="flex flex-col gap-1">
+                      <span className="flex text-xs font-semibold text-muted-foreground">
+                        Zug {turn}
+                        {counted && (
+                          <span className="ml-auto font-extrabold text-orange-600 tabular-nums">
+                            +{formatSeconds(step.loss * STRAFE_MS_PER_POINT)} s
+                          </span>
+                        )}
+                      </span>
+                      <StepRow step={step} />
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Gewertet wird jede Entscheidung, nicht der Wurf: jeder verschenkte erwartete Punkt kostet eine
+                Sekunde. Ein Kniffel aus Glück macht den Lauf nicht besser, eine verpasste Straße nach richtigem
+                Halten nicht schlechter.
+              </p>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
