@@ -1,17 +1,17 @@
 "use client";
 
-import { Dices } from "lucide-react";
+import { Check } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Category, Solver } from "@/games/yatzy/solver";
-import { categoryLabel, describeStep, formatLoss } from "../feedback";
+import { describeStep, formatLoss, shortCategoryLabel } from "../feedback";
 import { toTurnState } from "../puzzles";
 import type { PuzzleProgress, QuizPuzzle } from "../types";
-import { Die, ROLL_MS } from "./Die";
+import { DiceDock } from "./DiceDock";
+import { ROLL_MS } from "./Die";
 import { Scorecard } from "./Scorecard";
 
 type PuzzleViewProps = {
@@ -19,8 +19,8 @@ type PuzzleViewProps = {
   title: string;
   puzzle: QuizPuzzle;
   progress: PuzzleProgress;
-  /** The day's progress dots, shown at the bottom of the dice card. */
-  dots: ReactNode;
+  /** The day's progress, shown next to the title. */
+  dayProgress: ReactNode;
   /**
    * The dice the roll that led to this step threw, to animate them; null when
    * the view did not open on a fresh roll (resumed, or a new puzzle).
@@ -32,18 +32,43 @@ type PuzzleViewProps = {
   onScore: (category: Category) => void;
 };
 
-const rollsText = (rollsLeft: number) =>
-  rollsLeft === 0 ? "Kein Wurf mehr" : `Noch ${rollsLeft} ${rollsLeft === 1 ? "Wurf" : "Würfe"}`;
-
 const hintText = (rolled: boolean, rollsLeft: number) =>
   !rolled
-    ? "Würfle, um den Zug zu beginnen."
+    ? "Würfle, um zu starten"
     : rollsLeft === 0
-      ? "Wähle ein Feld auf deiner Karte."
-      : "Halte Würfel und würfle neu – oder trag direkt ein.";
+      ? "Wähle ein Feld"
+      : "Würfel halten, neu würfeln oder eintragen";
+
+/** The last decision in one line: a tick, or what it cost and what was better. */
+function StepVerdict({ step }: { step: PuzzleProgress["steps"][number] }) {
+  const { better, loss } = describeStep(step);
+  if (!better) {
+    return (
+      <>
+        <Check className="size-4 shrink-0 text-brand-accent" />
+        <span className="font-bold">Beste Wahl</span>
+      </>
+    );
+  }
+  return (
+    <>
+      <span
+        className={cn(
+          "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums text-white",
+          loss >= 3 ? "bg-orange-500" : "bg-brand-badge",
+        )}
+      >
+        −{formatLoss(loss)}
+      </span>
+      <span className="truncate text-muted-foreground">
+        besser: <b className="text-foreground">{better}</b>
+      </span>
+    </>
+  );
+}
 
 /**
- * One puzzle turn: a mission-style dice card above a Wunder-style sheet.
+ * One puzzle turn: the whole card in two columns, the dice at the bottom.
  * The selected field is local — the parent keys this view by step, so it
  * resets after every decision; held dice start from the last reroll's.
  */
@@ -52,7 +77,7 @@ export function PuzzleView({
   title,
   puzzle,
   progress,
-  dots,
+  dayProgress,
   rolling,
   onRoll,
   onKeep,
@@ -87,77 +112,44 @@ export function PuzzleView({
   }, [solver, puzzle.card, progress.dice, rolled]);
 
   const lastStep = progress.steps.at(-1);
-  const feedback = lastStep ? describeStep(lastStep) : null;
   const canRoll = !rolled || (progress.rollsLeft > 0 && held.some((h) => !h));
 
+  const feedback = lastStep ? (
+    <StepVerdict step={lastStep} />
+  ) : (
+    <span className="text-muted-foreground">{hintText(rolled, progress.rollsLeft)}</span>
+  );
+
   return (
-    <div className="flex flex-col gap-4">
-      <Card className="flex flex-col items-center gap-3 p-4">
-        <h2 className="text-lg font-bold">{title}</h2>
-
-        {/* Fixed rows, so the card never changes height between steps. */}
-        <div className="flex w-full flex-col px-2">
-          <div className="flex w-full items-start gap-2 px-3 text-sm font-semibold">
-            🎲
-            <span>{rollsText(rolled ? progress.rollsLeft : progress.rollsLeft + 1)}</span>
-          </div>
-          <div className="flex min-h-[3.25rem] w-full items-start gap-2 px-3 py-1.5 text-sm">
-            {feedback ? (feedback.better ? "💡" : "✅") : "👉"}
-            <span>
-              {!feedback ? (
-                hintText(rolled, progress.rollsLeft)
-              ) : feedback.better ? (
-                <>
-                  Besser wäre <b>{feedback.better}</b> gewesen (−{formatLoss(feedback.loss)} Punkte).
-                </>
-              ) : (
-                <>Beste Wahl: {feedback.chosen}.</>
-              )}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid w-full grid-cols-5 justify-items-center gap-2 px-2">
-          {progress.dice.map((value, i) => (
-            <Die
-              key={i}
-              value={rolled ? value : undefined}
-              held={held[i]}
-              rolling={animating && (rolling?.[i] ?? false)}
-              onToggle={
-                rolled && progress.rollsLeft > 0 && !animating
-                  ? () => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-
-        <div className="flex w-full gap-2 px-2">
-          {(!rolled || progress.rollsLeft > 0) && (
-            <Button
-              variant={rolled ? "outline" : "default"}
-              className="flex-1"
-              disabled={!canRoll || animating}
-              onClick={() => (rolled ? onKeep(held) : onRoll())}
-            >
-              <Dices />
-              Würfeln
-            </Button>
-          )}
-          <Button className="flex-1" disabled={!selected || animating} onClick={() => selected && onScore(selected)}>
-            {selected ? `${categoryLabel(selected)} eintragen` : "Feld wählen"}
-          </Button>
-        </div>
-
-        {dots}
-      </Card>
+    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5">
+      <div className="flex items-center gap-3 text-sm">
+        <h2 className="shrink-0 font-extrabold">{title}</h2>
+        {dayProgress}
+      </div>
 
       <Scorecard
+        split
         card={puzzle.card}
         options={options}
         selected={selected}
         onSelect={(category) => setSelected((prev) => (prev === category ? null : category))}
+      />
+
+      <DiceDock
+        feedback={feedback}
+        dice={progress.dice}
+        rolled={rolled}
+        held={held}
+        rollsLeft={progress.rollsLeft}
+        rolling={rolling}
+        animating={animating}
+        onToggle={(i) => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))}
+        canRoll={canRoll}
+        onRoll={() => (rolled ? onKeep(held) : onRoll())}
+        selected={
+          selected ? { label: shortCategoryLabel(selected), points: options.get(selected) ?? 0 } : null
+        }
+        onScore={() => selected && onScore(selected)}
       />
     </div>
   );

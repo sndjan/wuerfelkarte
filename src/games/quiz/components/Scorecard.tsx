@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, tournamentRules, type Category } from "@/games/yatzy/solver";
 import { cn } from "@/lib/utils";
 import { QUIZ_EMOJI } from "../config";
-import { categoryLabel } from "../feedback";
+import { categoryLabel, shortCategoryLabel } from "../feedback";
 import type { QuizCard } from "../types";
 
 type ScorecardProps = {
@@ -18,6 +18,11 @@ type ScorecardProps = {
   bare?: boolean;
   /** The card's heading; the quiz's by default. */
   title?: string;
+  /**
+   * Upper and lower section side by side, without a heading, so the whole
+   * card fits on a phone screen next to the dice.
+   */
+  split?: boolean;
 };
 
 const UPPER = CATEGORIES.slice(0, 6);
@@ -37,7 +42,10 @@ export function Scorecard({
   onSelect,
   bare = false,
   title = `${QUIZ_EMOJI} Deine Karte`,
+  split = false,
 }: ScorecardProps) {
+  const label = split ? shortCategoryLabel : categoryLabel;
+  const fieldPill = split ? cn(pill, "px-3.5 py-1 text-[15px]") : pill;
   const { upperBonusThreshold, upperBonus } = tournamentRules;
   const upperSum = UPPER.reduce((sum, c) => sum + (card[c] ?? 0), 0);
   const bonusReached = upperSum >= upperBonusThreshold;
@@ -46,9 +54,9 @@ export function Scorecard({
     const filled = card[category];
     if (filled !== undefined) {
       return (
-        <div key={category} className={cn(pill, filled === 0 ? crossedPill : filledPill)}>
+        <div key={category} className={cn(fieldPill, filled === 0 ? crossedPill : filledPill)}>
           <span>{filled === 0 ? "❌" : filled}</span>
-          <span className="truncate text-xs text-muted-foreground">{categoryLabel(category)}</span>
+          <span className="truncate text-xs text-muted-foreground">{label(category)}</span>
         </div>
       );
     }
@@ -68,12 +76,12 @@ export function Scorecard({
         <div
           key={category}
           className={cn(
-            pill,
+            fieldPill,
             "bg-white dark:bg-[#212121]",
             selected === category && "border-brand-accent ring-2 ring-brand-accent",
           )}
         >
-          <span className="truncate text-muted-foreground">{categoryLabel(category)}</span>
+          <span className="truncate text-muted-foreground">{label(category)}</span>
           {pointsLabel}
         </div>
       );
@@ -86,39 +94,55 @@ export function Scorecard({
         disabled={!allowed}
         onClick={() => allowed && onSelect(category)}
         className={cn(
-          pill,
+          fieldPill,
           openPill,
           "text-left disabled:cursor-not-allowed disabled:opacity-50",
           selected === category && "border-brand-accent ring-2 ring-brand-accent",
         )}
       >
-        <span className="truncate text-muted-foreground">{categoryLabel(category)}</span>
+        <span className="truncate text-muted-foreground">{label(category)}</span>
         {pointsLabel}
       </button>
     );
   };
 
+  const bonus = (
+    <div className={cn("w-full rounded-md bg-white dark:bg-card", split ? "px-1 pt-0.5" : "my-1 px-3 py-2")}>
+      <div className="flex items-center justify-center gap-2 font-bold">
+        <span>
+          {upperSum}
+          {!bonusReached && (
+            <span className="text-xs font-normal text-muted-foreground">/{upperBonusThreshold}</span>
+          )}
+        </span>
+        {bonusReached && <Badge className="bg-green-800 font-bold">+{upperBonus}</Badge>}
+      </div>
+      <Progress
+        value={(upperSum / upperBonusThreshold) * 100}
+        className="mt-2"
+        indicatorClassName={
+          bonusReached ? "bg-green-800 dark:bg-green-700" : "bg-green-700 dark:bg-green-400"
+        }
+      />
+    </div>
+  );
+
+  if (split) {
+    return (
+      <Card className="grid grid-cols-2 gap-2 p-2.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          {UPPER.map(field)}
+          {bonus}
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">{CATEGORIES.slice(6).map(field)}</div>
+      </Card>
+    );
+  }
+
   const fields = (
     <>
       {UPPER.map(field)}
-      <div className="my-1 w-full rounded-md bg-white px-3 py-2 dark:bg-card">
-        <div className="flex items-center justify-center gap-2 font-bold">
-          <span>
-            {upperSum}
-            {!bonusReached && (
-              <span className="text-xs font-normal text-muted-foreground">/{upperBonusThreshold}</span>
-            )}
-          </span>
-          {bonusReached && <Badge className="bg-green-800 font-bold">+{upperBonus}</Badge>}
-        </div>
-        <Progress
-          value={(upperSum / upperBonusThreshold) * 100}
-          className="mt-2"
-          indicatorClassName={
-            bonusReached ? "bg-green-800 dark:bg-green-700" : "bg-green-700 dark:bg-green-400"
-          }
-        />
-      </div>
+      {bonus}
       {CATEGORIES.slice(6).map(field)}
     </>
   );
