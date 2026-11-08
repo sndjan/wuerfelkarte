@@ -8,20 +8,26 @@ made. It is built for thinking slowly: each move stops for feedback, a ranking o
 the top moves and a "Weiter" tap.
 
 A speedrun mode turns the same solo game into a race: fill all 13 fields as fast
-as possible, without the solver interrupting, and compare the time against your
-own personal best and — once a day, on dice everyone shares — against everyone
-else. The solver comes back only after the finish line, to show what the speed
-cost.
+as possible and compare the time against your own personal best and — once a
+day, on dice everyone shares — against everyone else.
+
+**The result measures skill, not luck.** The points on the card are not part of
+the score: a Kniffel in the first roll is luck, so it must not make a run
+better. Instead every decision is graded by the solver, exactly as in training,
+and each *expected* point a decision gives away costs time. Expected loss only
+depends on what the player did with the dice they got, never on how the dice
+fell afterwards, so a careful player on bad dice beats a careless one on good
+dice.
 
 Most of the parts exist already:
 
 - Dice, holding and rerolls: the training's `TurnView` / the quiz's `DiceDock` and `Die`.
-- Fair shared dice: the quiz's `seededRandom` and `reroll(dice, held, faces)`
-  ([src/games/quiz/puzzles.ts](../../../src/games/quiz/puzzles.ts)), which hands out rerolled
-  faces by sorted slot so everyone keeping the same values sees the same dice.
-- Scoring without the 2 MB solver table: `scoreCategory` in
-  [src/games/yatzy/solver.ts](../../../src/games/yatzy/solver.ts) (tournament rules).
-- Post-game grading: `gradeKeep`, `gradeScore`, `trainingStats`, `biggestMistakes`.
+- Grading: `gradeKeep`, `gradeScore` and the per-step `loss` in
+  [src/games/quiz/puzzles.ts](../../../src/games/quiz/puzzles.ts), `trainingStats` and
+  `biggestMistakes` in [src/games/training/game.ts](../../../src/games/training/game.ts).
+- Fair shared dice: the quiz's `seededRandom` and `reroll(dice, held, faces)`,
+  which hands out rerolled faces by sorted slot so everyone keeping the same
+  values sees the same dice.
 - Anonymous daily distribution: the `quiz_results` table and
   [src/games/quiz/distribution.ts](../../../src/games/quiz/distribution.ts).
 - Storage, resume and match history: `createGameStorage`, `RunningGame`.
@@ -31,32 +37,60 @@ Most of the parts exist already:
 - A new game **Kniffel-Speedrun** (⏱️, route `/speedrun`, folder `src/games/speedrun/`)
   listed in the registry next to Quiz and Training.
 - A run is one full solo card (13 turns, tournament rules) against a running clock.
+- One number per run, the **Wertungszeit**:
+
+  ```
+  strafe   = Σ loss of every decision × 1 s     (expected points given away)
+  wertung  = time + strafe
+  ```
+
+  The score on the card is shown, but does not count.
 - Three categories:
-  | Category | Dice | Target | Ranked against |
+  | Category | Dice | Counts | Ranked against |
   | --- | --- | --- | --- |
-  | **Any%** | random | none | own PB |
-  | **200er** (default) | random | 200 points | own PB |
-  | **Tagesrun** | seeded per day, same for everyone | the day's *Par* | own PB + everyone (anonymous) |
-- One number per run, the **Wertungszeit**: real time plus penalty seconds for
-  every point below the category's target. Every run can always be finished; a
-  bad card is slow, not invalid.
+  | **Any%** | random | time only | own PB |
+  | **Klassisch** (default) | random | time + Strafe | own PB |
+  | **Tagesrun** | seeded per day, same for everyone | time + Strafe | own PB + everyone (anonymous) |
 - Live splits per turn against the personal best, LiveSplit-style.
-- Built for speed: no confirmations, no feedback during the run, one tap per
+- Built for speed: no confirmations, no move-by-move feedback, one tap per
   decision on mobile, full keyboard control on desktop.
-- After the finish: the solver's analysis of the run (expected points given
-  away, biggest mistakes), reusing the training's summary pieces.
+- After the finish: the full analysis of the run (which decisions cost how
+  much, the better move), reusing the training's summary pieces.
 
 ## Non-goals
 
-- No named or global leaderboard, no accounts. The app's promise ("nothing
-  leaves the browser except the anonymous quiz total") extends only to the
-  Tagesrun's anonymous time, same as the quiz.
+- No named or global leaderboard, no accounts. Only the Tagesrun's anonymous
+  result leaves the browser, the same way as the quiz total.
 - No server-side verification of times. The server can replay a Tagesrun's
-  score from its seed and decisions, but not its clock; the distribution is for
-  fun, not for prizes.
+  decisions and re-grade them, but not its clock; the distribution is for fun.
 - No multiplayer race or ghost of another player.
-- No Yatzy variants (Wunder+, Mini, …) — tournament rules only, so Par and the
-  solver analysis stay comparable.
+- No Yatzy variants (Wunder+, Mini, …) — tournament rules only, the rules the
+  solver table is built for.
+
+## Why expected loss removes luck
+
+Each decision's `loss` is `best.expected − chosen.expected`: the expected final
+score of the best move minus that of the chosen move, both computed for the
+*same* dice and card. The solver is the referee:
+
+- Rolling a Kniffel does not lower the Strafe; entering it in Chance would raise it.
+- Missing a Große Straße after the right keep costs nothing — the decision was
+  right, the dice were not.
+- Bad dice early on make the rest of the card worse, but every later decision is
+  graded against what is still possible on *that* card.
+
+What luck still touches, and how much:
+
+- **The number of decisions** varies a little (a turn that is finished after the
+  first roll has one decision, not three). Fewer decisions mean fewer chances to
+  lose points and slightly less time. In practice 30–39 decisions per run; the
+  effect on Wertungszeit is a few seconds at most. The Tagesrun removes it
+  entirely between players, since everyone gets the same dice for the same keeps.
+- **How hard the decisions are**: some positions are close calls, some obvious.
+  Again, the Tagesrun makes this equal for everyone.
+
+That is why the Tagesrun is the one with a shared distribution: on random dice
+the Wertungszeit is fair to within seconds, on the day's dice it is exactly fair.
 
 ## Rules of a run
 
@@ -67,27 +101,26 @@ Most of the parts exist already:
 - The clock stops the moment the 13th field is entered.
 - Real time (RTA): the clock is `now − startedAt`. Leaving the tab, locking the
   phone or reloading does not pause it. A reloaded run resumes with the clock
-  still running, so reloading is never an advantage.
+  still running, so reloading is never an advantage — and taking a long break
+  to think is paid for by the clock.
 - Dice animations are the same length for everyone and short (≤ 200 ms); input
   during an animation is accepted and applies to the final faces. There is an
   option to switch the shake off entirely.
 
-**Wertungszeit**
+**Strafe**
 
-```
-penalty  = max(0, target − score) × 1 s
-wertung  = time + penalty
-```
-
-- Any%: `target = 0` → `wertung = time`.
-- 200er: `target = 200`. A 185-point card in 1:12.4 scores 1:27.4.
-- Tagesrun: `target = Par`, the score the optimal solver reaches on that day's
-  seed (deterministic, because rerolled faces are fixed by slot). Finishing
-  above Par costs nothing extra — there is no bonus for it either, so the race
-  stays about speed.
+- 1 second per expected point given away, summed over all decisions, rounded to
+  a tenth at the end. A run with every move optimal has no Strafe.
+- Any% ignores the Strafe — the pure "how fast can you fill a card" race, kept
+  because it is fun and classic. It is the only category where careless play is
+  allowed.
+- The Strafe is graded **while the run happens** and shown as a running total in
+  the header ("Strafe +6,4"), but without saying which move it came from or
+  what was better. The player knows a move was off; the lesson comes after the
+  finish. (This needs the solver table loaded before the start; see Code.)
 
 One second per point keeps the trade-off honest: thinking 5 seconds longer is
-worth it only if it gains more than 5 points.
+worth it only if the better move is worth more than 5 expected points.
 
 **Tagesrun**
 
@@ -114,86 +147,45 @@ worth it only if it gains more than 5 points.
 
 ## Screens
 
+The design lives on the Kniffel-Speedrun canvas (Start, Lauf — playable, Ziel,
+Lauf am Desktop).
+
 ### 1. Start (`/speedrun`)
 
-```
-┌─────────────────────────────────────┐
-│ ←  Kniffel-Speedrun                 │
-├─────────────────────────────────────┤
-│  [ Any% ]  [ 200er ]  [ Tagesrun ]  │  ← segmented control
-│                                     │
-│  Persönliche Bestzeit   1:38,2      │
-│  Summe der Bestsplits   1:31,7      │
-│  Läufe                  23          │
-│                                     │
-│        ┌─────────────────────┐      │
-│        │   ▶  Würfeln        │      │  ← starts the clock
-│        └─────────────────────┘      │
-│  Leertaste startet · ⌨️ Tastenkürzel  │
-└─────────────────────────────────────┘
-```
-
-For the Tagesrun the stats block shows the day's Par instead of sum of best and,
-once the ranked run is done, "Heute schon gelaufen: 1:44,9 · besser als 62 %".
+- Segmented control Any% · Klassisch · Tagesrun (gold dot while today's run is open).
+- One line on how the category counts ("Jeder verschenkte Punkt kostet eine
+  Sekunde. Die Punkte auf der Karte zählen nicht.").
+- Personal best as a large time, broken down as `Zeit + Strafe`, plus sum of
+  best splits and the number of runs.
+- Recent runs with their Wertungszeit and Strafe.
+- Big start button "Würfeln & los" — it is disabled with "Solver lädt…" until
+  the table is in.
 
 ### 2. Run
 
-```
-┌─────────────────────────────────────┐
-│  1:04,3         Zug 8/13     −2,4   │  ← timer · turn · delta to PB (green/red)
-│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░            │  ← 13 segments, each split-coloured
-├─────────────────────────────────────┤
-│  Einser   3  │ Dreierpasch    +17   │
-│  Zweier   6  │ Viererpasch     ❌   │  ← compact two-column card,
-│  Dreier  +9  │ Full House     +25   │    previews on free fields
-│  Vierer  16  │ Kl. Straße     30    │
-│  Fünfer  +5  │ Gr. Straße      ❌   │
-│  Sechser 24  │ Wunder          ❌   │
-│  Bonus 49/63 │ Chance         +17   │
-│              │ Gesamt         142   │
-├─────────────────────────────────────┤
-│        ⚃  ⚃  ⚃  ⚄  ⚀                │  ← tap to hold
-│   [ Würfeln  ●● ]                   │  ← dots = rolls left
-└─────────────────────────────────────┘
-```
-
-- Timer in tabular numerals, tenths of a second, always visible (sticky top).
-- Delta to the PB's cumulative split for the same turn: green when ahead, red
-  when behind, gold when this turn's split is the fastest ever (a "Goldsplit").
-- In the 200er/Tagesrun a small projection under Gesamt: "auf Kurs: 212" — the
-  current score plus the solver-free expected rest (a fixed table of average
-  points per open field, no solver needed), so the player sees whether the
-  penalty is coming.
-- Everything that does not help the next tap is hidden: no menu, no hint
-  button, no move feedback. The header's back arrow asks once ("Lauf abbrechen?").
-- Card and dice fit one phone screen without scrolling (the card is the
-  compact layout from #39, dice docked at the bottom for the thumb).
+- Sticky dark header: running clock, running Strafe, delta to PB, 13-segment
+  split bar (gold = fastest-ever turn, green = ahead, orange = behind).
+- Compact two-column card with previews on free fields; dice docked at the
+  bottom for the thumb; "Würfeln" with dots for rolls left.
+- The card's total is shown small, as information only.
+- Everything that does not help the next tap is hidden.
 
 ### 3. Finish
 
-```
-┌─────────────────────────────────────┐
-│         🏁  1:31,2   Neue Bestzeit!  │
-│   Zeit 1:27,2 + Strafe 4,0 (196 P.)  │
-├─────────────────────────────────────┤
-│  Splits                 Δ PB        │
-│   1  Sechser   0:05,1   −0,8  ★     │  ★ = gold split
-│   2  Kl. Str.  0:11,9   +1,2        │
-│   …                                 │
-├─────────────────────────────────────┤
-│  Analyse      Ø Zugqualität 87      │  ← loads the solver now
-│  Verschenkt   23,4 erwartete Punkte │
-│  Größte Fehler (from biggestMistakes)│
-├─────────────────────────────────────┤
-│  [ Nochmal ]   [ Teilen ]           │
-└─────────────────────────────────────┘
-```
-
+- Wertungszeit large, `Zeit + Strafe` below it, card points shown as "zählt nicht".
+- "Nochmal" and "Teilen" right under the result — the restart loop must be
+  instant, it is what speedrunners do most.
+- Split table with deltas and gold-split stars.
+- Analysis: average move quality, best moves `n / m`, expected points given away
+  (= Strafe), biggest mistakes with the better move, each with its seconds.
 - Tagesrun adds the anonymous distribution of Wertungszeiten (the quiz's
   `ScoreDistribution` with time buckets) and "besser als n %".
-- "Teilen" uses the shared share kit: `⏱️ Kniffel-Speedrun 8.11. · 1:31,2 (196 P.) · würfelkarte.com/speedrun`.
-- "Nochmal" starts a new run of the same category with one tap — the
-  restart loop must be instant, it is what speedrunners do most.
+- Share text: `⏱️ Kniffel-Speedrun 8.11. · 1:39,8 (1:27,2 + 12,6) · würfelkarte.com/speedrun`.
+
+### 4. Desktop
+
+Same run screen with the splits in a side panel and keyboard hints on every
+field and die.
 
 ## Keyboard (desktop)
 
@@ -205,23 +197,23 @@ QWERTY alike:
 | `1`–`5` | hold / release die 1–5 |
 | `Space` | Würfeln (also starts the run) |
 | `Q W E R T Z` | Einser … Sechser |
-| `A S D F G H J` | Dreierpasch, Viererpasch, Full House, Kl. Straße, Gr. Straße, Wunder, Chance |
+| `A S D F G H J` | Dreierpasch, Viererpasch, Full House, Kl. Straße, Gr. Straße, Kniffel, Chance |
 | `Enter` on finish | Nochmal |
 | `Esc` | Lauf abbrechen (asks once) |
 
 Each field shows its key as a small hint when a hardware keyboard was used
 (first keydown), hidden on touch.
 
+## Splits
+
+A split is the cumulative **Wertungszeit** at the end of a turn: time so far
+plus Strafe so far. That way a fast but sloppy turn does not show up green.
+Gold splits compare one turn's own Wertungszeit (its time plus its Strafe).
+
 ## Data model (`src/games/speedrun/types.ts`)
 
 ```ts
-export type SpeedrunCategory = "any" | "200" | "daily";
-
-/** One decision, as it happened. Enough to replay the run with the solver. */
-export type RunEvent =
-  | { kind: "roll"; at: number; dice: number[] }                  // first roll of a turn
-  | { kind: "keep"; at: number; held: boolean[]; dice: number[] }  // dice after the reroll
-  | { kind: "score"; at: number; category: Category; points: number; bonus: number };
+export type SpeedrunCategory = "any" | "classic" | "daily";
 
 export type SpeedrunGame = {
   id: string;
@@ -238,8 +230,10 @@ export type SpeedrunGame = {
   held: boolean[];
   rollsLeft: RollsLeft;
   rolled: boolean;
-  /** `at` is ms since startedAt. */
-  events: RunEvent[];
+  /** Every graded decision, as in training. */
+  steps: QuizStep[];
+  /** ms since startedAt at the end of each finished turn. */
+  turnEnds: number[];
 };
 
 export type StoredSpeedrunMatch = StoredMatch<MatchPlayer> & {
@@ -247,79 +241,73 @@ export type StoredSpeedrunMatch = StoredMatch<MatchPlayer> & {
   date?: string;
   ranked?: boolean;
   timeMs: number;
-  penaltyMs: number;
+  /** Σ loss × 1000, 0 in Any%. */
+  strafeMs: number;
   wertungMs: number;
+  /** Shown, never ranked. */
   score: number;
-  /** Cumulative ms at the end of each of the 13 turns. */
+  /** Cumulative Wertungszeit ms at the end of each of the 13 turns. */
   splits: number[];
-  /** Filled in once the solver analysis has run. */
-  loss?: number;
-  rating?: number;
+  loss: number;
+  decisions: number;
+  optimal: number;
 };
 ```
 
 Personal best, gold splits and sum of best are derived from the stored matches
 per category; nothing extra is stored.
 
-The run keeps a raw event log instead of graded `QuizStep`s: grading needs the
-solver table, which must not be on the hot path. After the finish,
-`analyzeRun(solver, game)` replays the events through `gradeKeep`/`gradeScore`
-and returns the same `QuizStep[]`, so `TrainingSummary`'s pieces can render it.
-
 ## Code layout
 
 ```
 src/games/speedrun/
-  config.ts            SPEEDRUN_NAME, SPEEDRUN_EMOJI, TARGET_200, PENALTY_MS_PER_POINT
+  config.ts            SPEEDRUN_NAME, SPEEDRUN_EMOJI, STRAFE_MS_PER_POINT
   types.ts
-  run.ts               pure: newRun, applyRoll, applyKeep, applyScore, wertung, splits,
-                       entryFor (points + bonus + Wunder rule, no solver)
+  run.ts               pure: newRun, applyRoll, applyKeep, applyScore, strafe, wertung, splits
   dice.ts              DiceSource: random, or seeded per day via seededRandom + reroll()
-  par.ts               par(solver, date): the optimal solver's score on the day's dice
-  analysis.ts          analyzeRun(solver, game) → QuizStep[]
   records.ts           personalBest, goldSplits, sumOfBest, deltaToPb
   storage.ts           createGameStorage("speedrun", …), one stored game per category
   resume.ts            RunningGame for the home page ("läuft · Zug 5/13 · 0:41")
   distribution.ts      Tagesrun submission + time buckets (mirrors the quiz)
-  hooks/useSpeedrun.ts clock (requestAnimationFrame, only the timer re-renders),
-                       keyboard, commit/finish, lazy solver load after finish
+  hooks/useSpeedrun.ts solver load before start, clock (requestAnimationFrame,
+                       only the timer re-renders), keyboard, commit/finish
   components/
     Speedrun.tsx       start / run / finish switch
     StartPanel.tsx
-    RunTimer.tsx       timer, delta, split bar
+    RunTimer.tsx       clock, Strafe, delta, split bar
     RunBoard.tsx       compact card + DiceDock
     FinishPanel.tsx    splits table, analysis, distribution, share
-  *.test.ts            run, dice (seed reproducibility), records, analysis
+  *.test.ts            run, dice (seed reproducibility), records, strafe
 src/app/speedrun/page.tsx
 supabase/migrations/2026xxxx_speedrun_results.sql
 ```
 
-`entryFor` pulls the points-and-bonus logic out of `applyScore`'s use of
-`solver.analyze` so both training and speedrun can use it without the table;
-training keeps working unchanged.
+Grading must not slow down input. `applyKeep`/`applyScore` update the dice and
+card synchronously; the matching `gradeKeep`/`gradeScore` call (a few ms with
+the table) runs right after the frame is painted and appends its step. The
+clock is not affected either way: it is wall time.
 
 ## Backend (Tagesrun only)
 
 A `speedrun_results` table mirroring `quiz_results`: `run_date`, a one-day random
-`token`, `time_ms`, `score` and `wertung_ms`. The client computes
-`wertung_ms`, because Par comes from the solver table, which the server does not
-have. Plausibility checks only: `time_ms` between
-10 s and 2 h, `score` between 0 and 375. Two `security definer` functions,
-`submit_speedrun_result` and `get_speedrun_distribution`, same date window and
-duplicate-token rule as the quiz. Without Supabase env vars the Tagesrun still
-works, just without the chart.
+`token`, `time_ms`, `strafe_ms` and `wertung_ms` (checked:
+`wertung_ms = time_ms + strafe_ms`). Plausibility checks only: `time_ms` between
+10 s and 2 h, `strafe_ms` between 0 and 400 s. Two `security definer`
+functions, `submit_speedrun_result` and `get_speedrun_distribution`, same date
+window and duplicate-token rule as the quiz. Without Supabase env vars the
+Tagesrun still works, just without the chart.
 
 ## Open questions
 
-1. **Penalty rate** — 1 s per point is a guess. Playtest: a careful optimal
-   player (≈ 240 points) and a fast careless one (≈ 170) should land within
-   ~20 % of each other in the 200er.
-2. **Par for random runs** — the 200er uses a fixed 200 because random dice
-   have no Par. Alternative: compute the solver's score on the run's own dice
-   afterwards and penalise below that ("luck-adjusted"). More fair, but the
-   result is unknown until after the finish.
+1. **Strafe rate** — 1 s per expected point is a starting guess. Playtest: an
+   optimal player usually gives away 0–10 points per game, a fast careless one
+   40–80. The rate should make "careful" win against "fast and careless", but
+   not by minutes.
+2. **Live Strafe or only at the end?** Showing the running total tells the player
+   a move was off without saying which. Alternative: reveal it only at the
+   finish, for suspense — but then there is no way to adjust mid-run.
 3. **Dice-roll time** — should the first roll of each turn be automatic (one tap
-   fewer per turn, 13 taps per run)? Faster and less tedious, but removes the
-   "Würfeln" rhythm; could be a setting.
+   fewer per turn)? Faster and less tedious, but removes the "Würfeln" rhythm;
+   could be a setting.
 4. **Seeded practice** — allow replaying past days' seeds from an archive (like
    the quiz archive), unranked?
