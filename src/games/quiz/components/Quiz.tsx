@@ -136,23 +136,32 @@ export function Quiz({ date }: { date?: string }) {
   // Today's puzzles go without a date while they are played.
   const dated = (title: string) => `${title} · ${formatDate(day.date)}`;
 
-  // Like the Chaoswunder mission dots, coloured by each finished puzzle's result.
-  const dots = (
-    <div className="flex flex-row justify-center gap-1.5 pt-1">
-      {day.progress.map((p, i) => (
-        <span
-          key={i}
-          className={cn(
-            "size-2 rounded-full",
-            p.done
-              ? pointsColor(puzzlePoints(p))
-              : i === current
-                ? "bg-foreground"
-                : "bg-muted-foreground/30",
-          )}
-        />
-      ))}
-    </div>
+  // One segment per puzzle, coloured by each finished puzzle's result, and
+  // the points collected so far.
+  const collected = day.progress.reduce((sum, p) => sum + (p.done ? puzzlePoints(p) : 0), 0);
+  const dayProgress = (
+    <>
+      <div className="grid min-w-10 flex-1 grid-flow-col gap-1" aria-hidden="true">
+        {day.progress.map((p, i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1.5 rounded-full",
+              p.done
+                ? pointsColor(puzzlePoints(p))
+                : i === current
+                  ? "bg-foreground"
+                  : "bg-foreground/20",
+            )}
+          />
+        ))}
+      </div>
+      {collected > 0 && (
+        <span className="shrink-0 rounded-full bg-brand-accent px-2.5 py-0.5 text-xs font-bold tabular-nums text-white">
+          +{collected}
+        </span>
+      )}
+    </>
   );
 
   return (
@@ -178,10 +187,10 @@ export function Quiz({ date }: { date?: string }) {
             solver={solver}
             title={
               archive
-                ? dated(`Aufgabe ${current + 1} von ${day.puzzles.length}`)
-                : `Aufgabe ${current + 1} von ${day.puzzles.length}`
+                ? dated(`Aufgabe ${current + 1}/${day.puzzles.length}`)
+                : `Aufgabe ${current + 1}/${day.puzzles.length}`
             }
-            dots={dots}
+            dayProgress={dayProgress}
             puzzle={day.puzzles[current]}
             progress={day.progress[current]}
             rolling={rolling}

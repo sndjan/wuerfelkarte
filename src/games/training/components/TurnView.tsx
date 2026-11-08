@@ -1,20 +1,20 @@
 "use client";
 
-import { Dices, Lightbulb } from "lucide-react";
+import { Check, Lightbulb } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Category, Solver } from "@/games/yatzy/solver";
-import { categoryLabel, moveText } from "@/games/quiz/feedback";
+import { describeStep, formatLoss, moveText, shortCategoryLabel } from "@/games/quiz/feedback";
 import { toTurnState } from "@/games/quiz/puzzles";
-import { Die, ROLL_MS } from "@/games/quiz/components/Die";
+import { ROLL_MS } from "@/games/quiz/components/Die";
+import { DiceDock } from "@/games/quiz/components/DiceDock";
 import { Scorecard } from "@/games/quiz/components/Scorecard";
-import { TRAINING_EMOJI } from "../config";
 import { TURNS, bestMove, lastStep, totalScore, trainingStats } from "../game";
 import type { TrainingGame } from "../types";
-import { MoveFeedback } from "./MoveFeedback";
+import { VerdictBadge, verdictColor } from "./MoveFeedback";
 
 type TurnViewProps = {
   solver: Solver;
@@ -26,13 +26,56 @@ type TurnViewProps = {
   onScore: (category: Category) => void;
 };
 
-const rollsText = (rollsLeft: number) =>
-  rollsLeft === 0 ? "Kein Wurf mehr" : `Noch ${rollsLeft} ${rollsLeft === 1 ? "Wurf" : "Würfe"}`;
+function StatTile({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col items-center">
+      <span className="truncate text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </span>
+      <span className="text-base leading-5 font-extrabold tabular-nums">{children}</span>
+    </div>
+  );
+}
+
+/** How the game is going: three numbers and one segment per turn. */
+function GameStats({ game }: { game: TrainingGame }) {
+  const stats = trainingStats(game);
+  const played = game.turns.length;
+  return (
+    <div className="flex flex-col gap-2 rounded-xl bg-muted px-3 pt-1 pb-2">
+      <div className="grid grid-cols-3 gap-2">
+        <StatTile label="Beste Züge">
+          {stats.optimal}
+          <span className="text-sm font-normal text-muted-foreground">/{stats.decisions}</span>
+        </StatTile>
+        <StatTile label="Spielstärke">{stats.rating}</StatTile>
+        <StatTile label="Verschenkt">{stats.loss > 0 ? `−${formatLoss(stats.loss)}` : "0"}</StatTile>
+      </div>
+      {/* Each finished turn in the colour of its worst decision. */}
+      <div className="grid grid-cols-13 gap-[3px]" aria-hidden="true">
+        {Array.from({ length: TURNS }, (_, i) => {
+          const turn = game.turns[i];
+          const worst = turn ? Math.max(0, ...turn.steps.map((s) => s.loss)) : null;
+          return (
+            <span
+              key={i}
+              className={cn(
+                "h-2 rounded-full",
+                worst !== null ? verdictColor(worst) : "bg-foreground/15",
+                i === played && "ring-2 ring-foreground/70",
+              )}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 /**
- * One decision of the training game: the dice, the verdict on the last move
- * and the scorecard. Keyed by decision, so the selected field and the hint
- * reset after every move.
+ * One decision of the training game: the scorecard in two columns, the game's
+ * stats, and the dice at the bottom. Keyed by decision, so the selected field
+ * and the hint reset after every move.
  */
 export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: TurnViewProps) {
   const { current } = game;
@@ -69,101 +112,84 @@ export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: Tur
     );
   }, [hint, solver, game]);
 
-  const stats = trainingStats(game);
+  const step = lastStep(game);
+  const better = step ? describeStep(step).better : null;
   const canRoll = !rolled || (current.rollsLeft > 0 && held.some((h) => !h));
 
+  const feedback = tip ? (
+    <>
+      <Lightbulb className="size-4 shrink-0 text-brand-badge" />
+      <span className="truncate">
+        Tipp: <b>{tip}</b>
+      </span>
+    </>
+  ) : step ? (
+    <>
+      <VerdictBadge loss={step.loss} />
+      {better ? (
+        <span className="truncate text-muted-foreground">
+          besser: <b className="text-foreground">{better}</b>
+        </span>
+      ) : (
+        <Check className="size-4 shrink-0 text-brand-accent" />
+      )}
+    </>
+  ) : (
+    <span className="text-muted-foreground">
+      {rolled ? "Würfel halten, neu würfeln oder eintragen" : "Würfle, um zu starten"}
+    </span>
+  );
+
   return (
-    <div className="flex flex-col gap-4">
-      <Card className="flex flex-col items-center gap-3 p-4">
-        <div className="flex w-full items-center justify-between px-2">
-          <h2 className="text-lg font-bold">
-            Zug {game.turns.length + 1} von {TURNS}
-          </h2>
-          <span className="rounded-full bg-muted px-3 py-1 text-sm font-bold tabular-nums">
-            {totalScore(game)} Pkt.
-          </span>
-        </div>
-        <div className="flex w-full items-center justify-between px-2 text-xs text-muted-foreground">
-          <span>🎲 {rollsText(rolled ? current.rollsLeft : current.rollsLeft + 1)}</span>
-          {stats.decisions > 0 && (
-            <span className="tabular-nums">
-              {stats.optimal}/{stats.decisions} beste Züge · Spielstärke {stats.rating}
-            </span>
-          )}
-        </div>
-
-        <div className="grid w-full grid-cols-5 justify-items-center gap-2 px-2">
-          {current.dice.map((value, i) => (
-            <Die
-              key={i}
-              value={rolled ? value : undefined}
-              held={held[i]}
-              rolling={animating && (rolling?.[i] ?? false)}
-              onToggle={
-                rolled && current.rollsLeft > 0 && !animating
-                  ? () => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-
-        <div className="flex w-full gap-2 px-2">
-          {(!rolled || current.rollsLeft > 0) && (
-            <Button
-              variant={rolled ? "outline" : "default"}
-              className="flex-1"
-              disabled={!canRoll || animating}
-              onClick={() => (rolled ? onKeep(held) : onRoll())}
-            >
-              <Dices />
-              Würfeln
-            </Button>
-          )}
-          <Button
-            className="flex-1"
-            disabled={!selected || animating}
-            onClick={() => selected && onScore(selected)}
-          >
-            {selected ? `${categoryLabel(selected)} eintragen` : "Feld wählen"}
-          </Button>
-        </div>
-
-        {rolled && (
-          <div className="flex min-h-9 w-full items-center px-2">
-            {tip ? (
-              <p className="flex items-start gap-2 text-sm">
-                <Lightbulb className="mt-0.5 size-4 shrink-0 text-brand-badge" />
-                <span>
-                  Bester Zug: <b>{tip}</b>
-                </span>
-              </p>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground"
-                disabled={animating}
-                onClick={() => setHint(true)}
-              >
-                <Lightbulb />
-                Tipp anzeigen
-              </Button>
-            )}
-          </div>
-        )}
-      </Card>
-
-      <Card className="p-4">
-        <MoveFeedback step={lastStep(game)} />
-      </Card>
+    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5">
+      <div className="flex items-center justify-between text-sm">
+        <h2 className="font-extrabold">
+          Zug {game.turns.length + 1}
+          <span className="font-normal text-muted-foreground">/{TURNS}</span>
+        </h2>
+        <span className="rounded-full bg-muted px-3 py-1 font-extrabold tabular-nums">
+          {totalScore(game)} Pkt.
+        </span>
+      </div>
 
       <Scorecard
-        title={`${TRAINING_EMOJI} Deine Karte`}
+        split
         card={game.card}
         options={options}
         selected={selected}
         onSelect={(category) => setSelected((prev) => (prev === category ? null : category))}
+      />
+
+      <GameStats game={game} />
+
+      <DiceDock
+        feedback={feedback}
+        dice={current.dice}
+        rolled={rolled}
+        held={held}
+        rollsLeft={current.rollsLeft}
+        rolling={rolling}
+        animating={animating}
+        onToggle={(i) => setHeld((prev) => prev.map((h, j) => (j === i ? !h : h)))}
+        canRoll={canRoll}
+        onRoll={() => (rolled ? onKeep(held) : onRoll())}
+        selected={
+          selected ? { label: shortCategoryLabel(selected), points: options.get(selected) ?? 0 } : null
+        }
+        onScore={() => selected && onScore(selected)}
+        aside={
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-11 shrink-0"
+            aria-label={hint ? "Tipp ausblenden" : "Tipp anzeigen"}
+            aria-pressed={hint}
+            disabled={!rolled || animating}
+            onClick={() => setHint((h) => !h)}
+          >
+            <Lightbulb className="size-5" />
+          </Button>
+        }
       />
     </div>
   );

@@ -77,28 +77,3 @@ export function StepRow({
     </div>
   );
 }
-
-/** The live verdict on the last decision, shown while playing. */
-export function MoveFeedback({ step }: { step: QuizStep | null }) {
-  if (!step) {
-    return (
-      <p className="px-1 text-sm text-muted-foreground">
-        Spiel eine ganze Partie Kniffel. Nach jedem Zug – Würfel halten, weiterwürfeln oder
-        eintragen – siehst du hier, wie gut er war und welcher Zug besser gewesen wäre.
-      </p>
-    );
-  }
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-2 rounded-xl border-2 p-3",
-        step.loss === 0 ? "border-brand-accent/40" : "border-orange-500/40",
-      )}
-    >
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Dein letzter Zug
-      </span>
-      <StepRow step={step} rankingOpen={step.loss > 0} />
-    </div>
-  );
-}

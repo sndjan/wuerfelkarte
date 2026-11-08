@@ -19,6 +19,17 @@ export type StepFeedback = {
 export const categoryLabel = (category: Category) =>
   category === "Wunder" ? "Kniffel" : category;
 
+const SHORT_LABELS: Partial<Record<Category, string>> = {
+  Dreierpasch: "3er-Pasch",
+  Viererpasch: "4er-Pasch",
+  "Kleine Straße": "Kl. Straße",
+  "Große Straße": "Gr. Straße",
+};
+
+/** A field's name short enough for a two-column card. */
+export const shortCategoryLabel = (category: Category) =>
+  SHORT_LABELS[category] ?? categoryLabel(category);
+
 const diceText = (dice: readonly number[]) => dice.join(" ");
 
 const entryText = (category: Category, points: number) =>
