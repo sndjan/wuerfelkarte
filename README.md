@@ -3,7 +3,8 @@
 Score tracking for dice, card and pub games you play at a real table — Yatzy,
 Wizard, Flip 7, Cabo and Darts, with more on the way. No account: every
 roster, running game and result stays in the browser. Only the daily quiz
-sends its day total, anonymously, for the global score distribution.
+and the speedrun's Tagesrun send their result, anonymously, for a global
+distribution.
 
 Live at [würfelkarte.com](https://www.würfelkarte.com).
 
@@ -38,6 +39,10 @@ runs as before, just without the chart.
 - **Kniffel-Training** — a whole solo game with digital dice; every decision
   (which dice to keep, when to stop, which field to fill) is graded against the
   optimal solver as you make it, with the better move and the ranked top moves.
+- **Kniffel-Speedrun** — a whole solo card against the clock. The result is
+  the time plus one second per expected point a decision gives away, so it
+  measures how well you decide, not how lucky the dice were. Any%, Klassisch
+  and a daily Tagesrun on dice everyone shares.
 - **Darts** — X01 on a clickable board, with legs, checkout suggestions and
   three-dart averages.
 

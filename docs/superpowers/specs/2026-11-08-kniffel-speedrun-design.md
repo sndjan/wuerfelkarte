@@ -235,6 +235,9 @@ export type SpeedrunGame = {
   /** ms since startedAt at the end of each finished turn. */
   turnEnds: number[];
 };
+// As built, SpeedrunGame extends TrainingGame (card, turns, current) with
+// category, seed, date, ranked, clockStart and turnEnds, so the training's
+// stats and mistake list work on it unchanged.
 
 export type StoredSpeedrunMatch = StoredMatch<MatchPlayer> & {
   category: SpeedrunCategory;
@@ -266,7 +269,7 @@ src/games/speedrun/
   run.ts               pure: newRun, applyRoll, applyKeep, applyScore, strafe, wertung, splits
   dice.ts              DiceSource: random, or seeded per day via seededRandom + reroll()
   records.ts           personalBest, goldSplits, sumOfBest, deltaToPb
-  storage.ts           createGameStorage("speedrun", …), one stored game per category
+  storage.ts           createGameStorage("speedrun", …), one stored run at a time
   resume.ts            RunningGame for the home page ("läuft · Zug 5/13 · 0:41")
   distribution.ts      Tagesrun submission + time buckets (mirrors the quiz)
   hooks/useSpeedrun.ts solver load before start, clock (requestAnimationFrame,
@@ -282,10 +285,12 @@ src/app/speedrun/page.tsx
 supabase/migrations/2026xxxx_speedrun_results.sql
 ```
 
-Grading must not slow down input. `applyKeep`/`applyScore` update the dice and
-card synchronously; the matching `gradeKeep`/`gradeScore` call (a few ms with
-the table) runs right after the frame is painted and appends its step. The
-clock is not affected either way: it is wall time.
+Grading does not slow down input: `gradeKeep`/`gradeScore` take well under a
+millisecond with the table, so they run synchronously inside `applyKeep` /
+`applyScore`. The table is loaded before the first run can start.
+
+Every die follows from the run's seed (`turnDice(seed)`), random runs included,
+so any run can be replayed exactly from its seed and decisions.
 
 ## Backend (Tagesrun only)
 
