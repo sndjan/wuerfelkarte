@@ -24,7 +24,7 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
   const [step, setStep] = useState<"email" | "code">("email");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(
-    linkFailed ? "Der Link hat nicht funktioniert. Fordere einen neuen an oder gib den Code ein." : null,
+    linkFailed ? "Link ungültig. Fordere einen neuen an." : null,
   );
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -33,7 +33,10 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
 
   useEffect(() => {
     if (resendIn <= 0) return;
-    const timer = window.setTimeout(() => setResendIn((value) => value - 1), 1000);
+    const timer = window.setTimeout(
+      () => setResendIn((value) => value - 1),
+      1000,
+    );
     return () => window.clearTimeout(timer);
   }, [resendIn]);
 
@@ -50,7 +53,10 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
       email: email.trim(),
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: new URL("/konto/callback", window.location.origin).toString(),
+        emailRedirectTo: new URL(
+          "/konto/callback",
+          window.location.origin,
+        ).toString(),
       },
     });
     setSending(false);
@@ -68,7 +74,11 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
     if (!supabase || verifying) return;
     setError(null);
     setVerifying(true);
-    const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: "email" });
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token,
+      type: "email",
+    });
     setVerifying(false);
     // On success the auth listener switches the page to the account view.
     if (verifyError) setError(authErrorMessage(verifyError));
@@ -104,19 +114,19 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
           {step === "code" ? "📬" : "🎲"}
         </span>
         <h2 className={cn(BALOO, "mt-2 text-2xl font-extrabold")}>
-          {step === "code" ? "Schau in dein Postfach" : "Deine Spiele überall"}
+          {step === "code" ? "Schau in dein Postfach" : "Anmelden"}
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           {step === "code" ? (
             <>
-              Wir haben einen Link an <b className="text-foreground">{email.trim()}</b> geschickt.
-              <span className="mt-1 block text-xs">Nichts da? Schau auch im Spam-Ordner nach.</span>
+              Link an <b className="text-foreground">{email.trim()}</b>{" "}
+              gesendet.
+              <span className="mt-1 block text-xs">
+                Nichts da? Spam-Ordner prüfen.
+              </span>
             </>
           ) : (
-            <>
-              Mit einem Konto hast du Spieler, Verlauf und laufende Spiele auf all deinen Geräten.
-              Ohne Konto bleibt alles wie bisher auf diesem Gerät.
-            </>
+            <>Deine Spiele auf all deinen Geräten.</>
           )}
         </p>
       </section>
@@ -147,18 +157,22 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
               {error}
             </p>
           )}
-          <Button type="submit" disabled={sending} className="h-12 rounded-xl text-base font-bold">
+          <Button
+            type="submit"
+            disabled={sending}
+            className="h-12 rounded-xl text-base font-bold"
+          >
             {sending ? <Loader2 className="animate-spin" /> : <Mail />}
-            {sending ? "Wird gesendet …" : "Anmeldelink senden"}
+            {sending ? "Sendet …" : "Link senden"}
           </Button>
           <p className="text-center text-xs leading-relaxed text-muted-foreground">
-            Kein Passwort nötig. Neu hier? Mit demselben Knopf wird dein Konto angelegt.
+            Kein Passwort. Neu? Das Konto entsteht automatisch.
           </p>
         </form>
       ) : (
         <section className="mt-8 flex flex-col gap-3">
           <label htmlFor="otp" className="text-center text-sm font-bold">
-            Oder den Code aus der Mail eingeben
+            Oder Code eingeben
           </label>
           <input
             id="otp"
@@ -177,7 +191,10 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
             )}
           />
           {error && (
-            <p role="alert" className="text-center text-sm font-medium text-destructive">
+            <p
+              role="alert"
+              className="text-center text-sm font-medium text-destructive"
+            >
               {error}
             </p>
           )}
@@ -187,7 +204,7 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
             </p>
           ) : (
             <p className="text-center text-xs leading-relaxed text-muted-foreground">
-              Praktisch, wenn Würfelkarte auf dem Homescreen liegt: der Link öffnet sonst den Browser.
+              Für die App auf dem Homescreen.
             </p>
           )}
           <Button
@@ -197,7 +214,9 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
             onClick={() => void sendLink()}
             className="mt-4 self-center"
           >
-            {resendIn > 0 ? `Erneut senden in 0:${String(resendIn).padStart(2, "0")}` : "Erneut senden"}
+            {resendIn > 0
+              ? `Erneut in 0:${String(resendIn).padStart(2, "0")}`
+              : "Erneut senden"}
           </Button>
         </section>
       )}

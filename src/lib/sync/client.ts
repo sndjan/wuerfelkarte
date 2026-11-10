@@ -31,8 +31,8 @@ function warnRename(notice: RenameNotice) {
   toast.warning(`„${notice.from}“ heißt jetzt „${notice.to}“`, {
     description:
       notice.kind === "moved"
-        ? `Der Name gehört jetzt deinem verknüpften Mitspieler ${notice.account}. Die bisherigen Spiele von „${notice.from}“ zählen für „${notice.to}“. Du kannst den Namen in der Spielerliste ändern.`
-        : `${notice.account} heißt genauso wie ein anderer verknüpfter Mitspieler. Statistiken zählen nach Namen, deshalb die Nummer.`,
+        ? `Der Name gehört jetzt ${notice.account}. Spiele ziehen mit.`
+        : `Name schon vergeben.`,
     duration: 12_000,
   });
 }

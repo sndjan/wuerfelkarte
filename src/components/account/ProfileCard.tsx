@@ -66,9 +66,11 @@ export function ProfileCard({
         }}
       >
         <div>
-          <h3 className={`${BALOO} text-lg font-extrabold`}>{profile ? "Name ändern" : "Wie heißt du?"}</h3>
+          <h3 className={`${BALOO} text-lg font-extrabold`}>
+            {profile ? "Name ändern" : "Dein Name"}
+          </h3>
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-            Unter diesem Namen stehst du in den Spielen und Statistiken von allen, die dich verknüpfen.
+            So heißt du bei allen, die dich verknüpfen.
           </p>
         </div>
         <Input
@@ -90,7 +92,11 @@ export function ProfileCard({
             Speichern
           </Button>
           {profile && (
-            <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditing(false)}
+            >
               Abbrechen
             </Button>
           )}
@@ -102,7 +108,9 @@ export function ProfileCard({
   return (
     <section className="flex items-center gap-3 rounded-[20px] bg-card p-5">
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Deine Konto-ID</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          Konto-ID
+        </p>
         <p className={`${BALOO} truncate text-2xl font-extrabold`}>
           {profile!.name}
           <span className="text-muted-foreground">#{profile!.tag}</span>

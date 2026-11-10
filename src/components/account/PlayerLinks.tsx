@@ -91,7 +91,7 @@ function InviteForm({
   };
 
   const share = async () => {
-    const text = `Ich habe dich auf Würfelkarte als „${player.name}“ eingeladen${ownHandle ? ` (von ${ownHandle})` : ""}. Nimm die Einladung unter ${window.location.origin}/konto an, dann landen unsere Spiele auch bei dir.`;
+    const text = `Nimm meine Würfelkarte-Einladung an${ownHandle ? ` (${ownHandle})` : ""}: ${window.location.origin}/konto`;
     try {
       if (navigator.share) await navigator.share({ text });
       else await navigator.clipboard.writeText(text);
@@ -104,12 +104,11 @@ function InviteForm({
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-background p-3">
         <p className="text-sm leading-relaxed">
-          Eingeladen. <b>{sentTo}</b> sieht die Einladung unter „Konto“. Nach
-          dem Annehmen heißt {player.name} bei dir überall wie im Konto.
+          <b>{sentTo}</b> eingeladen.
         </p>
         <div className="flex gap-2">
           <Button type="button" size="sm" onClick={() => void share()}>
-            <Share2 /> Bescheid sagen
+            <Share2 /> Teilen
           </Button>
           <Button type="button" size="sm" variant="ghost" onClick={onClose}>
             Fertig
@@ -153,9 +152,6 @@ function InviteForm({
         placeholder="Name#1234"
         className="h-11 rounded-xl bg-card text-base font-normal"
       />
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        Sie steht bei ihm oder ihr ganz oben unter „Konto“.
-      </p>
       {error && (
         <p role="alert" className="text-sm font-medium text-destructive">
           {error}
@@ -197,17 +193,12 @@ export function PlayerLinks({ user }: { user: User }) {
     );
   }
   if (links.state === "unavailable") {
-    return (
-      <Section
-        title="Mitspieler verknüpfen"
-        hint="Das Verknüpfen mit anderen Konten ist noch nicht eingerichtet."
-      />
-    );
+    return <Section title="Mitspieler" hint="Noch nicht eingerichtet." />;
   }
   if (links.state === "error") {
     return (
       <p className="text-center text-sm text-muted-foreground">
-        Verknüpfungen gerade nicht erreichbar.
+        Gerade nicht erreichbar.
       </p>
     );
   }
@@ -248,7 +239,7 @@ export function PlayerLinks({ user }: { user: User }) {
   const status = (link: PlayerLink) =>
     link.status === "accepted"
       ? `✓ ${handleFor(profiles, link.inviteeId)}`
-      : `Wartet auf ${handleFor(profiles, link.inviteeId)}`;
+      : `Eingeladen: ${handleFor(profiles, link.inviteeId)}`;
 
   return (
     <>
@@ -267,11 +258,8 @@ export function PlayerLinks({ user }: { user: User }) {
               className="flex flex-col gap-2 rounded-xl border p-3"
             >
               <p className="text-sm">
-                <b>{handleFor(profiles, invite.ownerId)}</b> hat dich als{" "}
-                <b>„{invite.playerName}“</b> in der Spielerliste. Nimmst du an,
-                heißt du dort{" "}
-                {own ? <b>„{own.name}“</b> : "wie in deinem Konto"} und eure
-                gemeinsamen Spiele landen auch bei dir.
+                <b>{handleFor(profiles, invite.ownerId)}</b> will dich als{" "}
+                <b>„{invite.playerName}“</b> verknüpfen.
               </p>
               <div className="flex gap-2">
                 <Button
@@ -302,13 +290,11 @@ export function PlayerLinks({ user }: { user: User }) {
       )}
 
       <Section
-        title="Mitspieler verknüpfen"
-        hint="Verknüpfe Spieler aus deiner Liste mit ihrem Konto. Sie heißen dann überall so wie dort, und jedes Spiel mit ihnen landet auch bei ihnen, auch die bisherigen."
+        title="Mitspieler"
+        hint="Verknüpfte Spieler tragen ihren Kontonamen und bekommen eure Spiele."
       >
         {roster.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Noch keine Spieler. Leg sie in einer Spiel-Lobby an.
-          </p>
+          <p className="text-sm text-muted-foreground">Noch keine Spieler.</p>
         ) : (
           <ul className="flex flex-col divide-y">
             {roster.map((player) => {
@@ -383,7 +369,7 @@ export function PlayerLinks({ user }: { user: User }) {
       {linkedToMe.length > 0 && (
         <Section
           title="Mit dir verknüpft"
-          hint="Ihre Spiele mit dir landen in deinem Verlauf."
+          hint="Ihre Spiele mit dir kommen zu dir."
         >
           <ul className="flex flex-col divide-y">
             {linkedToMe.map((link) => (

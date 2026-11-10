@@ -1,24 +1,29 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
-import { AlertTriangle, CheckCircle2, CloudOff, Loader2, LogOut, RefreshCw, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CloudOff,
+  Loader2,
+  LogOut,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase";
-import { getSyncStatus, subscribeSyncStatus, syncNow, type SyncStatus } from "@/lib/sync/client";
+import {
+  getSyncStatus,
+  subscribeSyncStatus,
+  syncNow,
+  type SyncStatus,
+} from "@/lib/sync/client";
 import { cn } from "@/lib/utils";
 import { PlayerLinks } from "./PlayerLinks";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
-
-const SYNCED_ITEMS = [
-  "Spielerliste",
-  "Verlauf und Statistiken aller Spiele",
-  "Laufende Spiele",
-  "Quiz-Tage, Training und Speedrun-Bestzeiten",
-  "Einstellungen pro Spiel",
-];
 
 function useSyncStatus(): SyncStatus {
   const [status, setStatus] = useState(getSyncStatus);
@@ -31,7 +36,10 @@ const timeAgo = (at: number) => {
   if (seconds < 60) return "gerade eben";
   const minutes = Math.round(seconds / 60);
   if (minutes < 60) return `vor ${minutes} Min.`;
-  return new Date(at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+  return new Date(at).toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 function SyncLine({ status }: { status: SyncStatus }) {
@@ -39,26 +47,26 @@ function SyncLine({ status }: { status: SyncStatus }) {
     case "syncing":
       return (
         <>
-          <Loader2 className="size-4 animate-spin" /> Wird synchronisiert …
+          <Loader2 className="size-4 animate-spin" /> Synchronisiert …
         </>
       );
     case "unavailable":
       return (
         <>
-          <CloudOff className="size-4" /> Die Synchronisierung ist noch nicht eingerichtet.
+          <CloudOff className="size-4" /> Sync nicht eingerichtet.
         </>
       );
     case "error":
       return (
         <>
-          <AlertTriangle className="size-4 text-destructive" /> Gerade nicht erreichbar. Deine Änderungen
-          bleiben gespeichert und gehen beim nächsten Mal raus.
+          <AlertTriangle className="size-4 text-destructive" /> Offline. Wird
+          nachgeholt.
         </>
       );
     case "pending":
       return (
         <>
-          <Loader2 className="size-4 animate-spin" /> Änderungen werden gleich hochgeladen.
+          <Loader2 className="size-4 animate-spin" /> Gleich synchronisiert.
         </>
       );
     case "synced":
@@ -96,7 +104,7 @@ export function AccountView({ user }: { user: User }) {
     const { error } = await supabase.rpc("delete_own_account");
     if (error) {
       setDeleting(false);
-      setDeleteError("Das Konto konnte nicht gelöscht werden. Bitte später erneut versuchen.");
+      setDeleteError("Löschen fehlgeschlagen.");
       return;
     }
     // The user is gone on the server; only the local session is left to drop.
@@ -117,13 +125,18 @@ export function AccountView({ user }: { user: User }) {
         >
           {(user.email ?? "?").charAt(0).toUpperCase()}
         </span>
-        <h2 className={cn(BALOO, "mt-2 text-2xl font-extrabold")}>Angemeldet</h2>
+        <h2 className={cn(BALOO, "mt-2 text-2xl font-extrabold")}>
+          Angemeldet
+        </h2>
         <p className="break-all text-sm text-muted-foreground">{user.email}</p>
       </section>
 
       <section className="flex flex-col gap-3 rounded-[20px] bg-card p-5">
         <div className="flex items-start justify-between gap-3">
-          <p className="flex min-h-9 flex-wrap items-center gap-1.5 text-sm" role="status">
+          <p
+            className="flex min-h-9 flex-wrap items-center gap-1.5 text-sm"
+            role="status"
+          >
             <SyncLine status={status} />
           </p>
           <Button
@@ -138,19 +151,8 @@ export function AccountView({ user }: { user: User }) {
             <RefreshCw />
           </Button>
         </div>
-        <div>
-          <p className="text-sm font-bold">Auf all deinen Geräten dabei</p>
-          <ul className="mt-1.5 flex flex-col gap-1 text-sm text-muted-foreground">
-            {SYNCED_ITEMS.map((item) => (
-              <li key={item} className="flex items-center gap-2">
-                <span aria-hidden="true">✓</span> {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Melde dich auf einem anderen Gerät mit derselben E-Mail an. Was dort schon gespielt wurde, kommt
-          dazu, nichts wird überschrieben.
+        <p className="text-xs text-muted-foreground">
+          Spieler, Verlauf und Spiele auf all deinen Geräten.
         </p>
       </section>
 
@@ -167,15 +169,17 @@ export function AccountView({ user }: { user: User }) {
         Abmelden
       </Button>
       <p className="-mt-2 text-center text-xs text-muted-foreground">
-        Deine Spiele bleiben nach dem Abmelden auf diesem Gerät.
+        Spiele bleiben auf diesem Gerät.
       </p>
 
       {deleteOpen ? (
         <section className="mt-6 flex flex-col gap-3 rounded-[20px] border-2 border-destructive/40 bg-card p-5">
-          <h3 className={cn(BALOO, "text-lg font-extrabold")}>Konto löschen?</h3>
+          <h3 className={cn(BALOO, "text-lg font-extrabold")}>
+            Konto löschen?
+          </h3>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Dein Konto und alle hochgeladenen Daten werden endgültig gelöscht. Auf diesem Gerät bleiben deine Spiele
-            erhalten, auf anderen Geräten ebenfalls, bis du sie dort entfernst.
+            Alles auf dem Server wird gelöscht. Deine Geräte behalten ihre
+            Spiele.
           </p>
           {deleteError && (
             <p role="alert" className="text-sm font-medium text-destructive">
@@ -183,11 +187,21 @@ export function AccountView({ user }: { user: User }) {
             </p>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="destructive" disabled={deleting} onClick={() => void deleteAccount()}>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={() => void deleteAccount()}
+            >
               {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
               Endgültig löschen
             </Button>
-            <Button type="button" variant="outline" disabled={deleting} onClick={() => setDeleteOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+            >
               Abbrechen
             </Button>
           </div>

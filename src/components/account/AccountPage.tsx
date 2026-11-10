@@ -23,11 +23,15 @@ function AccountContent() {
   if (!available) {
     return (
       <p className="pt-16 text-center text-sm text-muted-foreground">
-        Konten sind gerade nicht verfügbar. Deine Spiele werden wie immer auf diesem Gerät gespeichert.
+        Konten gerade nicht verfügbar.
       </p>
     );
   }
-  return user ? <AccountView user={user} /> : <SignInForm linkFailed={linkFailed} />;
+  return user ? (
+    <AccountView user={user} />
+  ) : (
+    <SignInForm linkFailed={linkFailed} />
+  );
 }
 
 export function AccountPage() {

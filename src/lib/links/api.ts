@@ -60,10 +60,10 @@ export async function setProfileName(
 ): Promise<{ profile: Profile } | { error: string }> {
   const { data, error } = await client.rpc("set_profile_name", { p_name: name });
   if (!error) return { profile: toProfile(data as ProfileRow) };
-  if (isMissingTable(error)) return { error: "Kontonamen sind noch nicht eingerichtet." };
-  if (error.message.includes("invalid name")) return { error: "Bitte 1 bis 24 Zeichen, ohne #." };
-  if (error.message.includes("name taken")) return { error: "Der Name ist sehr beliebt. Probier einen anderen." };
-  return { error: "Das hat nicht geklappt. Bitte erneut versuchen." };
+  if (isMissingTable(error)) return { error: "Noch nicht eingerichtet." };
+  if (error.message.includes("invalid name")) return { error: "1–24 Zeichen, ohne #." };
+  if (error.message.includes("name taken")) return { error: "Name zu beliebt. Nimm einen anderen." };
+  return { error: "Hat nicht geklappt." };
 }
 
 /** German message for a failed invite, or null when it worked. */
@@ -79,13 +79,13 @@ export async function invitePlayer(
     p_handle: handle.trim(),
   });
   if (!error) return null;
-  if (isMissingTable(error)) return "Verknüpfen ist noch nicht eingerichtet.";
-  if (error.message.includes("invalid handle")) return "So sieht eine Konto-ID aus: Name#1234.";
-  if (error.message.includes("unknown handle")) return "Diese Konto-ID gibt es nicht.";
-  if (error.message.includes("own handle")) return "Das ist deine eigene Konto-ID.";
-  if (error.message.includes("no profile")) return "Gib dir zuerst oben einen Namen.";
-  if (error.message.includes("too many")) return "Du hast schon sehr viele Spieler verknüpft.";
-  return "Das hat nicht geklappt. Bitte erneut versuchen.";
+  if (isMissingTable(error)) return "Noch nicht eingerichtet.";
+  if (error.message.includes("invalid handle")) return "Format: Name#1234";
+  if (error.message.includes("unknown handle")) return "Konto-ID nicht gefunden.";
+  if (error.message.includes("own handle")) return "Das bist du selbst.";
+  if (error.message.includes("no profile")) return "Erst oben einen Namen wählen.";
+  if (error.message.includes("too many")) return "Zu viele Verknüpfungen.";
+  return "Hat nicht geklappt.";
 }
 
 export async function acceptLink(client: SupabaseClient, linkId: string): Promise<boolean> {

@@ -31,18 +31,22 @@ function Callback() {
 
     const verify = async () => {
       if (!supabase) return new Error("Keine Konten");
-      if (tokenHash && type) return (await supabase.auth.verifyOtp({ token_hash: tokenHash, type })).error;
+      if (tokenHash && type)
+        return (await supabase.auth.verifyOtp({ token_hash: tokenHash, type }))
+          .error;
       if (code) return (await supabase.auth.exchangeCodeForSession(code)).error;
       return new Error("Link unvollständig");
     };
 
-    void verify().then((error) => router.replace(error ? "/konto?error=link" : next));
+    void verify().then((error) =>
+      router.replace(error ? "/konto?error=link" : next),
+    );
   }, [params, router]);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center gap-3 bg-background text-muted-foreground">
       <Loader2 className="size-6 animate-spin" />
-      <p className="text-sm">Du wirst angemeldet …</p>
+      <p className="text-sm">Anmelden …</p>
     </div>
   );
 }
