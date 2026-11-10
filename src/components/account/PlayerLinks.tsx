@@ -5,14 +5,6 @@ import { Check, Link2, Loader2, Share2, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { activePlayers, loadRoster } from "@/games/shared/roster";
 import type { RosterPlayer } from "@/games/shared/types";
@@ -56,19 +48,19 @@ const handleFor = (profiles: Map<string, Profile>, userId: string) => {
   return profile ? handleOf(profile) : "Unbekannt";
 };
 
-function InviteDialog({
+/**
+ * Opens in place under the player's row. Dialogs sit awkwardly on a phone
+ * (keyboard over the input, a dimmed page), so the account page has none.
+ */
+function InviteForm({
   player,
-  current,
   ownHandle,
-  isSelf,
   onClose,
   onInvited,
   onMarkSelf,
 }: {
-  player: RosterPlayer | null;
-  current: string | undefined;
+  player: RosterPlayer;
   ownHandle: string | null;
-  isSelf: boolean;
   onClose: () => void;
   onInvited: () => void;
   onMarkSelf: () => void;
@@ -78,15 +70,9 @@ function InviteDialog({
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
-  useEffect(() => {
-    setHandle(current ?? "");
-    setError(null);
-    setSentTo(null);
-  }, [player, current]);
-
   const send = async () => {
     const supabase = getSupabase();
-    if (!supabase || !player) return;
+    if (!supabase) return;
     setSending(true);
     setError(null);
     const message = await invitePlayer(
@@ -105,7 +91,6 @@ function InviteDialog({
   };
 
   const share = async () => {
-    if (!player) return;
     const text = `Ich habe dich auf Würfelkarte als „${player.name}“ eingeladen${ownHandle ? ` (von ${ownHandle})` : ""}. Nimm die Einladung unter ${window.location.origin}/konto an, dann landen unsere Spiele auch bei dir.`;
     try {
       if (navigator.share) await navigator.share({ text });
@@ -115,70 +100,77 @@ function InviteDialog({
     }
   };
 
+  if (sentTo) {
+    return (
+      <div className="flex flex-col gap-3 rounded-xl bg-background p-3">
+        <p className="text-sm leading-relaxed">
+          Eingeladen. <b>{sentTo}</b> sieht die Einladung unter „Konto“. Nach
+          dem Annehmen heißt {player.name} bei dir überall wie im Konto.
+        </p>
+        <div className="flex gap-2">
+          <Button type="button" size="sm" onClick={() => void share()}>
+            <Share2 /> Bescheid sagen
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={onClose}>
+            Fertig
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Dialog open={player !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {player?.emoji} {player?.name} verknüpfen
-          </DialogTitle>
-          <DialogDescription>
-            {sentTo
-              ? `${sentTo} sieht die Einladung unter „Konto“. Nach dem Annehmen heißt ${player?.name} bei dir überall wie im Konto, und eure Spiele landen auch dort.`
-              : `Gib die Konto-ID von ${player?.name} ein. Sie steht bei ihm oder ihr ganz oben unter „Konto“.`}
-          </DialogDescription>
-        </DialogHeader>
-        {sentTo ? (
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Fertig
-            </Button>
-            <Button type="button" onClick={() => void share()}>
-              <Share2 /> Bescheid sagen
-            </Button>
-          </DialogFooter>
-        ) : (
-          <form
-            className="flex flex-col gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void send();
-            }}
-          >
-            <Input
-              required
-              autoComplete="off"
-              autoCapitalize="off"
-              value={handle}
-              onChange={(event) => setHandle(event.target.value)}
-              placeholder="Name#1234"
-              className="h-11 rounded-xl"
-            />
-            {error && (
-              <p role="alert" className="text-sm font-medium text-destructive">
-                {error}
-              </p>
-            )}
-            <DialogFooter className="gap-2">
-              {!isSelf && !current && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onMarkSelf}
-                  className="sm:mr-auto"
-                >
-                  <UserRound /> Das bin ich
-                </Button>
-              )}
-              <Button type="submit" disabled={sending || !handle.trim()}>
-                {sending ? <Loader2 className="animate-spin" /> : <Link2 />}
-                Einladen
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+    <form
+      className="flex flex-col gap-2 rounded-xl bg-background p-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void send();
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <label htmlFor={`invite-${player.id}`} className="text-xs font-bold">
+          Konto-ID von {player.name}
+        </label>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="-my-2 -mr-2"
+          aria-label="Abbrechen"
+          onClick={onClose}
+        >
+          <X />
+        </Button>
+      </div>
+      <Input
+        id={`invite-${player.id}`}
+        required
+        autoFocus
+        autoComplete="off"
+        autoCapitalize="off"
+        value={handle}
+        onChange={(event) => setHandle(event.target.value)}
+        placeholder="Name#1234"
+        className="h-11 rounded-xl bg-card text-base font-normal"
+      />
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Sie steht bei ihm oder ihr ganz oben unter „Konto“.
+      </p>
+      {error && (
+        <p role="alert" className="text-sm font-medium text-destructive">
+          {error}
+        </p>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" size="sm" disabled={sending || !handle.trim()}>
+          {sending ? <Loader2 className="animate-spin" /> : <Link2 />}
+          Einladen
+        </Button>
+        <Button type="button" size="sm" variant="outline" onClick={onMarkSelf}>
+          <UserRound /> Das bin ich
+        </Button>
+      </div>
+    </form>
   );
 }
 
@@ -323,52 +315,63 @@ export function PlayerLinks({ user }: { user: User }) {
               const link = mine.get(player.id);
               const isSelf = player.id === selfId;
               return (
-                <li key={player.id} className="flex items-center gap-3 py-2">
-                  <span className="text-xl" aria-hidden="true">
-                    {player.emoji}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold">{player.name}</p>
-                    {(link || isSelf) && (
-                      <p className="truncate text-xs text-muted-foreground">
-                        {isSelf
-                          ? `Du${own ? ` · ${handleOf(own)}` : ""}`
-                          : status(link!)}
-                      </p>
+                <li key={player.id} className="flex flex-col gap-2 py-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl" aria-hidden="true">
+                      {player.emoji}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-bold">{player.name}</p>
+                      {(link || isSelf) && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {isSelf
+                            ? `Du${own ? ` · ${handleOf(own)}` : ""}`
+                            : status(link!)}
+                        </p>
+                      )}
+                    </div>
+                    {isSelf ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`${player.name} nicht mehr als dich markieren`}
+                        onClick={() => markSelf(null)}
+                      >
+                        <X />
+                      </Button>
+                    ) : link ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Verknüpfung von ${player.name} lösen`}
+                        disabled={busy === link.id}
+                        onClick={() =>
+                          void act(link.id, () => removeLink(supabase, link.id))
+                        }
+                      >
+                        <X />
+                      </Button>
+                    ) : inviting?.id === player.id ? null : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInviting(player)}
+                      >
+                        <Link2 /> Verknüpfen
+                      </Button>
                     )}
                   </div>
-                  {isSelf ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${player.name} nicht mehr als dich markieren`}
-                      onClick={() => markSelf(null)}
-                    >
-                      <X />
-                    </Button>
-                  ) : link ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Verknüpfung von ${player.name} lösen`}
-                      disabled={busy === link.id}
-                      onClick={() =>
-                        void act(link.id, () => removeLink(supabase, link.id))
-                      }
-                    >
-                      <X />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setInviting(player)}
-                    >
-                      <Link2 /> Verknüpfen
-                    </Button>
+                  {inviting?.id === player.id && !link && !isSelf && (
+                    <InviteForm
+                      player={player}
+                      ownHandle={own ? handleOf(own) : null}
+                      onClose={() => setInviting(null)}
+                      onInvited={() => void reload()}
+                      onMarkSelf={() => markSelf(player.id)}
+                    />
                   )}
                 </li>
               );
@@ -405,22 +408,6 @@ export function PlayerLinks({ user }: { user: User }) {
           </ul>
         </Section>
       )}
-
-      <InviteDialog
-        player={inviting}
-        current={
-          inviting
-            ? mine.get(inviting.id)
-              ? handleFor(profiles, mine.get(inviting.id)!.inviteeId)
-              : undefined
-            : undefined
-        }
-        ownHandle={own ? handleOf(own) : null}
-        isSelf={inviting?.id === selfId}
-        onClose={() => setInviting(null)}
-        onInvited={() => void reload()}
-        onMarkSelf={() => inviting && markSelf(inviting.id)}
-      />
     </>
   );
 }

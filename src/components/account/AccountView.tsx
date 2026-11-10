@@ -5,14 +5,6 @@ import { AlertTriangle, CheckCircle2, CloudOff, Loader2, LogOut, RefreshCw, Tras
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { getSupabase } from "@/lib/supabase";
 import { getSyncStatus, subscribeSyncStatus, syncNow, type SyncStatus } from "@/lib/sync/client";
 import { cn } from "@/lib/utils";
@@ -178,44 +170,42 @@ export function AccountView({ user }: { user: User }) {
         Deine Spiele bleiben nach dem Abmelden auf diesem Gerät.
       </p>
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-6 self-center text-destructive hover:text-destructive"
-        onClick={() => {
-          setDeleteError(null);
-          setDeleteOpen(true);
-        }}
-      >
-        <Trash2 />
-        Konto löschen
-      </Button>
-
-      <Dialog open={deleteOpen} onOpenChange={(open) => !deleting && setDeleteOpen(open)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Konto löschen?</DialogTitle>
-            <DialogDescription>
-              Dein Konto und alle hochgeladenen Daten werden endgültig gelöscht. Auf diesem Gerät bleiben deine
-              Spiele erhalten, auf anderen Geräten ebenfalls, bis du sie dort entfernst.
-            </DialogDescription>
-          </DialogHeader>
+      {deleteOpen ? (
+        <section className="mt-6 flex flex-col gap-3 rounded-[20px] border-2 border-destructive/40 bg-card p-5">
+          <h3 className={cn(BALOO, "text-lg font-extrabold")}>Konto löschen?</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Dein Konto und alle hochgeladenen Daten werden endgültig gelöscht. Auf diesem Gerät bleiben deine Spiele
+            erhalten, auf anderen Geräten ebenfalls, bis du sie dort entfernst.
+          </p>
           {deleteError && (
             <p role="alert" className="text-sm font-medium text-destructive">
               {deleteError}
             </p>
           )}
-          <DialogFooter>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="destructive" disabled={deleting} onClick={() => void deleteAccount()}>
+              {deleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+              Endgültig löschen
+            </Button>
             <Button type="button" variant="outline" disabled={deleting} onClick={() => setDeleteOpen(false)}>
               Abbrechen
             </Button>
-            <Button type="button" variant="destructive" disabled={deleting} onClick={() => void deleteAccount()}>
-              {deleting && <Loader2 className="animate-spin" />}
-              Endgültig löschen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </section>
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-6 self-center text-destructive hover:text-destructive"
+          onClick={() => {
+            setDeleteError(null);
+            setDeleteOpen(true);
+          }}
+        >
+          <Trash2 />
+          Konto löschen
+        </Button>
+      )}
     </div>
   );
 }

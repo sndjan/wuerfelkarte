@@ -158,6 +158,9 @@ writes only localStorage, signed in or not.
 
 Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
 
+The account page uses no dialogs: inviting a player and confirming the
+account deletion open in place, which sits better on a phone.
+
 ### Account names and linked players
 
 Every account picks a name and gets a four-digit tag, its Konto-ID
