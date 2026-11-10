@@ -12,8 +12,16 @@ export function getSupabase(): SupabaseClient | null {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   client =
     url && key
-      ? // No accounts: nothing to keep or refresh between visits.
-        createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+      ? createClient(url, key, {
+          auth: {
+            // The session of an optional account, kept in localStorage.
+            persistSession: true,
+            autoRefreshToken: true,
+            // /konto/callback handles the sign-in link itself, for both link styles.
+            detectSessionInUrl: false,
+            flowType: "pkce",
+          },
+        })
       : null;
   return client;
 }

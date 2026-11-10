@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useSyncRefresh } from "@/lib/sync/useSyncRefresh";
+
 import { RunningGame } from "../resume";
 
 /**
@@ -17,6 +19,8 @@ export function useRunningGames(load: () => RunningGame[]) {
     // would re-read storage on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useSyncRefresh(() => setRunning(load()));
 
   /** Throws one game away and re-reads storage, so its card disappears. */
   const discard = (game: RunningGame) => {

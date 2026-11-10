@@ -1,9 +1,11 @@
 # Architecture
 
 Würfelkarte is a Next.js App Router app that tracks scores for physical dice and
-card games. There is no account: everything a group plays lives in their
-browser's localStorage. The one exception is the daily quiz's global score
-distribution, see [Quiz distribution](#quiz-distribution).
+card games. Everything a group plays lives in their browser's localStorage. An
+optional account copies that data to Supabase and back, see
+[Accounts and sync](#accounts-and-sync); the daily quiz's global score
+distribution is the other thing that talks to a server, see
+[Quiz distribution](#quiz-distribution).
 
 ## Layout
 
@@ -20,7 +22,8 @@ src/
   components/
     ui/                   shadcn primitives
     common/               PageHeader, DarkModeToggle, seasonal/
-  lib/                    utils
+  components/account/     sign-in, account page, header button
+  lib/                    utils, Supabase client, auth, sync/
 ```
 
 The rule that keeps this honest: **nothing under `src/games/` or
@@ -86,6 +89,7 @@ configuration language, not less code.
 | `quiz:submission` | Today's quiz result until the server has it |
 | `speedrun:daily` | The last day a ranked Tagesrun was started |
 | `speedrun:submission` | Today's ranked Tagesrun until the server has it |
+| `wuerfelkarte:sync` | The account sync's bookkeeping: user, cursor, dirty keys |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -119,6 +123,38 @@ finished run sends its time and penalty with a one-day token through
 `submit_speedrun_result`, and `get_speedrun_distribution` returns players per
 second of Wertungszeit. The server cannot check the clock, so its checks are
 plausibility only.
+
+## Accounts and sync
+
+Accounts are optional and add nothing but the sync: the app still reads and
+writes only localStorage, signed in or not.
+
+- **Sign-in** (`src/components/account/`, routes `/konto` and
+  `/konto/callback`): Supabase Auth with an email link or a 6-digit code, as in
+  Tischleinplandich. The session is kept by supabase-js in localStorage
+  (`src/lib/supabase.ts`); `AuthProvider` (`src/lib/auth.tsx`) exposes it and
+  starts or stops the sync.
+- **What syncs** (`src/lib/sync/keys.ts`): the roster, every game's `:game`,
+  `:matches` and `:settings`, `yatzy:players`, `quiz:days` and
+  `speedrun:daily`. The quiz and speedrun submissions stay on the device, so
+  their tokens never meet an account.
+- **How** (`src/lib/sync/engine.ts`): `writeJSON`/`removeKey` report every key
+  they change; the sync marks it dirty and uploads it a few seconds later, as
+  one row per key in `user_storage` (migration
+  `20261110120000_user_storage.sql`, RLS limits each user to their rows). A
+  removed key is uploaded as `null`. Downloads ask for rows stamped after the
+  last one seen. A row this device did not change replaces the local value;
+  one it changed too is merged (`merge.ts`): match histories and the roster are
+  combined, quiz days too, and for a running game or settings this device wins.
+  The first sign-in on a browser marks all its keys dirty, so games played
+  before signing in join the account instead of being overwritten.
+- **When**: after sign-in, a few seconds after a change, when the app returns to
+  the foreground or comes back online, and on „Abmelden“.
+- **Screens**: `useMatchHistory`, `useRunningGames` and `usePlayerRoster` re-read
+  storage on the `wuerfelkarte:synced` event (`useSyncRefresh`). A running
+  board does not; it keeps what is on the table.
+
+Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
 
 ## Adding a game
 

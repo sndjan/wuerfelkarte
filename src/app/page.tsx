@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AccountButton } from "@/components/account/AccountButton";
 import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Input } from "@/components/ui/input";
@@ -41,6 +42,7 @@ export default function GamesOverview() {
             <span className="text-brand-accent">.com</span>
           </span>
         }
+        right={<AccountButton />}
       />
       <InstallPwaBanner />
       <div className="mx-auto max-w-md px-4 py-6">
