@@ -16,6 +16,7 @@ import {
 import { getSupabase } from "@/lib/supabase";
 import { getSyncStatus, subscribeSyncStatus, syncNow, type SyncStatus } from "@/lib/sync/client";
 import { cn } from "@/lib/utils";
+import { PlayerLinks } from "./PlayerLinks";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
@@ -160,6 +161,8 @@ export function AccountView({ user }: { user: User }) {
           dazu, nichts wird überschrieben.
         </p>
       </section>
+
+      <PlayerLinks user={user} />
 
       <Button
         type="button"

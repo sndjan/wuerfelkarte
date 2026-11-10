@@ -90,6 +90,7 @@ configuration language, not less code.
 | `speedrun:daily` | The last day a ranked Tagesrun was started |
 | `speedrun:submission` | Today's ranked Tagesrun until the server has it |
 | `wuerfelkarte:sync` | The account sync's bookkeeping: user, cursor, dirty keys |
+| `wuerfelkarte:sharing` | Linked players: matches already sent, newest received |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -155,6 +156,30 @@ writes only localStorage, signed in or not.
   board does not; it keeps what is on the table.
 
 Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
+
+### Linked players
+
+A roster player can be linked to another account (`/konto` → „Mitspieler
+verknüpfen“, migration `20261110130000_player_links.sql`):
+
+1. Jan invites the person behind his roster entry „Tim“ by email
+   (`invite_player`). The invite waits in `player_links`; nothing tells Jan
+   whether the address has an account.
+2. Whoever signs in with that address sees it under „Einladungen“ (a dot on the
+   header button) and accepts (`accept_player_link`) or declines (deletes it).
+3. After each account sync, `src/lib/links/runner.ts` uploads every match in
+   Jan's Yatzy, Wizard, Flip 7, Cabo and Darts histories that has a player with
+   the linked roster entry's current name, earlier matches included, into
+   `shared_matches`. RLS only lets it through for an accepted link.
+   `wuerfelkarte:sharing` remembers a fingerprint per match, so only new or
+   corrected matches go out.
+4. Tim's devices download them into their `<game>:matches`, marked
+   `sharedBy: <Jan's email>`. From there his own sync carries them to his other
+   devices; they count in his statistics and show as „Geteilt von …“ in the
+   full history. Received matches are never passed on.
+
+Either side can end the link; the shared rows go with it, copies already in
+Tim's history stay. The pure rules are in `src/lib/links/share.ts`.
 
 ## Adding a game
 

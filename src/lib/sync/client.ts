@@ -1,6 +1,7 @@
 "use client";
 
 import { setWriteListener } from "@/games/shared/storage";
+import { forgetSharing, runSharing } from "@/lib/links/runner";
 import { getSupabase } from "@/lib/supabase";
 import { hasPendingChanges, linkDevice, markDirty, runSync, unlinkDevice } from "./engine";
 import { isSyncedKey } from "./keys";
@@ -76,6 +77,11 @@ export function syncNow(): Promise<void> {
 
   setStatus({ state: "syncing" });
   running = runSync(supabaseRemote(supabase, id), id)
+    .then(async ({ changed }) => {
+      // Sharing with linked players is extra: when it fails, the sync still counts.
+      const shared = await runSharing(supabase, id).catch(() => ({ changed: false }));
+      return { changed: changed || shared.changed };
+    })
     .then(({ changed }) => {
       if (userId !== id) return;
       setStatus({ state: hasPendingChanges() ? "pending" : "synced", lastSyncedAt: Date.now() });
@@ -115,6 +121,9 @@ export function stopSync({ forget }: { forget: boolean }): void {
   document.removeEventListener("visibilitychange", onForeground);
   window.removeEventListener("pagehide", onHide);
   window.removeEventListener("online", onOnline);
-  if (forget) unlinkDevice();
+  if (forget) {
+    unlinkDevice();
+    forgetSharing();
+  }
   setStatus({ state: "off", lastSyncedAt: null });
 }
