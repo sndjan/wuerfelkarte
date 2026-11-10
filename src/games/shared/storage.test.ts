@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createGameStorage } from "./storage";
+import { createGameStorage, removeKey, setWriteListener, writeJSON } from "./storage";
 import { MatchPlayer, StoredMatch } from "./types";
 
 type TestGame = { id: string; rounds: number[] };
@@ -145,5 +145,18 @@ describe("createGameStorage", () => {
 
     a.saveMatch(match("m1"));
     expect(b.loadMatches()).toEqual([]);
+  });
+});
+
+describe("write listener", () => {
+  it("hears only writes that change something", () => {
+    const heard: string[] = [];
+    setWriteListener((key) => heard.push(key));
+    writeJSON("a:game", { x: 1 });
+    writeJSON("a:game", { x: 1 });
+    removeKey("a:game");
+    removeKey("a:game");
+    setWriteListener(null);
+    expect(heard).toEqual(["a:game", "a:game"]);
   });
 });

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useSyncRefresh } from "@/lib/sync/useSyncRefresh";
+
 import {
   createRosterPlayer,
   loadRoster,
@@ -21,6 +23,9 @@ export function usePlayerRoster() {
     setRoster(loadRoster());
     setLoaded(true);
   }, []);
+
+  // A roster from another device replaces this one; saving it back is a no-op.
+  useSyncRefresh(() => setRoster(loadRoster()));
 
   useEffect(() => {
     if (loaded) saveRoster(roster);

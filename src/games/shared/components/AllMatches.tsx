@@ -42,7 +42,12 @@ type Row = {
   action: MatchAction | null;
   /** Golf-scored games (Cabo, …) win with the lowest total instead of the highest. */
   lowerIsBetter: boolean;
+  /** Set for a match another account recorded with a player linked to this one. */
+  sharedBy?: string;
 };
+
+const sharedByOf = (match: object): string | undefined =>
+  "sharedBy" in match && typeof match.sharedBy === "string" ? match.sharedBy : undefined;
 
 /** Every match ever played, across every game and gamemode, newest first. */
 export function AllMatches() {
@@ -62,6 +67,7 @@ export function AllMatches() {
         gameName: "Yatzy",
         gamemodeName: yatzyGamemodes[match.gamemode]?.name ?? match.gamemode,
         timestamp: match.timestamp,
+        sharedBy: sharedByOf(match),
         players: match.players,
         action: info && {
           label: info.label,
@@ -77,6 +83,7 @@ export function AllMatches() {
       gameName: "Wizard",
       gamemodeName: wizardGamemodes[match.gamemode]?.name ?? match.gamemode,
       timestamp: match.timestamp,
+        sharedBy: sharedByOf(match),
       players: match.players,
       action: null,
       lowerIsBetter: false,
@@ -87,6 +94,7 @@ export function AllMatches() {
       gameName: "Flip 7",
       gamemodeName: flip7Gamemodes[match.gamemode]?.name ?? match.gamemode,
       timestamp: match.timestamp,
+        sharedBy: sharedByOf(match),
       players: match.players,
       action: null,
       lowerIsBetter: false,
@@ -97,6 +105,7 @@ export function AllMatches() {
       gameName: "Cabo",
       gamemodeName: caboGamemodes[match.gamemode]?.name ?? match.gamemode,
       timestamp: match.timestamp,
+        sharedBy: sharedByOf(match),
       players: match.players,
       action: null,
       lowerIsBetter: true,
@@ -107,6 +116,7 @@ export function AllMatches() {
       gameName: "Darts",
       gamemodeName: dartsGamemodes[match.gamemode]?.name ?? match.gamemode,
       timestamp: match.timestamp,
+        sharedBy: sharedByOf(match),
       players: match.players,
       action: null,
       lowerIsBetter: false,
@@ -147,6 +157,11 @@ export function AllMatches() {
                     <p className="truncate text-sm text-muted-foreground">
                       {row.players.map((p) => p.name).join(", ")}
                     </p>
+                    {row.sharedBy !== undefined && (
+                      <p className="truncate text-xs text-muted-foreground">
+                        Geteilt{row.sharedBy && ` von ${row.sharedBy}`}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 items-center gap-3">
                     {row.action && (

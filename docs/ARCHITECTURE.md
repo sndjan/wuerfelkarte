@@ -1,9 +1,11 @@
 # Architecture
 
 Würfelkarte is a Next.js App Router app that tracks scores for physical dice and
-card games. There is no account: everything a group plays lives in their
-browser's localStorage. The one exception is the daily quiz's global score
-distribution, see [Quiz distribution](#quiz-distribution).
+card games. Everything a group plays lives in their browser's localStorage. An
+optional account copies that data to Supabase and back, see
+[Accounts and sync](#accounts-and-sync); the daily quiz's global score
+distribution is the other thing that talks to a server, see
+[Quiz distribution](#quiz-distribution).
 
 ## Layout
 
@@ -20,7 +22,8 @@ src/
   components/
     ui/                   shadcn primitives
     common/               PageHeader, DarkModeToggle, seasonal/
-  lib/                    utils
+  components/account/     sign-in, account page, header button
+  lib/                    utils, Supabase client, auth, sync/
 ```
 
 The rule that keeps this honest: **nothing under `src/games/` or
@@ -86,6 +89,9 @@ configuration language, not less code.
 | `quiz:submission` | Today's quiz result until the server has it |
 | `speedrun:daily` | The last day a ranked Tagesrun was started |
 | `speedrun:submission` | Today's ranked Tagesrun until the server has it |
+| `wuerfelkarte:sync` | The account sync's bookkeeping: user, cursor, dirty keys |
+| `wuerfelkarte:sharing` | Linked players: matches already sent, newest received |
+| `wuerfelkarte:self` | The roster entry that is the signed-in user (synced) |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -119,6 +125,75 @@ finished run sends its time and penalty with a one-day token through
 `submit_speedrun_result`, and `get_speedrun_distribution` returns players per
 second of Wertungszeit. The server cannot check the clock, so its checks are
 plausibility only.
+
+## Accounts and sync
+
+Accounts are optional and add nothing but the sync: the app still reads and
+writes only localStorage, signed in or not.
+
+- **Sign-in** (`src/components/account/`, routes `/konto` and
+  `/konto/callback`): Supabase Auth with an email link or a 6-digit code, as in
+  Tischleinplandich. The session is kept by supabase-js in localStorage
+  (`src/lib/supabase.ts`); `AuthProvider` (`src/lib/auth.tsx`) exposes it and
+  starts or stops the sync.
+- **What syncs** (`src/lib/sync/keys.ts`): the roster, every game's `:game`,
+  `:matches` and `:settings`, `yatzy:players`, `quiz:days` and
+  `speedrun:daily`. The quiz and speedrun submissions stay on the device, so
+  their tokens never meet an account.
+- **How** (`src/lib/sync/engine.ts`): `writeJSON`/`removeKey` report every key
+  they change; the sync marks it dirty and uploads it a few seconds later, as
+  one row per key in `user_storage` (migration
+  `20261110120000_user_storage.sql`, RLS limits each user to their rows). A
+  removed key is uploaded as `null`. Downloads ask for rows stamped after the
+  last one seen. A row this device did not change replaces the local value;
+  one it changed too is merged (`merge.ts`): match histories and the roster are
+  combined, quiz days too, and for a running game or settings this device wins.
+  The first sign-in on a browser marks all its keys dirty, so games played
+  before signing in join the account instead of being overwritten.
+- **When**: after sign-in, a few seconds after a change, when the app returns to
+  the foreground or comes back online, and on „Abmelden“.
+- **Screens**: `useMatchHistory`, `useRunningGames` and `usePlayerRoster` re-read
+  storage on the `wuerfelkarte:synced` event (`useSyncRefresh`). A running
+  board does not; it keeps what is on the table.
+
+Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
+
+The account page uses no dialogs: inviting a player and confirming the
+account deletion open in place, which sits better on a phone.
+
+### Account names and linked players
+
+Every account picks a name and gets a four-digit tag, its Konto-ID
+(„Jan#4821“, `profiles`, set through `set_profile_name`). A roster player can
+be linked to another account by that ID (`/konto` → „Mitspieler verknüpfen“,
+migration `20261110130000_player_links.sql`):
+
+1. Jan enters „Tim#0193“ for his roster entry „Timmi“ (`invite_player`).
+2. Tim sees the invite under „Einladungen“ (a dot on the header button) and
+   accepts (`accept_player_link`) or declines (deletes it).
+3. After each account sync, `src/lib/links/runner.ts`:
+   - renames „Timmi“ in Jan's roster to Tim's account name, and every match,
+     running game and Yatzy seating with „Timmi“ in it (`names.ts`). The old
+     name goes into the roster entry's `formerNames`, so a match finished on a
+     board that was open during the rename is caught next time. If Tim renames
+     his account, Jan's data follows. Statistics count by name, so two roster
+     players never share one: an unlinked „Tim“ in the way becomes „Tim (2)“
+     (his matches too) and a warning toast says so; if two linked accounts
+     are both called Tim, the second gets „Tim (2)“.
+   - does the same for the roster entry Jan marked as himself („Das bin ich“,
+     synced key `wuerfelkarte:self`), so Tim's copies show Jan's account name.
+   - uploads every Yatzy, Wizard, Flip 7, Cabo and Darts match with a linked
+     player, earlier ones included, into `shared_matches` (RLS only for an
+     accepted link). `wuerfelkarte:sharing` keeps a fingerprint per match, so
+     only new, corrected or renamed matches go out.
+   - downloads matches shared with this account into `<game>:matches`, marked
+     `sharedBy: "Jan#4821"`. The account sync carries them to the user's other
+     devices; they count in the statistics and show as „Geteilt von …“ in the
+     full history. Received matches are never passed on.
+
+Either side can end a link; the shared rows go with it, copies already in the
+other history stay. Profiles are readable only by the account itself and
+accounts linked with it; looking up an ID happens inside `invite_player`.
 
 ## Adding a game
 

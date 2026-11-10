@@ -1,4 +1,4 @@
-import { createGameStorage } from "@/games/shared/storage";
+import { createGameStorage, writeJSON } from "@/games/shared/storage";
 import { StoredMatch } from "@/games/shared/types";
 import { gamemodes } from "./gamemodes";
 import { Mission } from "./gamemodes/chaoswunder";
@@ -92,13 +92,8 @@ export const loadPlayers = (): StoredYatzyPlayer[] | null => {
   }
 };
 
-export const savePlayers = (players: StoredYatzyPlayer[]): void => {
-  try {
-    localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
-  } catch {
-    // Storage full or unavailable — the game keeps working.
-  }
-};
+export const savePlayers = (players: StoredYatzyPlayer[]): void =>
+  writeJSON(PLAYERS_KEY, players);
 
 export const loadChaosSettings = () => yatzyStorage.loadSettings();
 

@@ -10,6 +10,18 @@ import { MatchPlayer, StoredMatch } from "./types";
 
 export const APP_NAMESPACE = "wuerfelkarte";
 
+type WriteListener = (key: string) => void;
+let writeListener: WriteListener | null = null;
+
+/**
+ * Hears every key that `writeJSON`/`removeKey` actually changed. The account
+ * sync uses it to know what to upload; it lives here so the storage layer
+ * does not depend on the sync.
+ */
+export const setWriteListener = (listener: WriteListener | null): void => {
+  writeListener = listener;
+};
+
 export const readJSON = <T>(key: string, fallback: T): T => {
   if (typeof window === "undefined") return fallback;
   try {
@@ -24,7 +36,10 @@ export const readJSON = <T>(key: string, fallback: T): T => {
 export const writeJSON = (key: string, value: unknown): void => {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const raw = JSON.stringify(value);
+    if (localStorage.getItem(key) === raw) return;
+    localStorage.setItem(key, raw);
+    writeListener?.(key);
   } catch {
     // Storage full or unavailable — nothing useful to do here.
   }
@@ -33,7 +48,9 @@ export const writeJSON = (key: string, value: unknown): void => {
 export const removeKey = (key: string): void => {
   if (typeof window === "undefined") return;
   try {
+    if (localStorage.getItem(key) === null) return;
     localStorage.removeItem(key);
+    writeListener?.(key);
   } catch {
     // See above.
   }
