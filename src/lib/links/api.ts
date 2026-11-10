@@ -18,7 +18,7 @@ type LinkRow = {
   owner_id: string;
   player_id: string;
   player_name: string;
-  invitee_id: string | null;
+  invitee_id: string;
   status: "pending" | "accepted";
 };
 
@@ -41,16 +41,14 @@ export async function fetchLinkState(client: SupabaseClient): Promise<LinkState>
   if (links.error) fail(links.error);
   if (profiles.error) fail(profiles.error);
   return {
-    links: ((links.data ?? []) as LinkRow[])
-      .filter((row) => row.invitee_id !== null)
-      .map((row) => ({
-        id: row.id,
-        ownerId: row.owner_id,
-        playerId: row.player_id,
-        playerName: row.player_name,
-        inviteeId: row.invitee_id!,
-        status: row.status,
-      })),
+    links: ((links.data ?? []) as LinkRow[]).map((row) => ({
+      id: row.id,
+      ownerId: row.owner_id,
+      playerId: row.player_id,
+      playerName: row.player_name,
+      inviteeId: row.invitee_id,
+      status: row.status,
+    })),
     profiles: new Map(((profiles.data ?? []) as ProfileRow[]).map((row) => [row.user_id, toProfile(row)])),
   };
 }

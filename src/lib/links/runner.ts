@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadRoster, saveRoster } from "@/games/shared/roster";
 import { readJSON, removeKey, writeJSON } from "@/games/shared/storage";
 import { LinksUnavailableError, fetchLinkState, isMissingTable } from "./api";
-import { accountRenames, renameIn } from "./names";
+import { accountRenames, renameIn, type RenameNotice } from "./names";
 import { loadSelfPlayerId } from "./self";
 import { SHARED_GAMES, handleOf, matchesToShare, receiveMatches, type SharedMatch } from "./share";
 
@@ -41,10 +41,13 @@ const RENAMED_KEYS = [
   "yatzy:players",
 ];
 
-/** Writes account names into the roster, histories and running games; returns whether anything changed. */
-function applyAccountNames(userId: string, linkState: Awaited<ReturnType<typeof fetchLinkState>>): boolean {
+/** Writes account names into the roster, histories and running games. */
+function applyAccountNames(
+  userId: string,
+  linkState: Awaited<ReturnType<typeof fetchLinkState>>,
+): { changed: boolean; notices: RenameNotice[] } {
   const roster = loadRoster();
-  const { roster: renamed, names } = accountRenames({
+  const { roster: renamed, names, notices } = accountRenames({
     userId,
     roster,
     selfPlayerId: loadSelfPlayerId(),
@@ -64,21 +67,27 @@ function applyAccountNames(userId: string, linkState: Awaited<ReturnType<typeof 
       changed = true;
     }
   }
-  return changed;
+  return { changed, notices };
 }
 
-/** Returns whether the local history changed. Missing tables mean nothing to do. */
-export async function runSharing(client: SupabaseClient, userId: string): Promise<{ changed: boolean }> {
+export type SharingResult = { changed: boolean; notices: RenameNotice[] };
+
+/**
+ * Returns whether local data changed and which players had to give up their
+ * name. Missing tables mean nothing to do.
+ */
+export async function runSharing(client: SupabaseClient, userId: string): Promise<SharingResult> {
   let linkState;
   try {
     linkState = await fetchLinkState(client);
   } catch (error) {
-    if (error instanceof LinksUnavailableError) return { changed: false };
+    if (error instanceof LinksUnavailableError) return { changed: false, notices: [] };
     throw error;
   }
   const { links, profiles } = linkState;
   let state = loadState(userId);
-  let changed = applyAccountNames(userId, linkState);
+  const renamed = applyAccountNames(userId, linkState);
+  let changed = renamed.changed;
 
   const matchesByGame = Object.fromEntries(
     SHARED_GAMES.map((game) => [game, readJSON<SharedMatch[]>(matchesKey(game), [])]),
@@ -103,7 +112,7 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
       { onConflict: "owner_id,recipient_id,game,match_id" },
     );
     if (error) {
-      if (isMissingTable(error)) return { changed: false };
+      if (isMissingTable(error)) return { changed, notices: renamed.notices };
       throw new Error(error.message);
     }
     const done = Object.fromEntries(
@@ -127,7 +136,7 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
   }
   const { data, error } = await query;
   if (error) {
-    if (isMissingTable(error)) return { changed: false };
+    if (isMissingTable(error)) return { changed, notices: renamed.notices };
     throw new Error(error.message);
   }
   const received = (data ?? []) as { owner_id: string; game: string; match: unknown; updated_at: string }[];
@@ -154,5 +163,5 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
   if (newest && (!state.cursor || Date.parse(newest) > Date.parse(state.cursor))) {
     writeJSON(STATE_KEY, { ...state, cursor: newest });
   }
-  return { changed };
+  return { changed, notices: renamed.notices };
 }

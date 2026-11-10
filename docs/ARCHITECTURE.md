@@ -161,10 +161,9 @@ Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
 ### Account names and linked players
 
 Every account picks a name and gets a four-digit tag, its Konto-ID
-(„Jan#4821“, `profiles`, migration `20261110140000_profiles.sql`, set through
-`set_profile_name`). A roster player can be linked to another account by that
-ID (`/konto` → „Mitspieler verknüpfen“, migrations
-`20261110130000_player_links.sql` and `…140000_profiles.sql`):
+(„Jan#4821“, `profiles`, set through `set_profile_name`). A roster player can
+be linked to another account by that ID (`/konto` → „Mitspieler verknüpfen“,
+migration `20261110130000_player_links.sql`):
 
 1. Jan enters „Tim#0193“ for his roster entry „Timmi“ (`invite_player`).
 2. Tim sees the invite under „Einladungen“ (a dot on the header button) and
@@ -174,8 +173,10 @@ ID (`/konto` → „Mitspieler verknüpfen“, migrations
      running game and Yatzy seating with „Timmi“ in it (`names.ts`). The old
      name goes into the roster entry's `formerNames`, so a match finished on a
      board that was open during the rename is caught next time. If Tim renames
-     his account, Jan's data follows. A rename that would give two roster
-     players the same name is skipped, since statistics count by name.
+     his account, Jan's data follows. Statistics count by name, so two roster
+     players never share one: an unlinked „Tim“ in the way becomes „Tim (2)“
+     (his matches too) and a warning toast says so; if two linked accounts
+     are both called Tim, the second gets „Tim (2)“.
    - does the same for the roster entry Jan marked as himself („Das bin ich“,
      synced key `wuerfelkarte:self`), so Tim's copies show Jan's account name.
    - uploads every Yatzy, Wizard, Flip 7, Cabo and Darts match with a linked

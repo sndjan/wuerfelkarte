@@ -63,16 +63,65 @@ describe("accountRenames", () => {
     expect(roster[0].name).toBe("Jan");
   });
 
-  it("does not merge two roster players into one name", () => {
-    const { roster, names } = accountRenames({
+  it("moves an unlinked player with the same name aside, with their matches, and says so", () => {
+    const { roster, names, notices } = accountRenames({
       userId: JAN,
       roster: [player("r-other", "Tim"), player("r-tim", "Timmi")],
       selfPlayerId: null,
       links: [link()],
       profiles: profiles([[TIM, "Tim"]]),
     });
-    expect(roster.map((p) => p.name)).toEqual(["Tim", "Timmi"]);
-    expect(names.size).toBe(0);
+    expect(roster.map((p) => p.name)).toEqual(["Tim (2)", "Tim"]);
+    // Swapped at once: the old Tim's matches go to "Tim (2)", Timmi's to "Tim".
+    expect(names).toEqual(
+      new Map([
+        ["tim", "Tim (2)"],
+        ["timmi", "Tim"],
+      ]),
+    );
+    expect(notices).toEqual([{ kind: "moved", from: "Tim", to: "Tim (2)", account: "Tim#1234" }]);
+
+    const history = [
+      { id: "old", players: [{ name: "Tim" }, { name: "Jan" }] },
+      { id: "linked", players: [{ name: "Timmi" }, { name: "Jan" }] },
+    ];
+    expect((renameIn(history, names) as typeof history).map((m) => m.players[0].name)).toEqual(["Tim (2)", "Tim"]);
+  });
+
+  it("skips numbers that are taken", () => {
+    const { roster } = accountRenames({
+      userId: JAN,
+      roster: [player("a", "Tim"), player("b", "Tim (2)"), player("r-tim", "Timmi")],
+      selfPlayerId: null,
+      links: [link()],
+      profiles: profiles([[TIM, "Tim"]]),
+    });
+    expect(roster.map((p) => p.name)).toEqual(["Tim (3)", "Tim (2)", "Tim"]);
+  });
+
+  it("numbers the second of two linked accounts with the same name, and stays put", () => {
+    const OTHER = "other-tim";
+    const links = [
+      link(),
+      { ...link(), id: "l2", playerId: "r-tim2", inviteeId: OTHER },
+    ];
+    const both = new Map<string, Profile>([
+      [TIM, { userId: TIM, name: "Tim", tag: "1234" }],
+      [OTHER, { userId: OTHER, name: "Tim", tag: "9999" }],
+    ]);
+    const first = accountRenames({
+      userId: JAN,
+      roster: [player("r-tim", "Tim"), player("r-tim2", "Timo")],
+      selfPlayerId: null,
+      links,
+      profiles: both,
+    });
+    expect(first.roster.map((p) => p.name)).toEqual(["Tim", "Tim (2)"]);
+    expect(first.notices).toEqual([{ kind: "twin", from: "Timo", to: "Tim (2)", account: "Tim#9999" }]);
+
+    const again = accountRenames({ userId: JAN, roster: first.roster, selfPlayerId: null, links, profiles: both });
+    expect(again.roster).toBe(first.roster);
+    expect(again.notices).toEqual([]);
   });
 
   it("follows an account that renames itself again, keeping old names mapped", () => {

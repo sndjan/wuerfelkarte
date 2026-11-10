@@ -1,60 +1,131 @@
--- Linking a roster player to another account (#accounts).
+-- Account names, and linking roster players to other accounts by them.
 --
--- Jan has "Tim" in his roster and invites tim@example.com. Once Tim signs in
--- with that address and accepts, every match Jan records with "Tim" in it is
--- copied to Tim's account, so it shows up in his history and statistics too.
--- Nothing tells Jan whether an address has an account: an invite simply waits
--- until someone signs in with it.
+-- Every account picks a name and gets a four-digit tag, so "Jan#4821" is
+-- unique even when many people are called Jan. Jan links his roster entry
+-- "Timmi" to "Tim#0193"; once Tim accepts, Jan's devices show the player
+-- under Tim's account name everywhere (and follow it when it changes), and
+-- every match Jan records with him is copied to Tim's account, so it shows up
+-- in his history and statistics too.
+
+-- Links ---------------------------------------------------------------------
 
 create table if not exists public.player_links (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references auth.users (id) on delete cascade,
-  -- Shown to the invitee so they know who is asking.
-  owner_email text not null,
   -- The roster entry on the owner's devices, and its name when invited.
   player_id text not null,
   player_name text not null,
-  invitee_email text not null,
-  invitee_id uuid references auth.users (id) on delete cascade,
+  invitee_id uuid not null references auth.users (id) on delete cascade,
   status text not null default 'pending',
   created_at timestamptz not null default now(),
   accepted_at timestamptz,
   constraint player_links_status_check check (status in ('pending', 'accepted')),
-  constraint player_links_accepted_check check ((status = 'accepted') = (invitee_id is not null)),
   constraint player_links_name_check check (length(player_name) between 1 and 60),
   constraint player_links_player_id_check check (length(player_id) between 1 and 64),
+  constraint player_links_not_self_check check (owner_id <> invitee_id),
   constraint player_links_owner_player_key unique (owner_id, player_id)
 );
 
-create index if not exists player_links_invitee_email_idx on public.player_links (invitee_email) where status = 'pending';
-create index if not exists player_links_invitee_id_idx on public.player_links (invitee_id);
+create index if not exists player_links_invitee_idx on public.player_links (invitee_id);
 
 alter table public.player_links enable row level security;
 revoke all on table public.player_links from anon, authenticated;
 grant select, delete on table public.player_links to authenticated;
 
--- Owners see their links, invitees theirs, including invites still addressed
--- to their email. Writes go through the functions below.
+-- Both sides see a link; writes other than deleting go through the functions below.
 drop policy if exists "Linked users read their links" on public.player_links;
 create policy "Linked users read their links" on public.player_links
   for select to authenticated using (
-    (select auth.uid()) = owner_id
-    or (select auth.uid()) = invitee_id
-    or (status = 'pending' and invitee_email = lower((select auth.jwt()) ->> 'email'))
+    (select auth.uid()) = owner_id or (select auth.uid()) = invitee_id
   );
 
 -- Either side can end a link; an invitee declines by deleting the invite.
 drop policy if exists "Linked users remove their links" on public.player_links;
 create policy "Linked users remove their links" on public.player_links
   for delete to authenticated using (
-    (select auth.uid()) = owner_id
-    or (select auth.uid()) = invitee_id
-    or (status = 'pending' and invitee_email = lower((select auth.jwt()) ->> 'email'))
+    (select auth.uid()) = owner_id or (select auth.uid()) = invitee_id
   );
 
--- Invites (or re-invites) the person behind one roster player. A new address
--- for the same player replaces the old link.
-create or replace function public.invite_player(p_player_id text, p_player_name text, p_email text)
+-- Profiles ------------------------------------------------------------------
+
+create table if not exists public.profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  name text not null,
+  tag text not null,
+  updated_at timestamptz not null default now(),
+  constraint profiles_name_check check (length(name) between 1 and 24 and name !~ '#' and name = trim(name)),
+  constraint profiles_tag_check check (tag ~ '^[0-9]{4}$')
+);
+
+create unique index if not exists profiles_handle_key on public.profiles (lower(name), tag);
+
+alter table public.profiles enable row level security;
+revoke all on table public.profiles from anon, authenticated;
+grant select on table public.profiles to authenticated;
+
+-- Your own profile, and those of accounts you are linked with (either way,
+-- invites included). Looking someone up by ID goes through invite_player.
+drop policy if exists "Linked users read profiles" on public.profiles;
+create policy "Linked users read profiles" on public.profiles
+  for select to authenticated using (
+    (select auth.uid()) = user_id
+    or exists (
+      select 1 from public.player_links l
+      where (l.owner_id = (select auth.uid()) and l.invitee_id = profiles.user_id)
+         or (l.invitee_id = (select auth.uid()) and l.owner_id = profiles.user_id)
+    )
+  );
+
+-- Sets the signed-in user's name. The tag stays if it is still free under
+-- the new name; otherwise a free one is drawn.
+create or replace function public.set_profile_name(p_name text)
+returns public.profiles
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_name text := trim(p_name);
+  v_tag text;
+  v_profile public.profiles;
+begin
+  if v_uid is null then
+    raise exception 'not signed in';
+  end if;
+  if length(v_name) not between 1 and 24 or v_name ~ '#' then
+    raise exception 'invalid name';
+  end if;
+
+  select tag into v_tag from public.profiles where user_id = v_uid;
+  if v_tag is null or exists (
+    select 1 from public.profiles
+    where lower(name) = lower(v_name) and tag = v_tag and user_id <> v_uid
+  ) then
+    v_tag := null;
+    for i in 1..50 loop
+      v_tag := (1000 + floor(random() * 9000))::int::text;
+      exit when not exists (
+        select 1 from public.profiles where lower(name) = lower(v_name) and tag = v_tag
+      );
+      v_tag := null;
+    end loop;
+    if v_tag is null then
+      raise exception 'name taken';
+    end if;
+  end if;
+
+  insert into public.profiles (user_id, name, tag, updated_at)
+  values (v_uid, v_name, v_tag, now())
+  on conflict (user_id) do update set name = excluded.name, tag = excluded.tag, updated_at = now()
+  returning * into v_profile;
+  return v_profile;
+end;
+$$;
+
+-- Invites the account behind a Konto-ID ("Tim#0193") as one roster player.
+-- Another account for the same player replaces the old link.
+create or replace function public.invite_player(p_player_id text, p_player_name text, p_handle text)
 returns public.player_links
 language plpgsql
 security definer
@@ -62,42 +133,47 @@ set search_path = ''
 as $$
 declare
   v_uid uuid := auth.uid();
-  v_own_email text := lower(auth.jwt() ->> 'email');
-  v_email text := lower(trim(p_email));
+  v_handle text := trim(p_handle);
+  v_invitee uuid;
   v_link public.player_links;
 begin
-  if v_uid is null or v_own_email is null then
+  if v_uid is null then
     raise exception 'not signed in';
   end if;
-  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' or length(v_email) > 254 then
-    raise exception 'invalid email';
+  if not exists (select 1 from public.profiles where user_id = v_uid) then
+    raise exception 'no profile';
   end if;
-  if v_email = v_own_email then
-    raise exception 'own email';
+  if v_handle !~ '^[^#]+#[0-9]{4}$' then
+    raise exception 'invalid handle';
+  end if;
+
+  select user_id into v_invitee from public.profiles
+  where lower(name) = lower(trim(split_part(v_handle, '#', 1))) and tag = split_part(v_handle, '#', 2);
+  if v_invitee is null then
+    raise exception 'unknown handle';
+  end if;
+  if v_invitee = v_uid then
+    raise exception 'own handle';
   end if;
   if (select count(*) from public.player_links where owner_id = v_uid and player_id <> p_player_id) >= 50 then
     raise exception 'too many links';
   end if;
 
-  insert into public.player_links (owner_id, owner_email, player_id, player_name, invitee_email)
-  values (v_uid, v_own_email, p_player_id, trim(p_player_name), v_email)
+  insert into public.player_links (owner_id, player_id, player_name, invitee_id, status)
+  values (v_uid, p_player_id, trim(p_player_name), v_invitee, 'pending')
   on conflict on constraint player_links_owner_player_key do update
     set player_name = excluded.player_name,
-        owner_email = excluded.owner_email,
-        -- Same address: keep an accepted link. New address: start over.
-        invitee_email = excluded.invitee_email,
-        invitee_id = case when public.player_links.invitee_email = excluded.invitee_email
-                          then public.player_links.invitee_id end,
-        status = case when public.player_links.invitee_email = excluded.invitee_email
+        -- Same account: keep an accepted link. Another account: start over.
+        status = case when public.player_links.invitee_id = excluded.invitee_id
                       then public.player_links.status else 'pending' end,
-        accepted_at = case when public.player_links.invitee_email = excluded.invitee_email
-                           then public.player_links.accepted_at end
+        accepted_at = case when public.player_links.invitee_id = excluded.invitee_id
+                           then public.player_links.accepted_at end,
+        invitee_id = excluded.invitee_id
   returning * into v_link;
   return v_link;
 end;
 $$;
 
--- Accepts an invite addressed to the signed-in user's email.
 create or replace function public.accept_player_link(p_link_id uuid)
 returns void
 language plpgsql
@@ -109,21 +185,22 @@ begin
     raise exception 'not signed in';
   end if;
   update public.player_links
-  set invitee_id = auth.uid(), status = 'accepted', accepted_at = now()
-  where id = p_link_id
-    and status = 'pending'
-    and invitee_email = lower(auth.jwt() ->> 'email')
-    and owner_id <> auth.uid();
+  set status = 'accepted', accepted_at = now()
+  where id = p_link_id and status = 'pending' and invitee_id = auth.uid();
   if not found then
     raise exception 'invite not found';
   end if;
 end;
 $$;
 
+revoke execute on function public.set_profile_name(text) from public, anon;
 revoke execute on function public.invite_player(text, text, text) from public, anon;
 revoke execute on function public.accept_player_link(uuid) from public, anon;
+grant execute on function public.set_profile_name(text) to authenticated;
 grant execute on function public.invite_player(text, text, text) to authenticated;
 grant execute on function public.accept_player_link(uuid) to authenticated;
+
+-- Shared matches --------------------------------------------------------------
 
 -- Matches the owner recorded with a linked player, copied for that player.
 create table if not exists public.shared_matches (
@@ -193,7 +270,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if old.invitee_id is not null and not exists (
+  if not exists (
     select 1 from public.player_links
     where owner_id = old.owner_id and invitee_id = old.invitee_id and id <> old.id and status = 'accepted'
   ) then

@@ -45,9 +45,9 @@ Setup in the Supabase dashboard:
 Every account has a Konto-ID like `Jan#4821`. Roster players can be linked to
 another account by its ID; once accepted, they carry that account's name in
 every match and statistic, and matches with them also land in their history.
-That needs `supabase/migrations/20261110130000_player_links.sql` and
-`20261110140000_profiles.sql`; without them the section on `/konto` says it is
-not set up yet.
+That needs `supabase/migrations/20261110130000_player_links.sql` (after the
+user_storage one); without it the section on `/konto` says it is not set up
+yet.
 
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it

@@ -1,6 +1,9 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { setWriteListener } from "@/games/shared/storage";
+import type { RenameNotice } from "@/lib/links/names";
 import { forgetSharing, runSharing } from "@/lib/links/runner";
 import { getSupabase } from "@/lib/supabase";
 import { hasPendingChanges, linkDevice, markDirty, runSync, unlinkDevice } from "./engine";
@@ -22,6 +25,17 @@ export type SyncStatus = {
 };
 
 const DEBOUNCE_MS = 2_000;
+
+/** Tells the user a roster player got a new name so two players never share one. */
+function warnRename(notice: RenameNotice) {
+  toast.warning(`„${notice.from}“ heißt jetzt „${notice.to}“`, {
+    description:
+      notice.kind === "moved"
+        ? `Der Name gehört jetzt deinem verknüpften Mitspieler ${notice.account}. Die bisherigen Spiele von „${notice.from}“ zählen für „${notice.to}“. Du kannst den Namen in der Spielerliste ändern.`
+        : `${notice.account} heißt genauso wie ein anderer verknüpfter Mitspieler. Statistiken zählen nach Namen, deshalb die Nummer.`,
+    duration: 12_000,
+  });
+}
 
 let userId: string | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -79,7 +93,8 @@ export function syncNow(): Promise<void> {
   running = runSync(supabaseRemote(supabase, id), id)
     .then(async ({ changed }) => {
       // Sharing with linked players is extra: when it fails, the sync still counts.
-      const shared = await runSharing(supabase, id).catch(() => ({ changed: false }));
+      const shared = await runSharing(supabase, id).catch(() => ({ changed: false, notices: [] }));
+      shared.notices.forEach(warnRename);
       return { changed: changed || shared.changed };
     })
     .then(({ changed }) => {
