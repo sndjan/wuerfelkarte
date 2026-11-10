@@ -8,23 +8,27 @@ import type { MatchPlayer, RosterPlayer, StoredMatch } from "@/games/shared/type
 /** Games played around a table with named players; the solo modes have no one to share with. */
 export const SHARED_GAMES = ["yatzy", "wizard", "flip7", "cabo", "darts"] as const;
 
+/** An account's public identity: the name it picked plus a tag, "Jan#4821". */
+export type Profile = { userId: string; name: string; tag: string };
+
+export const handleOf = (profile: Pick<Profile, "name" | "tag">) => `${profile.name}#${profile.tag}`;
+
 export type PlayerLink = {
   id: string;
   ownerId: string;
-  ownerEmail: string;
   playerId: string;
+  /** The roster name when the invite was sent. */
   playerName: string;
-  inviteeEmail: string;
-  inviteeId: string | null;
+  inviteeId: string;
   status: "pending" | "accepted";
 };
 
-/** A match as another account's device recorded it, marked with who that was. */
+/** A match as another account's device recorded it, marked with that account's handle. */
 export type SharedMatch = StoredMatch<MatchPlayer> & { sharedBy?: string };
 
 export type ShareRow = { recipientId: string; game: string; matchId: string; match: SharedMatch };
 
-const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+export const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /** FNV-1a: enough to tell whether a match changed since it was last sent. */
 export function fingerprint(text: string): string {
@@ -70,7 +74,7 @@ export function matchesToShare({
 }): { rows: ShareRow[]; fingerprints: Record<string, string> } {
   const rows: ShareRow[] = [];
   const fingerprints: Record<string, string> = {};
-  const linked = links.filter((l) => l.ownerId === userId && l.status === "accepted" && l.inviteeId);
+  const linked = links.filter((l) => l.ownerId === userId && l.status === "accepted");
 
   for (const link of linked) {
     const name = roster.find((p) => p.id === link.playerId)?.name ?? link.playerName;
@@ -82,7 +86,7 @@ export function matchesToShare({
         const print = fingerprint(JSON.stringify(match));
         if (sent[key] === print) continue;
         fingerprints[key] = print;
-        rows.push({ recipientId: link.inviteeId!, game, matchId: match.id, match });
+        rows.push({ recipientId: link.inviteeId, game, matchId: match.id, match });
       }
     }
   }
@@ -96,14 +100,14 @@ export function matchesToShare({
  */
 export function receiveMatches(
   local: SharedMatch[],
-  incoming: { match: unknown; ownerEmail: string }[],
+  incoming: { match: unknown; sharedBy: string }[],
 ): SharedMatch[] {
   const byId = new Map(local.map((m) => [m.id, m]));
-  for (const { match, ownerEmail } of incoming) {
+  for (const { match, sharedBy } of incoming) {
     if (!isStoredMatch(match)) continue;
     const existing = byId.get(match.id);
     if (existing && !existing.sharedBy) continue;
-    byId.set(match.id, { ...match, sharedBy: ownerEmail });
+    byId.set(match.id, { ...match, sharedBy });
   }
   return [...byId.values()].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
 }

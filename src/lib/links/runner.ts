@@ -1,14 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { loadRoster } from "@/games/shared/roster";
+import { loadRoster, saveRoster } from "@/games/shared/roster";
 import { readJSON, removeKey, writeJSON } from "@/games/shared/storage";
-import { LinksUnavailableError, fetchLinks, isMissingTable } from "./api";
-import { SHARED_GAMES, matchesToShare, receiveMatches, type SharedMatch } from "./share";
+import { LinksUnavailableError, fetchLinkState, isMissingTable } from "./api";
+import { accountRenames, renameIn } from "./names";
+import { loadSelfPlayerId } from "./self";
+import { SHARED_GAMES, handleOf, matchesToShare, receiveMatches, type SharedMatch } from "./share";
 
 /**
- * Runs after each account sync: sends matches with linked players to their
- * accounts and adds matches others sent here to the local history (which the
- * account sync then carries to this user's other devices).
+ * Runs after each account sync: gives linked players (and the user's own
+ * roster entry) their account names, sends matches with linked players to
+ * their accounts and adds matches others sent here to the local history
+ * (which the account sync then carries to this user's other devices).
  */
 
 type SharingState = {
@@ -32,16 +35,50 @@ export const forgetSharing = () => removeKey(STATE_KEY);
 
 const matchesKey = (game: string) => `${game}:matches`;
 
+/** Keys holding players by name that a rename has to reach. */
+const RENAMED_KEYS = [
+  ...SHARED_GAMES.flatMap((game) => [`${game}:matches`, `${game}:game`]),
+  "yatzy:players",
+];
+
+/** Writes account names into the roster, histories and running games; returns whether anything changed. */
+function applyAccountNames(userId: string, linkState: Awaited<ReturnType<typeof fetchLinkState>>): boolean {
+  const roster = loadRoster();
+  const { roster: renamed, names } = accountRenames({
+    userId,
+    roster,
+    selfPlayerId: loadSelfPlayerId(),
+    links: linkState.links,
+    profiles: linkState.profiles,
+  });
+  let changed = false;
+  if (renamed !== roster) {
+    saveRoster(renamed);
+    changed = true;
+  }
+  for (const key of RENAMED_KEYS) {
+    const value = readJSON<unknown>(key, null);
+    const next = renameIn(value, names);
+    if (next !== value) {
+      writeJSON(key, next);
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 /** Returns whether the local history changed. Missing tables mean nothing to do. */
 export async function runSharing(client: SupabaseClient, userId: string): Promise<{ changed: boolean }> {
-  let links;
+  let linkState;
   try {
-    links = await fetchLinks(client);
+    linkState = await fetchLinkState(client);
   } catch (error) {
     if (error instanceof LinksUnavailableError) return { changed: false };
     throw error;
   }
+  const { links, profiles } = linkState;
   let state = loadState(userId);
+  let changed = applyAccountNames(userId, linkState);
 
   const matchesByGame = Object.fromEntries(
     SHARED_GAMES.map((game) => [game, readJSON<SharedMatch[]>(matchesKey(game), [])]),
@@ -95,12 +132,14 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
   }
   const received = (data ?? []) as { owner_id: string; game: string; match: unknown; updated_at: string }[];
 
-  const ownerEmails = new Map(links.map((l) => [l.ownerId, l.ownerEmail]));
-  let changed = false;
+  const senderOf = (ownerId: string) => {
+    const profile = profiles.get(ownerId);
+    return profile ? handleOf(profile) : "";
+  };
   for (const game of SHARED_GAMES) {
     const incoming = received
       .filter((row) => row.game === game)
-      .map((row) => ({ match: row.match, ownerEmail: ownerEmails.get(row.owner_id) ?? "" }));
+      .map((row) => ({ match: row.match, sharedBy: senderOf(row.owner_id) }));
     if (incoming.length === 0) continue;
     const key = matchesKey(game);
     const before = JSON.stringify(readJSON(key, []));

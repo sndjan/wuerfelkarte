@@ -11,6 +11,11 @@ export type RosterPlayer = {
   active: boolean;
   /** Order in which the player was picked; drives seating order. `null` when inactive. */
   selectionOrder: number | null;
+  /**
+   * Names the player had before taking a linked account's name, so matches
+   * still recorded under one are renamed too.
+   */
+  formerNames?: string[];
 };
 
 export const EMOJI_OPTIONS = ["🦄", "🐶", "🦝", "🐸", "🐼", "🦊", "🐻", "😺"];

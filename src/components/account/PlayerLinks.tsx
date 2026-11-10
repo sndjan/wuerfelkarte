@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
-import { Check, Link2, Loader2, Share2, X } from "lucide-react";
+import { Check, Link2, Loader2, Share2, UserRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,50 +14,72 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { loadRoster } from "@/games/shared/roster";
+import { activePlayers, loadRoster } from "@/games/shared/roster";
 import type { RosterPlayer } from "@/games/shared/types";
 import { acceptLink, invitePlayer, removeLink } from "@/lib/links/api";
-import type { PlayerLink } from "@/lib/links/share";
+import { loadSelfPlayerId, saveSelfPlayerId } from "@/lib/links/self";
+import { handleOf, type PlayerLink, type Profile } from "@/lib/links/share";
 import { getSupabase } from "@/lib/supabase";
 import { syncNow } from "@/lib/sync/client";
 import { useSyncRefresh } from "@/lib/sync/useSyncRefresh";
+import { ProfileCard } from "./ProfileCard";
 import { openInvites, usePlayerLinks } from "./usePlayerLinks";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children?: React.ReactNode;
+}) {
   return (
     <section className="flex flex-col gap-3 rounded-[20px] bg-card p-5">
       <div>
         <h3 className={`${BALOO} text-lg font-extrabold`}>{title}</h3>
-        {hint && <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{hint}</p>}
+        {hint && (
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+            {hint}
+          </p>
+        )}
       </div>
       {children}
     </section>
   );
 }
 
-const inviteText = (email: string, name: string) =>
-  `Ich habe dich auf Würfelkarte als „${name}“ verknüpft. Melde dich mit ${email} an und nimm die Einladung an, dann landen unsere Spiele auch in deinem Verlauf: ${window.location.origin}/konto`;
+const handleFor = (profiles: Map<string, Profile>, userId: string) => {
+  const profile = profiles.get(userId);
+  return profile ? handleOf(profile) : "Unbekannt";
+};
 
 function InviteDialog({
   player,
   current,
+  ownHandle,
+  isSelf,
   onClose,
-  onDone,
+  onInvited,
+  onMarkSelf,
 }: {
   player: RosterPlayer | null;
-  current: PlayerLink | undefined;
+  current: string | undefined;
+  ownHandle: string | null;
+  isSelf: boolean;
   onClose: () => void;
-  onDone: () => void;
+  onInvited: () => void;
+  onMarkSelf: () => void;
 }) {
-  const [email, setEmail] = useState("");
+  const [handle, setHandle] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
 
   useEffect(() => {
-    setEmail(current?.inviteeEmail ?? "");
+    setHandle(current ?? "");
     setError(null);
     setSentTo(null);
   }, [player, current]);
@@ -67,19 +89,24 @@ function InviteDialog({
     if (!supabase || !player) return;
     setSending(true);
     setError(null);
-    const message = await invitePlayer(supabase, player.id, player.name, email);
+    const message = await invitePlayer(
+      supabase,
+      player.id,
+      player.name,
+      handle,
+    );
     setSending(false);
     if (message) {
       setError(message);
       return;
     }
-    setSentTo(email.trim().toLowerCase());
-    onDone();
+    setSentTo(handle.trim());
+    onInvited();
   };
 
   const share = async () => {
-    if (!player || !sentTo) return;
-    const text = inviteText(sentTo, player.name);
+    if (!player) return;
+    const text = `Ich habe dich auf Würfelkarte als „${player.name}“ eingeladen${ownHandle ? ` (von ${ownHandle})` : ""}. Nimm die Einladung unter ${window.location.origin}/konto an, dann landen unsere Spiele auch bei dir.`;
     try {
       if (navigator.share) await navigator.share({ text });
       else await navigator.clipboard.writeText(text);
@@ -97,8 +124,8 @@ function InviteDialog({
           </DialogTitle>
           <DialogDescription>
             {sentTo
-              ? `Sobald sich ${player?.name} mit ${sentTo} anmeldet, sieht er oder sie die Einladung unter „Konto“. Sag am besten kurz Bescheid.`
-              : `Mit welcher E-Mail meldet sich ${player?.name} bei Würfelkarte an? Nach dem Annehmen landen eure gemeinsamen Spiele auch in seinem oder ihrem Verlauf.`}
+              ? `${sentTo} sieht die Einladung unter „Konto“. Nach dem Annehmen heißt ${player?.name} bei dir überall wie im Konto, und eure Spiele landen auch dort.`
+              : `Gib die Konto-ID von ${player?.name} ein. Sie steht bei ihm oder ihr ganz oben unter „Konto“.`}
           </DialogDescription>
         </DialogHeader>
         {sentTo ? (
@@ -119,13 +146,12 @@ function InviteDialog({
             }}
           >
             <Input
-              type="email"
               required
               autoComplete="off"
-              inputMode="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="name@beispiel.de"
+              autoCapitalize="off"
+              value={handle}
+              onChange={(event) => setHandle(event.target.value)}
+              placeholder="Name#1234"
               className="h-11 rounded-xl"
             />
             {error && (
@@ -133,11 +159,18 @@ function InviteDialog({
                 {error}
               </p>
             )}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Abbrechen
-              </Button>
-              <Button type="submit" disabled={sending}>
+            <DialogFooter className="gap-2">
+              {!isSelf && !current && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={onMarkSelf}
+                  className="sm:mr-auto"
+                >
+                  <UserRound /> Das bin ich
+                </Button>
+              )}
+              <Button type="submit" disabled={sending || !handle.trim()}>
                 {sending ? <Loader2 className="animate-spin" /> : <Link2 />}
                 Einladen
               </Button>
@@ -152,11 +185,17 @@ function InviteDialog({
 export function PlayerLinks({ user }: { user: User }) {
   const { links, reload } = usePlayerLinks(user.id);
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
+  const [selfId, setSelfId] = useState<string | null>(null);
   const [inviting, setInviting] = useState<RosterPlayer | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  useEffect(() => setRoster(loadRoster()), []);
-  useSyncRefresh(() => setRoster(loadRoster()));
+  const readLocal = () => {
+    setRoster(loadRoster());
+    setSelfId(loadSelfPlayerId());
+  };
+  useEffect(readLocal, []);
+  // Renames from the sync show up here right away.
+  useSyncRefresh(readLocal);
 
   if (links.state === "loading") {
     return (
@@ -167,46 +206,89 @@ export function PlayerLinks({ user }: { user: User }) {
   }
   if (links.state === "unavailable") {
     return (
-      <Section title="Mitspieler verknüpfen" hint="Das Verknüpfen mit anderen Konten ist noch nicht eingerichtet.">
-        {null}
-      </Section>
+      <Section
+        title="Mitspieler verknüpfen"
+        hint="Das Verknüpfen mit anderen Konten ist noch nicht eingerichtet."
+      />
     );
   }
   if (links.state === "error") {
-    return <p className="text-center text-sm text-muted-foreground">Verknüpfungen gerade nicht erreichbar.</p>;
+    return (
+      <p className="text-center text-sm text-muted-foreground">
+        Verknüpfungen gerade nicht erreichbar.
+      </p>
+    );
   }
 
-  const all = links.links;
-  const invites = openInvites(all, user.id);
-  const linkedToMe = all.filter((l) => l.status === "accepted" && l.inviteeId === user.id);
-  const mine = new Map(all.filter((l) => l.ownerId === user.id).map((l) => [l.playerId, l]));
+  const { profiles } = links;
+  const own = profiles.get(user.id);
+  const invites = openInvites(links.links, user.id);
+  const linkedToMe = links.links.filter(
+    (l) => l.status === "accepted" && l.inviteeId === user.id,
+  );
+  const mine = new Map(
+    links.links
+      .filter((l) => l.ownerId === user.id)
+      .map((l) => [l.playerId, l]),
+  );
+  const supabase = getSupabase()!;
+  const suggestedName =
+    roster.find((p) => p.id === selfId)?.name ??
+    activePlayers(roster)[0]?.name ??
+    "";
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setBusy(id);
     await action();
     await reload();
     setBusy(null);
-    // An accepted invite starts the sharing; this side picks matches up on the next sync.
+    // Runs the renames and starts or stops sharing.
     void syncNow();
   };
-  const supabase = getSupabase()!;
+
+  const markSelf = (id: string | null) => {
+    saveSelfPlayerId(id);
+    setSelfId(id);
+    setInviting(null);
+    void syncNow();
+  };
+
+  const status = (link: PlayerLink) =>
+    link.status === "accepted"
+      ? `✓ ${handleFor(profiles, link.inviteeId)}`
+      : `Wartet auf ${handleFor(profiles, link.inviteeId)}`;
 
   return (
     <>
+      <ProfileCard
+        key={own ? handleOf(own) : "new"}
+        profile={own}
+        suggestedName={suggestedName}
+        onSaved={() => void reload()}
+      />
+
       {invites.length > 0 && (
         <Section title="Einladungen">
           {invites.map((invite) => (
-            <div key={invite.id} className="flex flex-col gap-2 rounded-xl border p-3">
+            <div
+              key={invite.id}
+              className="flex flex-col gap-2 rounded-xl border p-3"
+            >
               <p className="text-sm">
-                <b className="break-all">{invite.ownerEmail}</b> möchte dich als <b>„{invite.playerName}“</b>{" "}
-                verknüpfen. Eure gemeinsamen Spiele landen dann auch in deinem Verlauf.
+                <b>{handleFor(profiles, invite.ownerId)}</b> hat dich als{" "}
+                <b>„{invite.playerName}“</b> in der Spielerliste. Nimmst du an,
+                heißt du dort{" "}
+                {own ? <b>„{own.name}“</b> : "wie in deinem Konto"} und eure
+                gemeinsamen Spiele landen auch bei dir.
               </p>
               <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
                   disabled={busy === invite.id}
-                  onClick={() => void act(invite.id, () => acceptLink(supabase, invite.id))}
+                  onClick={() =>
+                    void act(invite.id, () => acceptLink(supabase, invite.id))
+                  }
                 >
                   <Check /> Annehmen
                 </Button>
@@ -215,7 +297,9 @@ export function PlayerLinks({ user }: { user: User }) {
                   size="sm"
                   variant="outline"
                   disabled={busy === invite.id}
-                  onClick={() => void act(invite.id, () => removeLink(supabase, invite.id))}
+                  onClick={() =>
+                    void act(invite.id, () => removeLink(supabase, invite.id))
+                  }
                 >
                   Ablehnen
                 </Button>
@@ -227,14 +311,17 @@ export function PlayerLinks({ user }: { user: User }) {
 
       <Section
         title="Mitspieler verknüpfen"
-        hint="Verknüpfe Spieler aus deiner Liste mit ihrem Konto. Jedes Spiel mit ihnen landet dann auch in ihrem Verlauf, auch die bisherigen."
+        hint="Verknüpfe Spieler aus deiner Liste mit ihrem Konto. Sie heißen dann überall so wie dort, und jedes Spiel mit ihnen landet auch bei ihnen, auch die bisherigen."
       >
         {roster.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Noch keine Spieler. Leg sie in einer Spiel-Lobby an.</p>
+          <p className="text-sm text-muted-foreground">
+            Noch keine Spieler. Leg sie in einer Spiel-Lobby an.
+          </p>
         ) : (
           <ul className="flex flex-col divide-y">
             {roster.map((player) => {
               const link = mine.get(player.id);
+              const isSelf = player.id === selfId;
               return (
                 <li key={player.id} className="flex items-center gap-3 py-2">
                   <span className="text-xl" aria-hidden="true">
@@ -242,26 +329,44 @@ export function PlayerLinks({ user }: { user: User }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold">{player.name}</p>
-                    {link && (
+                    {(link || isSelf) && (
                       <p className="truncate text-xs text-muted-foreground">
-                        {link.status === "accepted" ? "✓ " : "Wartet auf "}
-                        {link.inviteeEmail}
+                        {isSelf
+                          ? `Du${own ? ` · ${handleOf(own)}` : ""}`
+                          : status(link!)}
                       </p>
                     )}
                   </div>
-                  {link ? (
+                  {isSelf ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`${player.name} nicht mehr als dich markieren`}
+                      onClick={() => markSelf(null)}
+                    >
+                      <X />
+                    </Button>
+                  ) : link ? (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
                       aria-label={`Verknüpfung von ${player.name} lösen`}
                       disabled={busy === link.id}
-                      onClick={() => void act(link.id, () => removeLink(supabase, link.id))}
+                      onClick={() =>
+                        void act(link.id, () => removeLink(supabase, link.id))
+                      }
                     >
                       <X />
                     </Button>
                   ) : (
-                    <Button type="button" variant="outline" size="sm" onClick={() => setInviting(player)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInviting(player)}
+                    >
                       <Link2 /> Verknüpfen
                     </Button>
                   )}
@@ -273,21 +378,25 @@ export function PlayerLinks({ user }: { user: User }) {
       </Section>
 
       {linkedToMe.length > 0 && (
-        <Section title="Mit dir verknüpft" hint="Ihre Spiele mit dir landen in deinem Verlauf.">
+        <Section
+          title="Mit dir verknüpft"
+          hint="Ihre Spiele mit dir landen in deinem Verlauf."
+        >
           <ul className="flex flex-col divide-y">
             {linkedToMe.map((link) => (
               <li key={link.id} className="flex items-center gap-3 py-2">
-                <p className="min-w-0 flex-1 text-sm">
-                  <span className="break-all font-bold">{link.ownerEmail}</span>
-                  <span className="text-muted-foreground"> · als „{link.playerName}“</span>
+                <p className="min-w-0 flex-1 truncate text-sm font-bold">
+                  {handleFor(profiles, link.ownerId)}
                 </p>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Verknüpfung mit ${link.ownerEmail} lösen`}
+                  aria-label={`Verknüpfung mit ${handleFor(profiles, link.ownerId)} lösen`}
                   disabled={busy === link.id}
-                  onClick={() => void act(link.id, () => removeLink(supabase, link.id))}
+                  onClick={() =>
+                    void act(link.id, () => removeLink(supabase, link.id))
+                  }
                 >
                   <X />
                 </Button>
@@ -299,9 +408,18 @@ export function PlayerLinks({ user }: { user: User }) {
 
       <InviteDialog
         player={inviting}
-        current={inviting ? mine.get(inviting.id) : undefined}
+        current={
+          inviting
+            ? mine.get(inviting.id)
+              ? handleFor(profiles, mine.get(inviting.id)!.inviteeId)
+              : undefined
+            : undefined
+        }
+        ownHandle={own ? handleOf(own) : null}
+        isSelf={inviting?.id === selfId}
         onClose={() => setInviting(null)}
-        onDone={() => void reload()}
+        onInvited={() => void reload()}
+        onMarkSelf={() => inviting && markSelf(inviting.id)}
       />
     </>
   );

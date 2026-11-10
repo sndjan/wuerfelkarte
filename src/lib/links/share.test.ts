@@ -8,10 +8,8 @@ const TIM = "tim-id";
 const link = (overrides: Partial<PlayerLink> = {}): PlayerLink => ({
   id: "l1",
   ownerId: JAN,
-  ownerEmail: "jan@example.com",
   playerId: "r-tim",
   playerName: "Tim",
-  inviteeEmail: "tim@example.com",
   inviteeId: TIM,
   status: "accepted",
   ...overrides,
@@ -41,7 +39,7 @@ describe("matchesToShare", () => {
   it("waits for the invite to be accepted", () => {
     const { rows } = matchesToShare({
       userId: JAN,
-      links: [link({ status: "pending", inviteeId: null })],
+      links: [link({ status: "pending" })],
       roster,
       matchesByGame: { wizard: [match("a", ["Tim"])] },
       sent: {},
@@ -92,7 +90,7 @@ describe("matchesToShare", () => {
       userId: TIM,
       links: [link()],
       roster,
-      matchesByGame: { flip7: [{ ...match("a", ["Tim"]), sharedBy: "jan@example.com" }] },
+      matchesByGame: { flip7: [{ ...match("a", ["Tim"]), sharedBy: "Jan#4821" }] },
       sent: {},
     });
     expect(rows).toEqual([]);
@@ -103,20 +101,20 @@ describe("receiveMatches", () => {
   it("adds received matches in time order, marked with the sender", () => {
     const merged = receiveMatches(
       [match("own", ["Tim"], 2)],
-      [{ match: match("a", ["Jan", "Tim"], 1), ownerEmail: "jan@example.com" }],
+      [{ match: match("a", ["Jan", "Tim"], 1), sharedBy: "Jan#4821" }],
     );
     expect(merged.map((m) => [m.id, m.sharedBy])).toEqual([
-      ["a", "jan@example.com"],
+      ["a", "Jan#4821"],
       ["own", undefined],
     ]);
   });
 
   it("updates a received match but never one recorded here", () => {
-    const local = [{ ...match("a", ["Tim"]), sharedBy: "jan@example.com" }, match("b", ["Tim"])];
+    const local = [{ ...match("a", ["Tim"]), sharedBy: "Jan#4821" }, match("b", ["Tim"])];
     const merged = receiveMatches(local, [
-      { match: { ...match("a", ["Tim"]), durationMs: 9 }, ownerEmail: "jan@example.com" },
-      { match: { ...match("b", ["Tim"]), durationMs: 9 }, ownerEmail: "jan@example.com" },
-      { match: { nonsense: true }, ownerEmail: "jan@example.com" },
+      { match: { ...match("a", ["Tim"]), durationMs: 9 }, sharedBy: "Jan#4821" },
+      { match: { ...match("b", ["Tim"]), durationMs: 9 }, sharedBy: "Jan#4821" },
+      { match: { nonsense: true }, sharedBy: "Jan#4821" },
     ]);
     expect(merged.find((m) => m.id === "a")?.durationMs).toBe(9);
     expect(merged.find((m) => m.id === "b")?.durationMs).toBeUndefined();

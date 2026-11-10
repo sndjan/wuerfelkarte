@@ -8,7 +8,7 @@
 
 const GAME_KEY = /^[a-z0-9]+:(game|matches|settings)$/;
 
-const EXTRA_KEYS = new Set(["wuerfelkarte:roster", "yatzy:players", "quiz:days", "speedrun:daily"]);
+const EXTRA_KEYS = new Set(["wuerfelkarte:roster", "wuerfelkarte:self", "yatzy:players", "quiz:days", "speedrun:daily"]);
 
 export const isSyncedKey = (key: string): boolean =>
   EXTRA_KEYS.has(key) || (GAME_KEY.test(key) && !key.startsWith("wuerfelkarte:"));

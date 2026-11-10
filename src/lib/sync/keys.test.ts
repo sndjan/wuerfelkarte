@@ -5,6 +5,7 @@ describe("isSyncedKey", () => {
   it("syncs what a player would miss on another device", () => {
     for (const key of [
       "wuerfelkarte:roster",
+      "wuerfelkarte:self",
       "yatzy:game",
       "wizard:matches",
       "darts:settings",

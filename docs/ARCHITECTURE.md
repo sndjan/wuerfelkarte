@@ -91,6 +91,7 @@ configuration language, not less code.
 | `speedrun:submission` | Today's ranked Tagesrun until the server has it |
 | `wuerfelkarte:sync` | The account sync's bookkeeping: user, cursor, dirty keys |
 | `wuerfelkarte:sharing` | Linked players: matches already sent, newest received |
+| `wuerfelkarte:self` | The roster entry that is the signed-in user (synced) |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -157,29 +158,38 @@ writes only localStorage, signed in or not.
 
 Signing out forgets `wuerfelkarte:sync` but keeps the games on the device.
 
-### Linked players
+### Account names and linked players
 
-A roster player can be linked to another account (`/konto` → „Mitspieler
-verknüpfen“, migration `20261110130000_player_links.sql`):
+Every account picks a name and gets a four-digit tag, its Konto-ID
+(„Jan#4821“, `profiles`, migration `20261110140000_profiles.sql`, set through
+`set_profile_name`). A roster player can be linked to another account by that
+ID (`/konto` → „Mitspieler verknüpfen“, migrations
+`20261110130000_player_links.sql` and `…140000_profiles.sql`):
 
-1. Jan invites the person behind his roster entry „Tim“ by email
-   (`invite_player`). The invite waits in `player_links`; nothing tells Jan
-   whether the address has an account.
-2. Whoever signs in with that address sees it under „Einladungen“ (a dot on the
-   header button) and accepts (`accept_player_link`) or declines (deletes it).
-3. After each account sync, `src/lib/links/runner.ts` uploads every match in
-   Jan's Yatzy, Wizard, Flip 7, Cabo and Darts histories that has a player with
-   the linked roster entry's current name, earlier matches included, into
-   `shared_matches`. RLS only lets it through for an accepted link.
-   `wuerfelkarte:sharing` remembers a fingerprint per match, so only new or
-   corrected matches go out.
-4. Tim's devices download them into their `<game>:matches`, marked
-   `sharedBy: <Jan's email>`. From there his own sync carries them to his other
-   devices; they count in his statistics and show as „Geteilt von …“ in the
-   full history. Received matches are never passed on.
+1. Jan enters „Tim#0193“ for his roster entry „Timmi“ (`invite_player`).
+2. Tim sees the invite under „Einladungen“ (a dot on the header button) and
+   accepts (`accept_player_link`) or declines (deletes it).
+3. After each account sync, `src/lib/links/runner.ts`:
+   - renames „Timmi“ in Jan's roster to Tim's account name, and every match,
+     running game and Yatzy seating with „Timmi“ in it (`names.ts`). The old
+     name goes into the roster entry's `formerNames`, so a match finished on a
+     board that was open during the rename is caught next time. If Tim renames
+     his account, Jan's data follows. A rename that would give two roster
+     players the same name is skipped, since statistics count by name.
+   - does the same for the roster entry Jan marked as himself („Das bin ich“,
+     synced key `wuerfelkarte:self`), so Tim's copies show Jan's account name.
+   - uploads every Yatzy, Wizard, Flip 7, Cabo and Darts match with a linked
+     player, earlier ones included, into `shared_matches` (RLS only for an
+     accepted link). `wuerfelkarte:sharing` keeps a fingerprint per match, so
+     only new, corrected or renamed matches go out.
+   - downloads matches shared with this account into `<game>:matches`, marked
+     `sharedBy: "Jan#4821"`. The account sync carries them to the user's other
+     devices; they count in the statistics and show as „Geteilt von …“ in the
+     full history. Received matches are never passed on.
 
-Either side can end the link; the shared rows go with it, copies already in
-Tim's history stay. The pure rules are in `src/lib/links/share.ts`.
+Either side can end a link; the shared rows go with it, copies already in the
+other history stay. Profiles are readable only by the account itself and
+accounts linked with it; looking up an ID happens inside `invite_player`.
 
 ## Adding a game
 
