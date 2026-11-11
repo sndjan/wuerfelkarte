@@ -56,13 +56,18 @@ the section on `/konto` says it is not set up yet.
 phone, with digital dice the server rolls or with real dice entered by hand.
 Setup:
 
-1. Run `supabase/migrations/20261111120000_online_games.sql` (after the
-   player_links one). It also adds both tables to the `supabase_realtime`
-   publication; check under **Database → Publications** that they are listed.
+1. Run `supabase/migrations/20261111130000_online_games.sql` (after the
+   player_links and mutual_links ones), then
+   `20261111140000_online_service_grants.sql`, which gives the secret key
+   its rights on the tables even where new tables are not exposed to the API
+   automatically. The first also adds both online tables to the
+   `supabase_realtime` publication; check under **Database → Publications**
+   that they are listed.
 2. In the hosting (Vercel) environment, set `SUPABASE_SECRET_KEY` to the
    project's secret key (**Project Settings → API Keys**, `sb_secret_…`; the
    legacy `service_role` key works too, also as `SUPABASE_SERVICE_ROLE_KEY`).
    It is only read on the server by `/api/online`, never sent to the browser.
+   A publishable or anon key there is refused (the server log says so).
    Without it the page says online games are not set up yet.
 
 Deleting the account (`/konto` → „Konto löschen“) calls
