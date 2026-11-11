@@ -16,13 +16,15 @@ type OnlineSheetProps = {
   selected: string | null;
   /** Cells the host may correct (real dice). */
   correctable: boolean;
+  /** Totals and bonus progress stay hidden until the host starts the scoreboard. */
+  hideTotals: boolean;
   onCell: (seat: number, field: string) => void;
 };
 
 const cellText = (value: number | "X" | undefined) => (value === undefined ? "" : value === "X" ? "❌" : String(value));
 
 /** Every player's column side by side, as on the paper sheet. */
-export function OnlineSheet({ state, mySeat, preview, tappable, selected, correctable, onCell }: OnlineSheetProps) {
+export function OnlineSheet({ state, mySeat, preview, tappable, selected, correctable, hideTotals, onCell }: OnlineSheetProps) {
   const config = gamemodes[state.gamemode];
   const lastBonusField = config.bonus?.fields.at(-1);
   const finished = state.finishedAt !== null;
@@ -119,7 +121,9 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                     const reached = upper.sum >= upper.min;
                     return (
                       <td key={seat.userId} className="text-center text-xs tabular-nums">
-                        {reached ? (
+                        {hideTotals ? (
+                          <span className="text-muted-foreground">?</span>
+                        ) : reached ? (
                           <span className="rounded-full bg-green-800 px-1.5 py-0.5 font-bold text-white">
                             +{upper.bonus}
                           </span>
@@ -139,7 +143,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
             <th className="pr-1 pt-1 text-left font-bold">Summe</th>
             {state.seats.map((seat) => (
               <td key={seat.userId} className="pt-1 text-center text-base font-extrabold tabular-nums">
-                {seatScore(state, seat)}
+                {hideTotals ? <span className="text-muted-foreground">?</span> : seatScore(state, seat)}
               </td>
             ))}
           </tr>

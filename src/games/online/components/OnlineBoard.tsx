@@ -40,6 +40,7 @@ import {
   fieldKeys,
   forcedKeeps,
   nextRoll,
+  scoresRevealed,
   seatScore,
   type Cell,
   type OnlineState,
@@ -98,6 +99,17 @@ export function OnlineBoard({
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [rolling, setRolling] = useState<boolean[] | null>(null);
+  const [scoreOpen, setScoreOpen] = useState(false);
+
+  // Totals stay secret until the host starts the scoreboard; then it opens
+  // for everyone who is watching.
+  const revealed = scoresRevealed(state);
+  const wasRevealed = useRef(revealed);
+  useEffect(() => {
+    if (revealed && !wasRevealed.current) setScoreOpen(true);
+    wasRevealed.current = revealed;
+  }, [revealed]);
+  const hostName = state.seats.find((s) => s.userId === game.host_id)?.name ?? "Der Gastgeber";
 
   useEffect(() => {
     setKeep(turn.dice.map(() => false));
@@ -252,6 +264,22 @@ export function OnlineBoard({
       },
     });
 
+  const reveal = async () => {
+    await run({ type: "reveal", gameId: game.id });
+  };
+  const askReveal = () =>
+    running
+      ? setConfirm({
+          title: "Auswertung jetzt starten?",
+          text: "Das Spiel läuft noch. Danach sehen alle die Summen und die Rangliste.",
+          run: reveal,
+        })
+      : void reveal();
+
+  const trophyClass = finished
+    ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
+    : "rounded-full bg-white";
+
   const pickerOptions = picker ? fieldOptions(state.gamemode, picker.field) : [];
 
   return (
@@ -261,23 +289,34 @@ export function OnlineBoard({
         title={config.name}
         right={
           <>
-            <ScoreDialog
-              players={scored}
-              shareConfig={shareConfig(state.gamemode)}
-              elapsedMs={state.finishedAt !== null ? state.finishedAt - state.startedAt : null}
-              trigger={
-                <Button
-                  variant="outline"
-                  className={
-                    finished
-                      ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-                      : "rounded-full bg-white"
-                  }
-                >
-                  🏆
-                </Button>
-              }
-            />
+            {revealed ? (
+              <ScoreDialog
+                players={scored}
+                shareConfig={shareConfig(state.gamemode)}
+                elapsedMs={state.finishedAt !== null ? state.finishedAt - state.startedAt : null}
+                open={scoreOpen}
+                onOpenChange={setScoreOpen}
+                trigger={
+                  <Button variant="outline" className={trophyClass}>
+                    🏆
+                  </Button>
+                }
+              />
+            ) : isHost ? (
+              <Button variant="outline" className={trophyClass} disabled={busy} onClick={askReveal}>
+                🏆<span className="hidden sm:block">Auswertung starten</span>
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="rounded-full bg-white"
+                disabled
+                title={`${hostName} startet die Auswertung`}
+                aria-label={`Punkte verdeckt, ${hostName} startet die Auswertung`}
+              >
+                🏆
+              </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="rounded-full bg-white" aria-label="Menü">
@@ -351,19 +390,38 @@ export function OnlineBoard({
           </Card>
         )}
 
-        {finished && (
-          <Card className="gap-2 p-4">
-            {ranking.map((p, i) => (
-              <div key={p.id} className="flex items-center justify-between font-semibold">
-                <span>
-                  {MEDALS[i] ?? `${i + 1}.`} {p.name}
-                </span>
-                <span className="tabular-nums">{p.score}</span>
-              </div>
-            ))}
-            <p className="text-xs text-muted-foreground">Steht jetzt in deinem Yatzy-Verlauf.</p>
-          </Card>
-        )}
+        {finished &&
+          (revealed ? (
+            <Card className="gap-2 p-4">
+              {ranking.map((p, i) => (
+                <div key={p.id} className="flex items-center justify-between font-semibold">
+                  <span>
+                    {MEDALS[i] ?? `${i + 1}.`} {p.name}
+                  </span>
+                  <span className="tabular-nums">{p.score}</span>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">Steht jetzt in deinem Yatzy-Verlauf.</p>
+            </Card>
+          ) : (
+            <Card className="gap-3 p-4 text-center">
+              <p className="font-bold">Spiel vorbei!</p>
+              {isHost ? (
+                <>
+                  <p className="text-sm text-muted-foreground">Starte die Auswertung, dann sehen alle die Punkte.</p>
+                  <Button
+                    className="bg-yellow-400 text-black hover:bg-yellow-300"
+                    disabled={busy}
+                    onClick={askReveal}
+                  >
+                    🏆 Auswertung starten
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">{hostName} startet gleich die Auswertung …</p>
+              )}
+            </Card>
+          ))}
 
         <OnlineSheet
           state={state}
@@ -372,6 +430,7 @@ export function OnlineBoard({
           tappable={tappable}
           selected={selected}
           correctable={isHost && running && !digital}
+          hideTotals={!revealed}
           onCell={onCell}
         />
 

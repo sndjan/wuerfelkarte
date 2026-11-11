@@ -300,3 +300,14 @@ describe("the game", () => {
     expect(toMatch(state, "x").players.map((p) => p.name)).toEqual(["Tim", "tim (2)"]);
   });
 });
+
+describe("the scoreboard", () => {
+  it("stays hidden until the host starts it", async () => {
+    const { applyReveal, scoresRevealed } = await import("./engine");
+    const state = newState({ gamemode: "Wunder", diceMode: "physical", seats, now: 0 });
+    expect(scoresRevealed(state)).toBe(false);
+    const revealed = applyReveal(state, 5);
+    expect(scoresRevealed(revealed)).toBe(true);
+    expect(applyReveal(revealed, 9).revealedAt).toBe(5);
+  });
+});

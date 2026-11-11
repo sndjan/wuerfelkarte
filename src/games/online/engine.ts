@@ -72,6 +72,11 @@ export type OnlineState = {
   lastEntry: LastEntry | null;
   startedAt: number;
   finishedAt: number | null;
+  /**
+   * When the host started the scoreboard. Until then nobody sees totals,
+   * bonus progress or the ranking — only the cells.
+   */
+  revealedAt?: number | null;
 };
 
 export type Random = () => number;
@@ -120,6 +125,7 @@ export function newState({
     lastEntry: null,
     startedAt: now,
     finishedAt: null,
+    revealedAt: null,
   };
 }
 
@@ -408,6 +414,14 @@ export function applyLeave(state: OnlineState, seatIndex: number, now: number = 
   if (seats.every((s) => s.left)) return { ...left, finishedAt: now };
   if (seatIndex !== state.current) return left;
   return advance(left, seatIndex, now);
+}
+
+/** Whether the totals may be shown yet. */
+export const scoresRevealed = (state: OnlineState) => state.revealedAt != null;
+
+/** The host starts the scoreboard: totals and ranking become visible to everyone. */
+export function applyReveal(state: OnlineState, now: number = Date.now()): OnlineState {
+  return scoresRevealed(state) ? state : { ...state, revealedAt: now };
 }
 
 /** The host corrects a filled cell (real dice only, typos happen). */

@@ -6,6 +6,7 @@ import {
   applyCorrection,
   applyEntry,
   applyLeave,
+  applyReveal,
   applyRoll,
   digitalEntry,
   MoveError,
@@ -389,6 +390,16 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
           .eq("user_id", target),
       );
       await closeIfDone(db, game);
+      return { game };
+    }
+
+    case "reveal": {
+      const game = await mutate(db, action.gameId, (g) => {
+        if (g.host_id !== uid) deny("not host", 403);
+        if ((g.status !== "running" && g.status !== "finished") || !g.state) return deny("not running", 409);
+        if (g.state.revealedAt != null) return null;
+        return { state: applyReveal(g.state) };
+      });
       return { game };
     }
 

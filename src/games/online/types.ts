@@ -55,4 +55,5 @@ export type OnlineAction =
   | { type: "correct"; gameId: string; userId: string; field: string; value: Cell }
   | { type: "leave"; gameId: string }
   | { type: "remove"; gameId: string; userId: string }
+  | { type: "reveal"; gameId: string }
   | { type: "cancel"; gameId: string };

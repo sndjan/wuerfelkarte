@@ -95,8 +95,8 @@ by cascade. The games on the device stay.
 - **Kniffel Online** — Yatzy in every mode with linked accounts on their own
   phones: invite up to five, play live or one move at a time, with dice the
   server rolls (the app scores every field, Battle and Chaoswunder missions
-  included) or real dice entered by hand. Results land in everyone's Yatzy
-  history.
+  included) or real dice entered by hand. Totals stay hidden until the host
+  starts the scoreboard. Results land in everyone's Yatzy history.
 - **Darts** — X01 on a clickable board, with legs, checkout suggestions and
   three-dart averages.
 

@@ -201,6 +201,16 @@ describe("playing", () => {
   });
 });
 
+describe("the scoreboard", () => {
+  it("only the host starts it, during or after the game", async () => {
+    const gameId = await startedGame();
+    expect(game(gameId).state!.revealedAt).toBeNull();
+    expect(await code(act(TIM, { type: "reveal", gameId }))).toBe("not host");
+    await act(JAN, { type: "reveal", gameId });
+    expect(game(gameId).state!.revealedAt).toEqual(expect.any(Number));
+  });
+});
+
 describe("leaving", () => {
   it("passes the host role on and ends the game when the last player leaves", async () => {
     const gameId = await startedGame("physical");

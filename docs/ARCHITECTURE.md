@@ -234,6 +234,10 @@ server, not in localStorage.
 - **Leaving**: a player can leave and the host can take someone out; their
   column stays as it is and the turn skips them. The host role passes on if
   the host leaves. Only the host can correct a cell, and only with real dice.
+- **Hidden scores**: the board shows every cell but no totals, bonus
+  progress or ranking until the host starts the scoreboard (🏆, action
+  `reveal`, sets `state.revealedAt`) — during the game after a confirmation,
+  or once it is over. It then opens for everyone watching.
 - **History**: a finished game is written into each player's
   `yatzy:matches` (`toMatch`, marked `online: true`) the next time their app
   sees it; `online:saved` remembers it per device so a deleted entry stays
