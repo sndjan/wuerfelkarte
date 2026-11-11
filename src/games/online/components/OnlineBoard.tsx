@@ -28,7 +28,6 @@ import { ROLL_MS } from "@/games/quiz/components/Die";
 import { shareConfig } from "@/games/yatzy/config";
 import { gamemodes } from "@/games/yatzy/gamemodes";
 import { callOnline, OnlineError } from "../client";
-import { diceModeLabel } from "../config";
 import { fieldOptions, wunderFieldOf } from "../dice";
 import {
   canAddExtraWunder,
@@ -116,16 +115,29 @@ export function OnlineBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId]);
 
-  // Shake the thrown dice whenever a roll lands, for everyone watching.
+  // Shake the thrown dice whenever a roll lands, for everyone watching. The
+  // roller gets the same roll twice (the API's answer and Realtime), so the
+  // stop timer lives outside the effect: a second copy must not cancel it.
   const lastRoll = useRef({ turnId, rolls: turn.rolls });
+  const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (rollTimer.current) clearTimeout(rollTimer.current);
+    },
+    [],
+  );
   useEffect(() => {
     const prev = lastRoll.current;
     lastRoll.current = { turnId, rolls: turn.rolls };
     if (prev.turnId !== turnId || turn.rolls <= prev.rolls) return;
     setRolling(turn.thrown);
-    const id = setTimeout(() => setRolling(null), ROLL_MS);
-    return () => clearTimeout(id);
-  }, [turnId, turn.rolls, turn.thrown]);
+    if (rollTimer.current) clearTimeout(rollTimer.current);
+    rollTimer.current = setTimeout(() => {
+      rollTimer.current = null;
+      setRolling(null);
+    }, ROLL_MS);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnId, turn.rolls]);
 
   const run = async (action: Parameters<typeof callOnline>[0]) => {
     setBusy(true);
@@ -254,13 +266,6 @@ export function OnlineBoard({
       : null;
 
   const mission = running ? currentMission(state) : null;
-  const last = state.lastEntry;
-  const lastText =
-    last && state.seats[last.seat]
-      ? `${last.seat === mySeat ? "Du" : state.seats[last.seat].name}: ${labelOf(state, last.field)} ${
-          last.value === "X" ? "gestrichen" : last.doubled ? `${last.value} ×2` : last.value
-        }${last.extraWunder ? " · Zusatz-Wunder +50" : ""}`
-      : null;
 
   let line: React.ReactNode;
   if (finished) line = "Spiel vorbei.";
@@ -394,10 +399,6 @@ export function OnlineBoard({
       />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4">
-        <p className="text-center text-xs text-muted-foreground">
-          {diceModeLabel(state.diceMode)}
-          {lastText && ` · ${lastText}`}
-        </p>
 
         {mission && (
           <Card className="gap-1 p-3 text-center text-sm">
