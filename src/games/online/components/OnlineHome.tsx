@@ -25,7 +25,7 @@ import { Switch } from "./Switch";
 
 const errorText = (error: unknown) => (error instanceof OnlineError ? error.message : "Hat nicht geklappt.");
 
-function InviteCard({ game, onDone }: { game: GameWithPlayers; onDone: () => void }) {
+export function InviteCard({ game, onDone }: { game: GameWithPlayers; onDone: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const respond = async (accept: boolean) => {
@@ -234,6 +234,13 @@ function NewGame() {
 export function OnlineHome() {
   const { user } = useAuth();
   const online = useMyOnline();
+  const router = useRouter();
+  const activeId = online.state === "ready" ? online.active?.id : undefined;
+
+  // In a lobby or game already: there is nothing to choose here, go straight in.
+  useEffect(() => {
+    if (activeId) router.replace(`/online/${activeId}`);
+  }, [activeId, router]);
 
   let body: React.ReactNode;
   if (online.state === "loading") {

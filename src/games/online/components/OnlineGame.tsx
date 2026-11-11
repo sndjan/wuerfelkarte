@@ -25,7 +25,7 @@ function Message({ children }: { children: React.ReactNode }) {
 /** /online/[id]: the lobby before the start, the board after it. */
 export function OnlineGame({ gameId }: { gameId: string }) {
   const { user, loading } = useAuth();
-  const { load, userId, holds, sendHolds, accept } = useOnlineGame(gameId);
+  const { load, userId, holds, sendHolds, liveRoll, sendRolling, accept } = useOnlineGame(gameId);
 
   if (!loading && !user) {
     return (
@@ -88,7 +88,15 @@ export function OnlineGame({ gameId }: { gameId: string }) {
   }
   return (
     <div className="flex min-h-full flex-col bg-background">
-      <OnlineBoard game={game} userId={userId} holds={holds} sendHolds={sendHolds} accept={accept} />
+      <OnlineBoard
+        game={game}
+        userId={userId}
+        holds={holds}
+        sendHolds={sendHolds}
+        liveRoll={liveRoll}
+        sendRolling={sendRolling}
+        accept={accept}
+      />
     </div>
   );
 }

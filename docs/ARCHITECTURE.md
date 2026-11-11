@@ -238,15 +238,24 @@ server, not in localStorage.
   invites. Starting withdraws unanswered invites and shuffles the seats.
 - **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
   tables, a broadcast channel per game for the dice the player on turn is
-  holding, plus a reload on focus and a slow poll as a safety net.
-- **Real dice**: cells are filled with the same `GridSelect` picker as the
-  Yatzy sheet (without the reset button: an entry ends the turn). An extra
-  Wunder is picked on the own Wunder cell (50 → 100) and sent with the next
-  entry.
+  holding and for "rolling now" (so everyone's dice shake the moment the
+  roller taps, not when the server answers), plus a reload on focus and a
+  slow poll as a safety net. A reload never replaces a newer game row, and
+  the dice kept through a roll are part of the state (`turn.held`), so held
+  dice do not flick back.
+- **Board**: the Yatzy `PlayerCard`s side by side, own card first, then in
+  turn order; the card on turn is framed and scrolled into view.
+  `PlayerCard`'s `renderField` lets the board draw read-only fields and,
+  with digital dice, the "+12 Vierer" preview to tap.
+- **Real dice**: fields are filled with the card's own `GridSelect` picker
+  (quick-fill included). An extra Wunder is picked on the own Wunder field
+  (50 → 100) and sent with the next entry.
+- **Joining**: an invite can be accepted from the home page; accepting opens
+  the lobby, and `/online` goes straight to the game one is in.
 - **Leaving**: a player can leave and the host can take someone out; their
   column stays as it is and the turn skips them. The host role passes on if
   the host leaves. Only the host can correct a cell, and only with real dice.
-- **Hidden scores**: the board shows every cell but no totals or
+- **Hidden scores**: the cards show every field but no totals or
   ranking (the bonus progress, e.g. 35/63, stays) until the host starts the scoreboard (🏆, action
   `reveal`, sets `state.revealedAt`) — during the game after a confirmation,
   or once it is over. It then opens for everyone watching.

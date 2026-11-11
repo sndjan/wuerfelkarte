@@ -135,11 +135,14 @@ async function loadGame(db: SupabaseClient, gameId: string): Promise<{ game: Gam
 async function mutate(
   db: SupabaseClient,
   gameId: string,
-  change: (game: GameRow, players: PlayerRow[]) => Partial<GameRow> | null,
+  change: (game: GameRow) => Partial<GameRow> | null,
 ): Promise<GameRow> {
   for (let attempt = 0; attempt < 4; attempt++) {
-    const { game, players } = await loadGame(db, gameId);
-    const patch = change(game, players);
+    // Only the game row: a move does not need the player list, and every
+    // round trip here is time the player waits for the dice.
+    const game = check(await db.from("online_games").select("*").eq("id", gameId).maybeSingle()) as GameRow | null;
+    if (!game) return deny("gone", 404);
+    const patch = change(game);
     if (!patch) return game;
     const updated = check(
       await db

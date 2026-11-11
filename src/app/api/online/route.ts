@@ -10,8 +10,11 @@ export async function POST(request: Request) {
 
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return NextResponse.json({ error: "not signed in" }, { status: 401 });
-  const { data, error } = await db.auth.getUser(token);
-  if (error || !data.user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
+  // Verified locally against the project's signing keys where it can; older
+  // projects with a shared secret fall back to asking Supabase Auth.
+  const { data, error } = await db.auth.getClaims(token);
+  const userId = data?.claims.sub;
+  if (error || !userId) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
   let action: OnlineAction;
   try {
@@ -24,7 +27,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    return NextResponse.json(await handle(db, data.user.id, action));
+    return NextResponse.json(await handle(db, userId, action));
   } catch (err) {
     if (err instanceof ApiError) return NextResponse.json({ error: err.code }, { status: err.status });
     console.error("online api", err);
