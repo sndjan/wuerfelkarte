@@ -99,6 +99,7 @@ describe("rolling", () => {
     expect(state.turn.dice).toEqual([1, 2, 3, 4, 5]);
     state = applyRoll(state, 0, { keep: [true, true, false, false, false] }, faces(6));
     expect(state.turn.dice).toEqual([1, 2, 6, 6, 6]);
+    expect(state.turn.held).toEqual([true, true, false, false, false]);
     state = applyRoll(state, 0, { keep: [true, true, true, true, false] }, faces(2));
     expect(state.turn.rolls).toBe(3);
     expect(nextRoll(state)).toBeNull();

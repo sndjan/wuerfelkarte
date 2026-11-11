@@ -127,12 +127,16 @@ export type GameLoad =
 /** What the player on turn holds before rolling, sent live to the others. */
 export type LiveHolds = { turn: string; rolls: number; keep: boolean[]; preset?: number[] };
 
+/** The player on turn just tapped "Würfeln": the others start shaking these dice at once. */
+export type LiveRoll = { turn: string; rolls: number; shake: boolean[]; at: number };
+
 /** One online game, live: the row, its players, and the live holds of the player on turn. */
 export function useOnlineGame(gameId: string) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const [load, setLoad] = useState<GameLoad>({ state: "loading" });
   const [holds, setHolds] = useState<LiveHolds | null>(null);
+  const [liveRoll, setLiveRoll] = useState<LiveRoll | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const version = useRef(-1);
 
@@ -148,10 +152,16 @@ export function useOnlineGame(gameId: string) {
       setLoad({ state: "gone" });
       return;
     }
-    const row = game.data as GameRow;
-    version.current = Math.max(version.current, row.version);
-    setLoad({ state: "ready", game: row, players: (players.data ?? []) as PlayerRow[] });
-    saveOnlineResult(row, userId);
+    const fetched = game.data as GameRow;
+    const fetchedPlayers = (players.data ?? []) as PlayerRow[];
+    // A reload that started before a move can answer after it: keep the newer
+    // game row instead of flicking back to the old dice.
+    setLoad((prev) => {
+      const game = prev.state === "ready" && prev.game.version > fetched.version ? prev.game : fetched;
+      return { state: "ready", game, players: fetchedPlayers };
+    });
+    version.current = Math.max(version.current, fetched.version);
+    saveOnlineResult(fetched, userId);
   }, [gameId, userId]);
 
   /** A row the API just returned: shown at once, unless Realtime brought a newer one. */
@@ -181,6 +191,7 @@ export function useOnlineGame(gameId: string) {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "online_game_players", filter: `game_id=eq.${gameId}` }, throttled)
       .on("broadcast", { event: "holds" }, ({ payload }) => setHolds(payload as LiveHolds))
+      .on("broadcast", { event: "rolling" }, ({ payload }) => setLiveRoll({ ...(payload as LiveRoll), at: Date.now() }))
       .subscribe();
     channelRef.current = channel;
     // Realtime can miss events (a sleeping phone); a slow poll catches up.
@@ -196,5 +207,9 @@ export function useOnlineGame(gameId: string) {
     void channelRef.current?.send({ type: "broadcast", event: "holds", payload: next });
   }, []);
 
-  return { load, userId, holds, sendHolds, accept, reload: throttled };
+  const sendRolling = useCallback((next: Omit<LiveRoll, "at">) => {
+    void channelRef.current?.send({ type: "broadcast", event: "rolling", payload: next });
+  }, []);
+
+  return { load, userId, holds, sendHolds, liveRoll, sendRolling, accept, reload: throttled };
 }

@@ -43,6 +43,12 @@ interface PlayerCardProps {
   doubledFields?: Set<string>;
   /** Denser paddings/gaps so a full sheet fits on screen without scrolling. */
   compact?: boolean;
+  /**
+   * Draws a field in place of the value picker, e.g. a read-only cell or the
+   * online game's "+12" preview; `undefined` keeps the picker. Gets the
+   * cell's colour classes so it looks the same.
+   */
+  renderField?: (field: { key: string; label: string }, cellClass: string) => React.ReactNode | undefined;
 }
 
 const PlayerCard: React.FC<PlayerCardProps> = ({
@@ -65,6 +71,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   battleFieldStatus,
   doubledFields,
   compact = false,
+  renderField,
 }) => {
   const config = gamemodes[gamemode];
   const [jsConfetti, setJsConfetti] = useState<JSConfetti | null>(null);
@@ -226,42 +233,46 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           const fieldElement = (
             <div key={key} className="w-full flex items-center">
               <div className="min-w-0 flex-1 flex flex-col items-center z-10 relative">
-                <GridSelect
-                  value={
-                    playerPoints[key] !== 0 && playerPoints[key] !== undefined
-                      ? playerPoints[key].toString()
-                      : ""
-                  }
-                  onValueChange={(value) => onValueChange(value, key)}
-                  options={selectOptions ?? []}
-                  label={label}
-                  disabled={readOnly}
-                  compact={compact}
-                  className={`w-full transition-colors ${cellClass}`}
-                  quickFill={
-                    showQuickFill
-                      ? {
-                          icon: <Zap className="size-4" />,
-                          onClick: () =>
-                            onValueChange(String(nextQuickFillValue), key),
-                          title: `Wahrscheinlichsten Wert übernehmen (${nextQuickFillValue})`,
-                          ariaLabel: `Wahrscheinlichsten Wert für ${label} übernehmen (${nextQuickFillValue})`,
-                        }
-                      : undefined
-                  }
-                />
+                {renderField?.({ key, label }, cellClass) ?? (
+                  <GridSelect
+                    value={
+                      playerPoints[key] !== 0 && playerPoints[key] !== undefined
+                        ? playerPoints[key].toString()
+                        : ""
+                    }
+                    onValueChange={(value) => onValueChange(value, key)}
+                    options={selectOptions ?? []}
+                    label={label}
+                    disabled={readOnly}
+                    compact={compact}
+                    className={`w-full transition-colors ${cellClass}`}
+                    quickFill={
+                      showQuickFill
+                        ? {
+                            icon: <Zap className="size-4" />,
+                            onClick: () =>
+                              onValueChange(String(nextQuickFillValue), key),
+                            title: `Wahrscheinlichsten Wert übernehmen (${nextQuickFillValue})`,
+                            ariaLabel: `Wahrscheinlichsten Wert für ${label} übernehmen (${nextQuickFillValue})`,
+                          }
+                        : undefined
+                    }
+                  />
+                )}
                 {isDoubled && (
                   <Badge className="absolute right-8 top-1/2 -translate-y-1/2 z-20 bg-green-700 font-bold pointer-events-none">
                     ×2
                   </Badge>
                 )}
+                {/* On the pill's top edge: an open field shows its name, which
+                    a marker in the middle would cover. */}
                 {isOpen && !isDoubled && status === "forced" && (
-                  <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs font-bold text-amber-600 dark:text-amber-400 pointer-events-none">
+                  <span className="absolute -top-2 right-4 z-20 rounded-full bg-amber-400 px-1.5 text-[10px] font-bold leading-4 text-black pointer-events-none">
                     Pflicht
                   </span>
                 )}
                 {isOpen && status === "blocked" && (
-                  <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs pointer-events-none">
+                  <span className="absolute -top-2 right-4 z-20 text-xs leading-4 pointer-events-none">
                     🔒
                   </span>
                 )}

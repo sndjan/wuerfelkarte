@@ -45,6 +45,8 @@ export type OnlineTurn = {
   locked: boolean[];
   /** The dice the last roll threw. */
   thrown: boolean[];
+  /** The dice kept through the last roll, so everyone sees them held. */
+  held?: boolean[];
   /** The mission's extra roll has been used. */
   extraUsed: boolean;
 };
@@ -94,6 +96,7 @@ const freshTurn = (gamemode: string): OnlineTurn => {
     dice: Array(count).fill(1),
     locked: Array(count).fill(false),
     thrown: Array(count).fill(false),
+    held: Array(count).fill(false),
     extraUsed: false,
   };
 };
@@ -277,6 +280,7 @@ export function applyRoll(
       dice,
       locked,
       thrown,
+      held: thrown.map((t) => !t),
       extraUsed: turn.extraUsed || kind !== "normal",
     },
   };

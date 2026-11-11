@@ -26,9 +26,12 @@ import {
 import { ScoreDialog } from "@/games/shared/components/ScoreDialog";
 import { ROLL_MS } from "@/games/quiz/components/Die";
 import { shareConfig } from "@/games/yatzy/config";
+import PlayerCard from "@/games/yatzy/components/PlayerCard";
 import { gamemodes } from "@/games/yatzy/gamemodes";
+import { hasStoredCompactMode, loadCompactMode } from "@/games/yatzy/storage";
+import { cn } from "@/lib/utils";
 import { callOnline, OnlineError } from "../client";
-import { fieldOptions, wunderFieldOf } from "../dice";
+import { wunderFieldOf } from "../dice";
 import {
   canAddExtraWunder,
   canKeep,
@@ -37,6 +40,7 @@ import {
   currentRules,
   digitalEntry,
   fieldKeys,
+  fieldStatus,
   forcedKeeps,
   nextRoll,
   scoresRevealed,
@@ -44,10 +48,9 @@ import {
   type Cell,
   type OnlineState,
 } from "../engine";
-import type { LiveHolds } from "../hooks/useOnline";
+import type { LiveHolds, LiveRoll } from "../hooks/useOnline";
 import type { GameRow } from "../types";
 import { OnlineDice } from "./OnlineDice";
-import { OnlineSheet, type CellPicker } from "./OnlineSheet";
 
 const errorText = (error: unknown) => (error instanceof OnlineError ? error.message : "Hat nicht geklappt.");
 
@@ -58,18 +61,26 @@ const labelOf = (state: OnlineState, field: string) =>
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
+/** A roll shakes at least this long, and never longer than the second figure. */
+const MIN_SHAKE_MS = 350;
+const MAX_SHAKE_MS = 8000;
+
 /** The running (or finished) online game. */
 export function OnlineBoard({
   game,
   userId,
   holds,
   sendHolds,
+  liveRoll,
+  sendRolling,
   accept,
 }: {
   game: GameRow;
   userId: string;
   holds: LiveHolds | null;
   sendHolds: (holds: LiveHolds) => void;
+  liveRoll: LiveRoll | null;
+  sendRolling: (roll: Omit<LiveRoll, "at">) => void;
   accept: (row: GameRow) => void;
 }) {
   const router = useRouter();
@@ -86,7 +97,7 @@ export function OnlineBoard({
 
   // One turn = one seat's n-th go; local picks reset when it changes.
   const turnId = `${state.current}:${current?.turns ?? 0}`;
-  const [keep, setKeep] = useState<boolean[]>(() => turn.dice.map(() => false));
+  const [keep, setKeep] = useState<boolean[]>(() => turn.held ?? turn.dice.map(() => false));
   const [preset, setPreset] = useState<(number | null)[]>([null, null]);
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -115,14 +126,31 @@ export function OnlineBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId]);
 
-  // Shake the thrown dice whenever a roll lands, for everyone watching. The
-  // roller gets the same roll twice (the API's answer and Realtime), so the
-  // stop timer lives outside the effect: a second copy must not cancel it.
+  // The dice shake from the moment the roller taps (for the others from the
+  // moment the "rolling" broadcast arrives) until the result is in, at least
+  // MIN_SHAKE_MS so it reads as a roll. The roller gets each result twice
+  // (the API's answer and Realtime), so the timer lives in a ref: a second
+  // copy must not cancel it.
   const lastRoll = useRef({ turnId, rolls: turn.rolls });
-  const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shakeStart = useRef<number | null>(null);
+  const shakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopShake = (after: number) => {
+    if (shakeTimer.current) clearTimeout(shakeTimer.current);
+    shakeTimer.current = setTimeout(() => {
+      shakeTimer.current = null;
+      shakeStart.current = null;
+      setRolling(null);
+    }, after);
+  };
+  const startShake = (dice: boolean[]) => {
+    setRolling(dice);
+    shakeStart.current = Date.now();
+    // Should the result never come, stop anyway.
+    stopShake(MAX_SHAKE_MS);
+  };
   useEffect(
     () => () => {
-      if (rollTimer.current) clearTimeout(rollTimer.current);
+      if (shakeTimer.current) clearTimeout(shakeTimer.current);
     },
     [],
   );
@@ -131,13 +159,18 @@ export function OnlineBoard({
     lastRoll.current = { turnId, rolls: turn.rolls };
     if (prev.turnId !== turnId || turn.rolls <= prev.rolls) return;
     setRolling(turn.thrown);
-    if (rollTimer.current) clearTimeout(rollTimer.current);
-    rollTimer.current = setTimeout(() => {
-      rollTimer.current = null;
-      setRolling(null);
-    }, ROLL_MS);
+    const shaking = shakeStart.current;
+    if (shaking === null) shakeStart.current = Date.now();
+    stopShake(shaking === null ? ROLL_MS : Math.max(0, MIN_SHAKE_MS - (Date.now() - shaking)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId, turn.rolls]);
+  // Someone else tapped "Würfeln": shake their dice before the result arrives.
+  useEffect(() => {
+    if (!liveRoll || liveRoll.turn !== turnId || liveRoll.rolls !== turn.rolls) return;
+    if (Date.now() - liveRoll.at > MAX_SHAKE_MS) return;
+    startShake(liveRoll.shake);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveRoll]);
 
   const run = async (action: Parameters<typeof callOnline>[0]) => {
     setBusy(true);
@@ -158,7 +191,9 @@ export function OnlineBoard({
   const forced = forcedKeeps(state);
   const presetFaces = preset.filter((f): f is number => f !== null);
   const watchedHolds = !myTurn && holds?.turn === turnId && holds.rolls === turn.rolls ? holds : null;
-  const shownKeep = myTurn ? keep : (watchedHolds?.keep ?? turn.dice.map(() => false));
+  // Others see the live picks between rolls, and what the server kept
+  // through the last roll otherwise, so held dice never flick back.
+  const shownKeep = myTurn ? keep : (watchedHolds?.keep ?? turn.held ?? turn.dice.map(() => false));
   const shownPreset = myTurn ? presetFaces : (watchedHolds?.preset ?? []);
   const faces = turn.dice.map((d, i) => (turn.rolls > 0 ? d : shownPreset[i]));
 
@@ -188,6 +223,10 @@ export function OnlineBoard({
   const roll = async () => {
     setSelected(null);
     const sendKeep = turn.rolls === 0 ? turn.dice.map(() => false) : keep.map((k, i) => k || forced[i]);
+    const shake =
+      turn.rolls === 0 ? turn.dice.map((_, i) => i >= presetFaces.length) : sendKeep.map((k) => !k);
+    startShake(shake);
+    sendRolling({ turn: turnId, rolls: turn.rolls, shake });
     const ok = await run({
       type: "roll",
       gameId: game.id,
@@ -195,6 +234,7 @@ export function OnlineBoard({
       ...(turn.rolls === 0 && presetFaces.length > 0 ? { preset: presetFaces } : {}),
     });
     if (ok) sendHolds({ turn: turnId, rolls: turn.rolls + 1, keep });
+    else stopShake(0);
   };
 
   const score = async () => {
@@ -202,55 +242,101 @@ export function OnlineBoard({
     await run({ type: "score", gameId: game.id, field: selected });
   };
 
-  const onCell = (seat: number, field: string) => {
-    const filled = state.seats[seat].points[field] !== undefined;
-    if (seat === mySeat && myTurn && !filled) {
-      if (digital && preview?.[field]) setSelected((s) => (s === field ? null : field));
-    }
-  };
-
   const wunder = wunderFieldOf(state.gamemode);
-  const asCell = (value: string): Cell => (value === "X" ? "X" : Number(value));
+  const isBattle = state.gamemode === "Battle";
 
-  /** Real dice: the value picker for a cell, as on the paper-style sheet. */
-  const cellPicker = (seat: number, field: string): CellPicker | null => {
-    if (digital || !running) return null;
-    const value = state.seats[seat].points[field];
-    const shown = value === undefined ? "" : String(value);
-    const options = fieldOptions(state.gamemode, field);
-    if (seat === mySeat && myTurn) {
-      if (value === undefined && tappable.has(field)) {
-        return {
-          options,
-          value: "",
-          onChange: (v) => {
-            if (v !== "reset") void run({ type: "score", gameId: game.id, field, value: asCell(v), extraWunder: pendingExtra });
-          },
-        };
-      }
-      if (wunder && field === wunder.key && typeof value === "number" && canAddExtraWunder(state)) {
-        return {
-          options: [value + wunder.base],
-          value: pendingExtra ? String(value + wunder.base) : shown,
-          resettable: pendingExtra,
-          pending: pendingExtra,
-          onChange: (v) => setPendingExtra(v !== "reset" && v !== "X"),
-        };
-      }
+  /** Real dice: whether a cell opens the value picker for this account. */
+  const editable = (seatIndex: number, key: string) => {
+    if (digital || !running) return false;
+    const value = state.seats[seatIndex].points[key];
+    if (seatIndex === mySeat && myTurn) {
+      if (value === undefined && tappable.has(key)) return true;
+      if (wunder && key === wunder.key && typeof value === "number" && canAddExtraWunder(state)) return true;
     }
-    if (isHost && value !== undefined) {
-      return {
-        options,
-        value: shown,
-        onChange: (v) => {
-          if (v !== "reset" && v !== shown) {
-            void run({ type: "correct", gameId: game.id, userId: state.seats[seat].userId, field, value: asCell(v) });
-          }
-        },
-      };
-    }
-    return null;
+    return isHost && value !== undefined;
   };
+
+  /** A value picked on a card (real dice): an entry, an extra Wunder or the host's correction. */
+  const pickValue = (seatIndex: number, points: Record<string, number | "X">) => {
+    const [key, picked] = Object.entries(points)[0] ?? [];
+    if (key === undefined || picked === undefined) return;
+    const seat = state.seats[seatIndex];
+    const value = seat.points[key];
+    if (seatIndex === mySeat && myTurn) {
+      if (value === undefined) {
+        if (picked !== 0) void run({ type: "score", gameId: game.id, field: key, value: picked as Cell, extraWunder: pendingExtra });
+        return;
+      }
+      if (wunder && key === wunder.key && canAddExtraWunder(state)) {
+        setPendingExtra(typeof picked === "number" && typeof value === "number" && picked > value);
+        return;
+      }
+    }
+    if (isHost && value !== undefined && picked !== 0 && picked !== value) {
+      void run({ type: "correct", gameId: game.id, userId: seat.userId, field: key, value: picked as Cell });
+    }
+  };
+
+  /** Fields that are not a picker: read-only values, or the digital dice's "+12" to tap. */
+  const fieldFor = (seatIndex: number, field: { key: string; label: string }, cellClass: string) => {
+    if (editable(seatIndex, field.key)) return undefined;
+    const value = state.seats[seatIndex].points[field.key];
+    const pill = cn(
+      "flex w-full items-center gap-2 rounded-full border border-input shadow-xs transition-colors",
+      compact ? "px-3 py-1.5 text-sm" : "px-4 py-1.5 text-base",
+      cellClass,
+    );
+    const entry = seatIndex === mySeat ? preview?.[field.key] : null;
+    if (value === undefined && entry) {
+      const points = entry.value === "X" ? null : entry.doubled ? entry.value * 2 : entry.value;
+      return (
+        <button
+          type="button"
+          onClick={() => setSelected((s) => (s === field.key ? null : field.key))}
+          className={cn(pill, "text-left", selected === field.key && "ring-2 ring-brand-accent")}
+        >
+          <span className={cn("shrink-0 font-bold tabular-nums", points ? "text-brand-accent" : "opacity-40")}>
+            {points ? `+${points}` : "❌"}
+          </span>
+          <span className="truncate text-muted-foreground">{field.label}</span>
+        </button>
+      );
+    }
+    return (
+      <div className={pill}>
+        <span className={cn("truncate", value === undefined && "text-muted-foreground")}>
+          {value === undefined ? field.label : value === "X" ? "❌" : value}
+        </span>
+      </div>
+    );
+  };
+
+  // Cards in turn order starting with the own one, as around a table.
+  const order = state.seats
+    .map((_, i) => i)
+    .sort((a, b) => {
+      const from = mySeat === -1 ? 0 : mySeat;
+      const n = state.seats.length;
+      return ((a - from + n) % n) - ((b - from + n) % n);
+    });
+
+  // Compact cards on phones, as in the normal game, unless chosen otherwise there.
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    setCompact(hasStoredCompactMode() ? loadCompactMode() : window.innerWidth < 640);
+  }, []);
+
+  // Bring the card of the player on turn into view when the turn passes.
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  useEffect(() => {
+    const container = document.getElementById("online-cards");
+    const card = cardRefs.current[current?.userId ?? ""];
+    if (!container || !card || !running) return;
+    container.scrollTo({
+      left: card.offsetLeft - container.offsetLeft - container.clientWidth / 2 + card.offsetWidth / 2,
+      behavior: "smooth",
+    });
+  }, [turnId, running, current?.userId]);
 
   const selectedEntry = selected ? preview?.[selected] : null;
   const selectedInfo =
@@ -398,10 +484,9 @@ export function OnlineBoard({
         }
       />
 
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4">
-
+      <div className="flex w-full flex-1 flex-col gap-3 pb-4">
         {mission && (
-          <Card className="gap-1 p-3 text-center text-sm">
+          <Card className="mx-4 gap-1 p-3 text-center text-sm">
             <p className="font-bold">
               Mission {mySeat === state.current ? "für dich" : `für ${current?.name}`}: {mission.diceRule}
             </p>
@@ -411,7 +496,7 @@ export function OnlineBoard({
 
         {finished &&
           (revealed ? (
-            <Card className="gap-2 p-4">
+            <Card className="mx-4 gap-2 p-4">
               {ranking.map((p, i) => (
                 <div key={p.id} className="flex items-center justify-between font-semibold">
                   <span>
@@ -423,7 +508,7 @@ export function OnlineBoard({
               <p className="text-xs text-muted-foreground">Steht jetzt in deinem Yatzy-Verlauf.</p>
             </Card>
           ) : (
-            <Card className="gap-3 p-4 text-center">
+            <Card className="mx-4 gap-3 p-4 text-center">
               <p className="font-bold">Spiel vorbei!</p>
               {isHost ? (
                 <>
@@ -442,19 +527,67 @@ export function OnlineBoard({
             </Card>
           ))}
 
-        <OnlineSheet
-          state={state}
-          mySeat={mySeat}
-          preview={preview}
-          tappable={tappable}
-          selected={selected}
-          correctable={isHost && running && !digital}
-          hideTotals={!revealed}
-          onCell={onCell}
-          picker={cellPicker}
-        />
+        <div
+          id="online-cards"
+          className="no-scrollbar snap-x snap-mandatory overflow-x-auto px-4"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <div className="flex flex-row gap-4 py-1">
+            {order.map((seatIndex) => {
+              const seat = state.seats[seatIndex];
+              const points = Object.fromEntries(
+                fieldKeys(state).map((key) => [key, seat.points[key] ?? 0]),
+              ) as Record<string, number | "X">;
+              if (seatIndex === mySeat && pendingExtra && wunder) {
+                points[wunder.key] = (points[wunder.key] as number) + wunder.base;
+              }
+              const onTurn = running && seatIndex === state.current;
+              return (
+                <div
+                  key={seat.userId}
+                  ref={(el) => {
+                    cardRefs.current[seat.userId] = el;
+                  }}
+                  className={cn(
+                    "snap-center flex-1 basis-0 min-w-[150px] rounded-xl",
+                    onTurn && "ring-2 ring-brand-accent",
+                    seat.left && "opacity-60",
+                  )}
+                >
+                  <PlayerCard
+                    playerName={seat.name}
+                    playerPoints={points}
+                    updatePoints={(p) => pickValue(seatIndex, p)}
+                    resetPoints={() => {}}
+                    removePlayer={() => {}}
+                    changeName={() => {}}
+                    moveToRight={() => {}}
+                    moveToLeft={() => {}}
+                    gamemode={state.gamemode}
+                    hideMenu
+                    badge={seat.left ? "weg" : onTurn ? "🎲 dran" : undefined}
+                    battleFieldStatus={
+                      isBattle
+                        ? Object.fromEntries(
+                            fieldKeys(state).map((key) => {
+                              const status = fieldStatus(state, seatIndex, key);
+                              return [key, status === "filled" ? "open" : status];
+                            }),
+                          )
+                        : undefined
+                    }
+                    doubledFields={new Set(seat.doubled)}
+                    compact={compact}
+                    renderField={(field, cellClass) => fieldFor(seatIndex, field, cellClass)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {running && (digital ? (
+          <div className="mx-auto w-full max-w-md px-4">
           <OnlineDice
             line={line}
             faces={faces}
@@ -474,8 +607,9 @@ export function OnlineBoard({
             selected={selectedInfo}
             onScore={score}
           />
+          </div>
         ) : (
-          <Card className="sticky bottom-2 z-10 p-3 text-sm">{line}</Card>
+          <Card className="sticky bottom-2 z-10 mx-4 p-3 text-sm">{line}</Card>
         ))}
       </div>
 
@@ -516,7 +650,7 @@ export function OnlineBoard({
             ))}
             {digital && (
               <p className="mt-2 text-muted-foreground">
-                Digitale Würfel: Die App würfelt und rechnet jedes Feld aus. Nach einem Wurf zeigt dein Blatt, was
+                Digitale Würfel: Die App würfelt und rechnet jedes Feld aus. Nach einem Wurf zeigt deine Karte, was
                 jedes Feld bekommen würde.
               </p>
             )}
