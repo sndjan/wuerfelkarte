@@ -24,7 +24,11 @@ export type PlayerLink = {
 };
 
 /** A match as another account's device recorded it, marked with that account's handle. */
-export type SharedMatch = StoredMatch<MatchPlayer> & { sharedBy?: string };
+export type SharedMatch = StoredMatch<MatchPlayer> & {
+  sharedBy?: string;
+  /** Played online: every player's account already has it. */
+  online?: boolean;
+};
 
 export type ShareRow = { recipientId: string; game: string; matchId: string; match: SharedMatch };
 
@@ -56,7 +60,8 @@ export const isStoredMatch = (value: unknown): value is SharedMatch => {
 /**
  * Every match this account recorded with a player it linked, which has not
  * been sent in this exact form yet. Matches received from someone else are
- * never passed on. The roster's current name counts, so a renamed player
+ * never passed on, and neither are online games, which every player's
+ * account records itself. The roster's current name counts, so a renamed player
  * keeps their link; matches are found by the name they were played under.
  */
 export function matchesToShare({
@@ -80,7 +85,7 @@ export function matchesToShare({
     const name = roster.find((p) => p.id === link.playerId)?.name ?? link.playerName;
     for (const [game, matches] of Object.entries(matchesByGame)) {
       for (const match of matches) {
-        if (!isStoredMatch(match) || match.sharedBy) continue;
+        if (!isStoredMatch(match) || match.sharedBy || match.online) continue;
         if (!match.players.some((p) => sameName(p.name, name))) continue;
         const key = `${game}/${match.id}/${link.inviteeId}`;
         const print = fingerprint(JSON.stringify(match));

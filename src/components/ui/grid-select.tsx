@@ -16,6 +16,8 @@ interface GridSelectProps {
   className?: string;
   /** Denser padding, matching the player card's compact mode. */
   compact?: boolean;
+  /** Leaves out the reset button, for cells that cannot be emptied again. */
+  hideReset?: boolean;
   /** Renders a divider + icon button fused onto the pill's trailing edge. */
   quickFill?: {
     icon: React.ReactNode;
@@ -111,6 +113,7 @@ function GridSelect({
   disabled,
   className,
   compact,
+  hideReset = false,
   quickFill,
 }: GridSelectProps) {
   const [open, setOpen] = useState(false);
@@ -303,16 +306,18 @@ function GridSelect({
                 );
               })}
             </div>
-            <div className="flex items-center justify-between gap-2 p-3 pt-0">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="rounded-full"
-                onClick={() => select("reset")}
-              >
-                <RotateCcw />
-              </Button>
+            <div className={cn("flex items-center gap-2 p-3 pt-0", hideReset ? "justify-end" : "justify-between")}>
+              {!hideReset && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => select("reset")}
+                >
+                  <RotateCcw />
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"

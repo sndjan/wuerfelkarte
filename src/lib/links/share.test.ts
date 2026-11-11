@@ -95,6 +95,17 @@ describe("matchesToShare", () => {
     });
     expect(rows).toEqual([]);
   });
+
+  it("leaves online games alone: every account recorded them already", () => {
+    const { rows } = matchesToShare({
+      userId: JAN,
+      links: [link()],
+      roster,
+      matchesByGame: { yatzy: [{ ...match("a", ["Tim"]), online: true }] },
+      sent: {},
+    });
+    expect(rows).toEqual([]);
+  });
 });
 
 describe("receiveMatches", () => {

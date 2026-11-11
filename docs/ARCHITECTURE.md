@@ -92,6 +92,7 @@ configuration language, not less code.
 | `wuerfelkarte:sync` | The account sync's bookkeeping: user, cursor, dirty keys |
 | `wuerfelkarte:sharing` | Linked players: matches already sent, newest received |
 | `wuerfelkarte:self` | The roster entry that is the signed-in user (synced) |
+| `online:saved` | Online games already written into the Yatzy history on this device |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key
@@ -194,6 +195,61 @@ migration `20261110130000_player_links.sql`):
 Either side can end a link; the shared rows go with it, copies already in the
 other history stay. Profiles are readable only by the account itself and
 accounts linked with it; looking up an ID happens inside `invite_player`.
+
+## Kniffel Online
+
+`/online` and `/online/[id]` (`src/games/online/`) play Yatzy with linked
+accounts, each on their own device. Unlike every other game it lives on the
+server, not in localStorage.
+
+- **Rules** (`engine.ts`, `dice.ts`, `missions.ts`): pure functions over one
+  JSON state — seats with their points, whose turn it is, the dice of the
+  turn. `dice.ts` scores dice per field for every mode (3 dice in Mini, 6 in
+  Super, sixes as jokers); `missions.ts` reads the Chaoswunder missions as
+  dice rules (max rolls, faces that stay, keep-one, all-at-once, even/odd,
+  extra rolls, two preset dice, joker). The engine enforces Battle (claimed
+  fields are blocked, crossed ones forced, a forced success counts double)
+  and the extra-Wunder rule of Wunder+ and Battle (+50 in the Wunder box,
+  entry only in a fitting field or a crossed one). The board runs the same
+  functions to show what each field would score.
+- **Tables** (`supabase/migrations/20261111120000_online_games.sql`):
+  `online_games` (settings, `state` jsonb, a `version` for optimistic
+  writes) and `online_game_players` (invited / accepted / left, and an
+  `active` flag with a partial unique index: one game at a time). RLS lets
+  participants read; nobody writes from the browser.
+- **Server** (`server.ts`, route `src/app/api/online/route.ts`): every action
+  — create, invite, respond, start, roll, score, correct, leave, remove,
+  cancel — is a POST with the user's access token. The route checks it,
+  validates the move with the engine, rolls with `crypto.getRandomValues`
+  and writes with the secret key (`SUPABASE_SECRET_KEY`), retrying when the
+  `version` moved in between. `server.test.ts` runs the flows against an
+  in-memory stand-in (`fakeDb.ts`).
+- **Who can be invited**: accounts with an accepted player link, either
+  way. Someone in a lobby or running game is shown as „spielt gerade“ and
+  cannot be invited; accepting an invite or hosting drops one's other
+  invites. Starting withdraws unanswered invites and shuffles the seats.
+- **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
+  tables, a broadcast channel per game for the dice the player on turn is
+  holding, plus a reload on focus and a slow poll as a safety net.
+- **Real dice**: cells are filled with the same `GridSelect` picker as the
+  Yatzy sheet (without the reset button: an entry ends the turn). An extra
+  Wunder is picked on the own Wunder cell (50 → 100) and sent with the next
+  entry.
+- **Leaving**: a player can leave and the host can take someone out; their
+  column stays as it is and the turn skips them. The host role passes on if
+  the host leaves. Only the host can correct a cell, and only with real dice.
+- **Hidden scores**: the board shows every cell but no totals or
+  ranking (the bonus progress, e.g. 35/63, stays) until the host starts the scoreboard (🏆, action
+  `reveal`, sets `state.revealedAt`) — during the game after a confirmation,
+  or once it is over. It then opens for everyone watching.
+- **History**: a finished game is written into each player's
+  `yatzy:matches` (`toMatch`, marked `online: true`) the next time their app
+  sees it; `online:saved` remembers it per device so a deleted entry stays
+  deleted. Online matches are not passed through `shared_matches`, since
+  every player's account records them itself.
+
+Not yet: push notifications. Invites and „Du bist dran“ show in the app
+(home page and `/online`).
 
 ## Adding a game
 

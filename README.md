@@ -49,6 +49,21 @@ That needs `supabase/migrations/20261110130000_player_links.sql` (after the
 user_storage one); without it the section on `/konto` says it is not set up
 yet.
 
+### Kniffel Online
+
+`/online` plays Yatzy (every mode) with linked accounts, each on their own
+phone, with digital dice the server rolls or with real dice entered by hand.
+Setup:
+
+1. Run `supabase/migrations/20261111120000_online_games.sql` (after the
+   player_links one). It also adds both tables to the `supabase_realtime`
+   publication; check under **Database → Publications** that they are listed.
+2. In the hosting (Vercel) environment, set `SUPABASE_SECRET_KEY` to the
+   project's secret key (**Project Settings → API Keys**, `sb_secret_…`; the
+   legacy `service_role` key works too, also as `SUPABASE_SERVICE_ROLE_KEY`).
+   It is only read on the server by `/api/online`, never sent to the browser.
+   Without it the page says online games are not set up yet.
+
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it
 by cascade. The games on the device stay.
@@ -77,6 +92,11 @@ by cascade. The games on the device stay.
   the time plus one second per expected point a decision gives away, so it
   measures how well you decide, not how lucky the dice were. Any%, Klassisch
   and a daily Tagesrun on dice everyone shares.
+- **Kniffel Online** — Yatzy in every mode with linked accounts on their own
+  phones: invite up to five, play live or one move at a time, with dice the
+  server rolls (the app scores every field, Battle and Chaoswunder missions
+  included) or real dice entered by hand. Totals stay hidden until the host
+  starts the scoreboard. Results land in everyone's Yatzy history.
 - **Darts** — X01 on a clickable board, with legs, checkout suggestions and
   three-dart averages.
 

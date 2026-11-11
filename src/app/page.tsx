@@ -14,6 +14,7 @@ import { loadRunningGames } from "@/games/runningGames";
 import { games } from "@/games/registry";
 import { GameTile } from "@/games/GameTile";
 import { QuizTile } from "@/games/quiz/components/QuizTile";
+import { OnlineBanner } from "@/games/online/components/OnlineBanner";
 
 const matchesQuery = (game: (typeof games)[number], query: string): boolean => {
   const haystack = [game.name, ...(game.alternativeNames ?? [])];
@@ -46,6 +47,7 @@ export default function GamesOverview() {
       />
       <InstallPwaBanner />
       <div className="mx-auto max-w-md px-4 py-6">
+        <OnlineBanner />
         {runningGames.length > 0 && (
           <div className="mb-6 flex flex-col gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
