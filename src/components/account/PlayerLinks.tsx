@@ -6,11 +6,22 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { activePlayers, loadRoster } from "@/games/shared/roster";
+import { activePlayers, loadRoster, saveRoster } from "@/games/shared/roster";
 import type { RosterPlayer } from "@/games/shared/types";
-import { acceptLink, invitePlayer, removeLink } from "@/lib/links/api";
+import {
+  acceptLink,
+  invitePlayer,
+  linkBack,
+  removeLink,
+} from "@/lib/links/api";
+import { entryFor, linkedEntries } from "@/lib/links/entries";
 import { loadSelfPlayerId, saveSelfPlayerId } from "@/lib/links/self";
-import { handleOf, type PlayerLink, type Profile } from "@/lib/links/share";
+import {
+  handleOf,
+  sameName,
+  type PlayerLink,
+  type Profile,
+} from "@/lib/links/share";
 import { getSupabase } from "@/lib/supabase";
 import { syncNow } from "@/lib/sync/client";
 import { useSyncRefresh } from "@/lib/sync/useSyncRefresh";
@@ -170,12 +181,53 @@ function InviteForm({
   );
 }
 
+const NEW_ENTRY = "new";
+
+/** "Wer ist das?": an existing roster entry for the inviter, or a new one. */
+function WhoIsIt({
+  options,
+  value,
+  onChange,
+}: {
+  options: RosterPlayer[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const chip = (id: string, label: string) => (
+    <button
+      key={id}
+      type="button"
+      role="radio"
+      aria-checked={value === id}
+      onClick={() => onChange(id)}
+      className={
+        value === id
+          ? "h-9 rounded-full bg-primary px-3 text-sm font-bold text-primary-foreground"
+          : "h-9 rounded-full border bg-card px-3 text-sm font-bold"
+      }
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs font-bold">Wer ist das bei dir?</p>
+      <div role="radiogroup" className="flex flex-wrap gap-1.5">
+        {options.map((p) => chip(p.id, `${p.emoji} ${p.name}`))}
+        {chip(NEW_ENTRY, "+ Neu")}
+      </div>
+    </div>
+  );
+}
+
 export function PlayerLinks({ user }: { user: User }) {
   const { links, reload } = usePlayerLinks(user.id);
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
   const [selfId, setSelfId] = useState<string | null>(null);
   const [inviting, setInviting] = useState<RosterPlayer | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // Per invite: which roster entry is the inviter.
+  const [choices, setChoices] = useState<Record<string, string>>({});
 
   const readLocal = () => {
     setRoster(loadRoster());
@@ -206,9 +258,6 @@ export function PlayerLinks({ user }: { user: User }) {
   const { profiles } = links;
   const own = profiles.get(user.id);
   const invites = openInvites(links.links, user.id);
-  const linkedToMe = links.links.filter(
-    (l) => l.status === "accepted" && l.inviteeId === user.id,
-  );
   const mine = new Map(
     links.links
       .filter((l) => l.ownerId === user.id)
@@ -219,6 +268,31 @@ export function PlayerLinks({ user }: { user: User }) {
     roster.find((p) => p.id === selfId)?.name ??
     activePlayers(roster)[0]?.name ??
     "";
+
+  // Roster entries that could be the inviter: neither the user nor linked to anyone.
+  const taken = linkedEntries(links.links, user.id, selfId);
+  const candidates = roster.filter((p) => !taken.has(p.id));
+  const whoIs = (invite: PlayerLink) => {
+    const chosen = choices[invite.id];
+    if (chosen !== undefined) return chosen;
+    const name = profiles.get(invite.ownerId)?.name ?? "";
+    return candidates.find((p) => sameName(p.name, name))?.id ?? NEW_ENTRY;
+  };
+
+  // Links back right away with the entry the user picked; the sync then
+  // renames it and sends both histories.
+  const accept = async (invite: PlayerLink) => {
+    if (!(await acceptLink(supabase, invite.id))) return false;
+    const name = profiles.get(invite.ownerId)?.name ?? invite.playerName;
+    let playerId = whoIs(invite);
+    if (playerId === NEW_ENTRY) {
+      const entry = entryFor(roster, name, new Set(roster.map((p) => p.id)));
+      saveRoster(entry.roster);
+      setRoster(entry.roster);
+      playerId = entry.playerId;
+    }
+    return linkBack(supabase, invite.id, playerId, name);
+  };
 
   const act = async (id: string, action: () => Promise<boolean>) => {
     setBusy(id);
@@ -261,14 +335,19 @@ export function PlayerLinks({ user }: { user: User }) {
                 <b>{handleFor(profiles, invite.ownerId)}</b> will dich als{" "}
                 <b>„{invite.playerName}“</b> verknüpfen.
               </p>
+              <WhoIsIt
+                options={candidates}
+                value={whoIs(invite)}
+                onChange={(id) =>
+                  setChoices((prev) => ({ ...prev, [invite.id]: id }))
+                }
+              />
               <div className="flex gap-2">
                 <Button
                   type="button"
                   size="sm"
                   disabled={busy === invite.id}
-                  onClick={() =>
-                    void act(invite.id, () => acceptLink(supabase, invite.id))
-                  }
+                  onClick={() => void act(invite.id, () => accept(invite))}
                 >
                   <Check /> Annehmen
                 </Button>
@@ -365,35 +444,6 @@ export function PlayerLinks({ user }: { user: User }) {
           </ul>
         )}
       </Section>
-
-      {linkedToMe.length > 0 && (
-        <Section
-          title="Mit dir verknüpft"
-          hint="Ihre Spiele mit dir kommen zu dir."
-        >
-          <ul className="flex flex-col divide-y">
-            {linkedToMe.map((link) => (
-              <li key={link.id} className="flex items-center gap-3 py-2">
-                <p className="min-w-0 flex-1 truncate text-sm font-bold">
-                  {handleFor(profiles, link.ownerId)}
-                </p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Verknüpfung mit ${handleFor(profiles, link.ownerId)} lösen`}
-                  disabled={busy === link.id}
-                  onClick={() =>
-                    void act(link.id, () => removeLink(supabase, link.id))
-                  }
-                >
-                  <X />
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
     </>
   );
 }

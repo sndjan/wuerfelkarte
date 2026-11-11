@@ -2,13 +2,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { loadRoster, saveRoster } from "@/games/shared/roster";
 import { readJSON, removeKey, writeJSON } from "@/games/shared/storage";
-import { LinksUnavailableError, fetchLinkState, isMissingTable } from "./api";
+import { LinksUnavailableError, fetchLinkState, isMissingTable, linkBack, type LinkState } from "./api";
+import { entryFor, findSelf, linkedEntries, missingWaysBack } from "./entries";
 import { accountRenames, renameIn, type RenameNotice } from "./names";
-import { loadSelfPlayerId } from "./self";
+import { loadSelfPlayerId, saveSelfPlayerId } from "./self";
 import { SHARED_GAMES, handleOf, matchesToShare, receiveMatches, type SharedMatch } from "./share";
 
 /**
- * Runs after each account sync: gives linked players (and the user's own
+ * Runs after each account sync: makes sure every linked account has a roster
+ * entry here (links go both ways), gives linked players (and the user's own
  * roster entry) their account names, sends matches with linked players to
  * their accounts and adds matches others sent here to the local history
  * (which the account sync then carries to this user's other devices).
@@ -44,7 +46,7 @@ const RENAMED_KEYS = [
 /** Writes account names into the roster, histories and running games. */
 function applyAccountNames(
   userId: string,
-  linkState: Awaited<ReturnType<typeof fetchLinkState>>,
+  linkState: LinkState,
 ): { changed: boolean; notices: RenameNotice[] } {
   const roster = loadRoster();
   const { roster: renamed, names, notices } = accountRenames({
@@ -70,6 +72,42 @@ function applyAccountNames(
   return { changed, notices };
 }
 
+/**
+ * Gives each accepted invite a way back: an entry in this roster for the
+ * person who invited, recorded on the server. Also marks the user's own entry
+ * when one carries their account name.
+ */
+async function linkWaysBack(
+  client: SupabaseClient,
+  userId: string,
+  linkState: LinkState,
+): Promise<{ linked: boolean; rosterChanged: boolean }> {
+  let roster = loadRoster();
+  const before = roster;
+  let selfId = loadSelfPlayerId();
+  let selfFound = false;
+  const own = linkState.profiles.get(userId);
+  if (!selfId && own) {
+    selfId = findSelf(roster, own, linkedEntries(linkState.links, userId, null));
+    if (selfId) {
+      saveSelfPlayerId(selfId);
+      selfFound = true;
+    }
+  }
+
+  let linked = false;
+  for (const link of missingWaysBack(linkState.links, userId)) {
+    const name = linkState.profiles.get(link.ownerId)?.name;
+    if (!name) continue;
+    const entry = entryFor(roster, name, linkedEntries(linkState.links, userId, selfId));
+    roster = entry.roster;
+    if (roster !== before) saveRoster(roster);
+    if (await linkBack(client, link.id, entry.playerId, name)) linked = true;
+  }
+  // Open screens re-read the roster and who the user is.
+  return { linked, rosterChanged: roster !== before || selfFound };
+}
+
 export type SharingResult = { changed: boolean; notices: RenameNotice[] };
 
 /**
@@ -84,10 +122,13 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
     if (error instanceof LinksUnavailableError) return { changed: false, notices: [] };
     throw error;
   }
+  // Linked back, the new links decide the renames and the sharing below.
+  const waysBack = await linkWaysBack(client, userId, linkState);
+  if (waysBack.linked) linkState = await fetchLinkState(client);
   const { links, profiles } = linkState;
   let state = loadState(userId);
   const renamed = applyAccountNames(userId, linkState);
-  let changed = renamed.changed;
+  let changed = renamed.changed || waysBack.rosterChanged;
 
   const matchesByGame = Object.fromEntries(
     SHARED_GAMES.map((game) => [game, readJSON<SharedMatch[]>(matchesKey(game), [])]),

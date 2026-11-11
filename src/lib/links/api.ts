@@ -93,7 +93,22 @@ export async function acceptLink(client: SupabaseClient, linkId: string): Promis
   return !error;
 }
 
-/** Ends a link from either side, or declines an invite. */
+/** Records the owner of an accepted invite as one of this user's roster players. */
+export async function linkBack(
+  client: SupabaseClient,
+  linkId: string,
+  playerId: string,
+  playerName: string,
+): Promise<boolean> {
+  const { error } = await client.rpc("link_back", {
+    p_link_id: linkId,
+    p_player_id: playerId,
+    p_player_name: playerName,
+  });
+  return !error;
+}
+
+/** Ends a link from either side (both directions go), or declines an invite. */
 export async function removeLink(client: SupabaseClient, linkId: string): Promise<boolean> {
   const { error } = await client.from("player_links").delete().eq("id", linkId);
   return !error;
