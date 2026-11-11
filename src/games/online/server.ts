@@ -38,12 +38,37 @@ const deny = (code: string, status = 400): never => {
 
 let admin: SupabaseClient | null | undefined;
 
+/**
+ * Why a configured key cannot be the secret one, or null when it may be.
+ * A publishable or legacy anon key signs requests in as anon, which the
+ * tables refuse ("permission denied for table player_links").
+ */
+export function wrongKeyReason(key: string): string | null {
+  if (key.startsWith("sb_publishable_")) return "is the publishable key";
+  if (key.startsWith("sb_secret_")) return null;
+  const payload = key.split(".")[1];
+  if (!payload) return null;
+  try {
+    const { role } = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))) as { role?: string };
+    return role && role !== "service_role" ? `is a legacy key with role "${role}"` : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The client with the secret key, or null when the server has none. */
 export function getAdmin(): SupabaseClient | null {
   if (admin !== undefined) return admin;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
-  admin = url && key ? createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
+  const key = (process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)?.trim();
+  const wrong = key ? wrongKeyReason(key) : null;
+  if (wrong) {
+    console.error(`online api: SUPABASE_SECRET_KEY ${wrong}; it needs the secret key (sb_secret_…).`);
+  }
+  admin =
+    url && key && !wrong
+      ? createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } })
+      : null;
   return admin;
 }
 
@@ -52,6 +77,11 @@ const UNIQUE_VIOLATION = "23505";
 const check = <T>({ data, error }: { data: T; error: PostgrestError | null }): T => {
   if (error) {
     if (["42P01", "PGRST205"].includes(error.code)) deny("not set up", 503);
+    // 42501: the key lacks rights on a table (see 20261111140000_online_service_grants.sql).
+    if (error.code === "42501") {
+      console.error(`online api: ${error.message}. Run the online migrations and check SUPABASE_SECRET_KEY.`);
+      deny("not set up", 503);
+    }
     if (error.code === UNIQUE_VIOLATION) deny("busy", 409);
     throw new Error(error.message);
   }

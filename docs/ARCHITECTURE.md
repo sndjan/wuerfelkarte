@@ -220,7 +220,7 @@ server, not in localStorage.
   and the extra-Wunder rule of Wunder+ and Battle (+50 in the Wunder box,
   entry only in a fitting field or a crossed one). The board runs the same
   functions to show what each field would score.
-- **Tables** (`supabase/migrations/20261111120000_online_games.sql`):
+- **Tables** (`supabase/migrations/20261111130000_online_games.sql`):
   `online_games` (settings, `state` jsonb, a `version` for optimistic
   writes) and `online_game_players` (invited / accepted / left, and an
   `active` flag with a partial unique index: one game at a time). RLS lets

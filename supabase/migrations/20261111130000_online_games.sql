@@ -5,7 +5,7 @@
 -- to them over Realtime. Every write — creating, inviting, rolling, entering —
 -- goes through the app's /api/online route, which checks the move with the
 -- shared rules engine, rolls the dice itself and writes with the secret key.
--- Run after 20261110130000_player_links.sql.
+-- Run after 20261111120000_mutual_links.sql.
 
 create table if not exists public.online_games (
   id uuid primary key default gen_random_uuid(),

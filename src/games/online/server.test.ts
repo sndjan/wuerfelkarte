@@ -258,3 +258,16 @@ describe("leaving", () => {
 it("rejects malformed ids", async () => {
   expect(await code(act(JAN, { type: "start", gameId: "1; drop table" }))).toBe("bad request");
 });
+
+describe("wrongKeyReason", async () => {
+  const { wrongKeyReason } = await import("./server");
+  const jwt = (role: string) => `x.${btoa(JSON.stringify({ role })).replace(/=+$/, "")}.y`;
+  it("accepts secret and service_role keys", () => {
+    expect(wrongKeyReason("sb_secret_abc")).toBeNull();
+    expect(wrongKeyReason(jwt("service_role"))).toBeNull();
+  });
+  it("rejects publishable and anon keys", () => {
+    expect(wrongKeyReason("sb_publishable_abc")).toBe("is the publishable key");
+    expect(wrongKeyReason(jwt("anon"))).toBe('is a legacy key with role "anon"');
+  });
+});
