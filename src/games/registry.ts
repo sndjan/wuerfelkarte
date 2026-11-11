@@ -45,6 +45,14 @@ export const games: GameSummary[] = [
     alternativeNames: ["Speedrun", "Yatzy-Speedrun", "Zeitrennen", "Tagesrun"],
   },
   {
+    key: "online",
+    name: "Kniffel Online",
+    emoji: "🌐",
+    href: "/online",
+    locked: false,
+    alternativeNames: ["Online", "Multiplayer", "Yatzy online", "Kniffel mit Freunden"],
+  },
+  {
     key: "yatzy",
     name: "Yatzy",
     emoji: "🎲",
