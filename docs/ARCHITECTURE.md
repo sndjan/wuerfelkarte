@@ -231,6 +231,10 @@ server, not in localStorage.
 - **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
   tables, a broadcast channel per game for the dice the player on turn is
   holding, plus a reload on focus and a slow poll as a safety net.
+- **Real dice**: cells are filled with the same `GridSelect` picker as the
+  Yatzy sheet (without the reset button: an entry ends the turn). An extra
+  Wunder is picked on the own Wunder cell (50 → 100) and sent with the next
+  entry.
 - **Leaving**: a player can leave and the host can take someone out; their
   column stays as it is and the turn skips them. The host role passes on if
   the host leaves. Only the host can correct a cell, and only with real dice.

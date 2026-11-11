@@ -29,7 +29,7 @@ import { shareConfig } from "@/games/yatzy/config";
 import { gamemodes } from "@/games/yatzy/gamemodes";
 import { callOnline, OnlineError } from "../client";
 import { diceModeLabel } from "../config";
-import { fieldOptions } from "../dice";
+import { fieldOptions, wunderFieldOf } from "../dice";
 import {
   canAddExtraWunder,
   canKeep,
@@ -48,12 +48,9 @@ import {
 import type { LiveHolds } from "../hooks/useOnline";
 import type { GameRow } from "../types";
 import { OnlineDice } from "./OnlineDice";
-import { OnlineSheet } from "./OnlineSheet";
-import { Switch } from "./Switch";
+import { OnlineSheet, type CellPicker } from "./OnlineSheet";
 
 const errorText = (error: unknown) => (error instanceof OnlineError ? error.message : "Hat nicht geklappt.");
-
-type Picker = { mode: "enter"; field: string } | { mode: "correct"; seat: number; field: string };
 
 type Confirm = { title: string; text: string; run: () => Promise<void> };
 
@@ -94,8 +91,8 @@ export function OnlineBoard({
   const [preset, setPreset] = useState<(number | null)[]>([null, null]);
   const [selected, setSelected] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [picker, setPicker] = useState<Picker | null>(null);
-  const [extraWunder, setExtraWunder] = useState(false);
+  /** Real dice: an extra Wunder picked on the Wunder cell, sent with the next entry. */
+  const [pendingExtra, setPendingExtra] = useState(false);
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [rolling, setRolling] = useState<boolean[] | null>(null);
@@ -115,6 +112,7 @@ export function OnlineBoard({
     setKeep(turn.dice.map(() => false));
     setPreset([null, null]);
     setSelected(null);
+    setPendingExtra(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId]);
 
@@ -195,30 +193,51 @@ export function OnlineBoard({
   const onCell = (seat: number, field: string) => {
     const filled = state.seats[seat].points[field] !== undefined;
     if (seat === mySeat && myTurn && !filled) {
-      if (digital) {
-        if (preview?.[field]) setSelected((s) => (s === field ? null : field));
-      } else if (tappable.has(field)) {
-        setExtraWunder(false);
-        setPicker({ mode: "enter", field });
-      }
-      return;
+      if (digital && preview?.[field]) setSelected((s) => (s === field ? null : field));
     }
-    if (isHost && running && !digital && filled) setPicker({ mode: "correct", seat, field });
   };
 
-  const pick = async (value: Cell) => {
-    if (!picker) return;
-    const ok =
-      picker.mode === "enter"
-        ? await run({ type: "score", gameId: game.id, field: picker.field, value, extraWunder })
-        : await run({
-            type: "correct",
-            gameId: game.id,
-            userId: state.seats[picker.seat].userId,
-            field: picker.field,
-            value,
-          });
-    if (ok) setPicker(null);
+  const wunder = wunderFieldOf(state.gamemode);
+  const asCell = (value: string): Cell => (value === "X" ? "X" : Number(value));
+
+  /** Real dice: the value picker for a cell, as on the paper-style sheet. */
+  const cellPicker = (seat: number, field: string): CellPicker | null => {
+    if (digital || !running) return null;
+    const value = state.seats[seat].points[field];
+    const shown = value === undefined ? "" : String(value);
+    const options = fieldOptions(state.gamemode, field);
+    if (seat === mySeat && myTurn) {
+      if (value === undefined && tappable.has(field)) {
+        return {
+          options,
+          value: "",
+          onChange: (v) => {
+            if (v !== "reset") void run({ type: "score", gameId: game.id, field, value: asCell(v), extraWunder: pendingExtra });
+          },
+        };
+      }
+      if (wunder && field === wunder.key && typeof value === "number" && canAddExtraWunder(state)) {
+        return {
+          options: [value + wunder.base],
+          value: pendingExtra ? String(value + wunder.base) : shown,
+          resettable: pendingExtra,
+          pending: pendingExtra,
+          onChange: (v) => setPendingExtra(v !== "reset" && v !== "X"),
+        };
+      }
+    }
+    if (isHost && value !== undefined) {
+      return {
+        options,
+        value: shown,
+        onChange: (v) => {
+          if (v !== "reset" && v !== shown) {
+            void run({ type: "correct", gameId: game.id, userId: state.seats[seat].userId, field, value: asCell(v) });
+          }
+        },
+      };
+    }
+    return null;
   };
 
   const selectedEntry = selected ? preview?.[selected] : null;
@@ -247,7 +266,8 @@ export function OnlineBoard({
   if (finished) line = "Spiel vorbei.";
   else if (game.status === "cancelled") line = "Das Spiel wurde abgebrochen.";
   else if (!myTurn) line = <span>{current?.name} ist dran …</span>;
-  else if (!digital) line = <span className="font-semibold">Du bist dran: würfle und tippe ein Feld an.</span>;
+  else if (!digital && pendingExtra) line = <span className="font-semibold">Zusatz-Wunder: wähle jetzt ein passendes Feld.</span>;
+  else if (!digital) line = <span className="font-semibold">Du bist dran: würfle und trag ein Feld ein.</span>;
   else if (turn.rolls === 0) line = <span className="font-semibold">Du bist dran!</span>;
   else if (kind === null) line = <span className="font-semibold">Wähle ein Feld.</span>;
   else line = <span>Halte Würfel oder wähle ein Feld.</span>;
@@ -279,8 +299,6 @@ export function OnlineBoard({
   const trophyClass = finished
     ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
     : "rounded-full bg-white";
-
-  const pickerOptions = picker ? fieldOptions(state.gamemode, picker.field) : [];
 
   return (
     <>
@@ -432,6 +450,7 @@ export function OnlineBoard({
           correctable={isHost && running && !digital}
           hideTotals={!revealed}
           onCell={onCell}
+          picker={cellPicker}
         />
 
         {running && (digital ? (
@@ -458,38 +477,6 @@ export function OnlineBoard({
           <Card className="sticky bottom-2 z-10 p-3 text-sm">{line}</Card>
         ))}
       </div>
-
-      <Dialog open={picker !== null} onOpenChange={(open) => !open && setPicker(null)}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>
-              {picker && labelOf(state, picker.field)}
-              {picker?.mode === "correct" && ` · ${state.seats[picker.seat].name} korrigieren`}
-            </DialogTitle>
-            <DialogDescription>
-              {picker?.mode === "enter" ? "Was hast du gewürfelt?" : "Neuer Wert für dieses Feld."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-5 gap-2">
-            {pickerOptions.map((value) => (
-              <Button key={value} variant="outline" disabled={busy} onClick={() => pick(value)}>
-                {value}
-              </Button>
-            ))}
-          </div>
-          <Button variant="outline" disabled={busy} onClick={() => pick("X")}>
-            ❌ Streichen
-          </Button>
-          {picker?.mode === "enter" && canAddExtraWunder(state) && (
-            <Switch
-              title="Zusatz-Wunder (+50)"
-              hint="Ein weiteres Wunder: +50 im Wunder-Feld, dazu dieses passende Feld."
-              checked={extraWunder}
-              onToggle={() => setExtraWunder((v) => !v)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={confirm !== null} onOpenChange={(open) => !open && setConfirm(null)}>
         <DialogContent className="sm:max-w-[400px]">
