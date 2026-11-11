@@ -234,8 +234,8 @@ server, not in localStorage.
 - **Leaving**: a player can leave and the host can take someone out; their
   column stays as it is and the turn skips them. The host role passes on if
   the host leaves. Only the host can correct a cell, and only with real dice.
-- **Hidden scores**: the board shows every cell but no totals, bonus
-  progress or ranking until the host starts the scoreboard (🏆, action
+- **Hidden scores**: the board shows every cell but no totals or
+  ranking (the bonus progress, e.g. 35/63, stays) until the host starts the scoreboard (🏆, action
   `reveal`, sets `state.revealedAt`) — during the game after a confirmation,
   or once it is over. It then opens for everyone watching.
 - **History**: a finished game is written into each player's

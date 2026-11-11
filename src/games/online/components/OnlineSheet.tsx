@@ -16,7 +16,7 @@ type OnlineSheetProps = {
   selected: string | null;
   /** Cells the host may correct (real dice). */
   correctable: boolean;
-  /** Totals and bonus progress stay hidden until the host starts the scoreboard. */
+  /** Totals stay hidden until the host starts the scoreboard; the bonus progress stays visible. */
   hideTotals: boolean;
   onCell: (seat: number, field: string) => void;
 };
@@ -121,9 +121,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                     const reached = upper.sum >= upper.min;
                     return (
                       <td key={seat.userId} className="text-center text-xs tabular-nums">
-                        {hideTotals ? (
-                          <span className="text-muted-foreground">?</span>
-                        ) : reached ? (
+                        {reached ? (
                           <span className="rounded-full bg-green-800 px-1.5 py-0.5 font-bold text-white">
                             +{upper.bonus}
                           </span>
