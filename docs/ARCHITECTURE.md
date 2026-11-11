@@ -170,9 +170,17 @@ be linked to another account by that ID (`/konto` → „Mitspieler verknüpfen�
 migration `20261110130000_player_links.sql`):
 
 1. Jan enters „Tim#0193“ for his roster entry „Timmi“ (`invite_player`).
-2. Tim sees the invite under „Einladungen“ (a dot on the header button) and
-   accepts (`accept_player_link`) or declines (deletes it).
-3. After each account sync, `src/lib/links/runner.ts`:
+2. Tim sees the invite under „Einladungen“ (a dot on the header button),
+   picks which of his roster entries is Jan („Wer ist das bei dir?“, or a new
+   one) and accepts (`accept_player_link`, then `link_back`, migration
+   `20261111120000_mutual_links.sql`), or declines (deletes it). Links go both
+   ways from here: Tim's entry for Jan is linked to Jan's account, and ending
+   the link from either side ends both.
+3. After each account sync, on both sides, `src/lib/links/runner.ts`:
+   - links back any accepted invite that has no way back yet (an invite
+     accepted on an older version), using the entry named like the inviter or
+     a new one, and marks the user's own entry when one carries their account
+     name (`entries.ts`).
    - renames „Timmi“ in Jan's roster to Tim's account name, and every match,
      running game and Yatzy seating with „Timmi“ in it (`names.ts`). The old
      name goes into the roster entry's `formerNames`, so a match finished on a
