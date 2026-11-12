@@ -98,6 +98,45 @@ export function matchesToShare({
   return { rows, fingerprints };
 }
 
+const MAX_RECEIVED_BYTES = 20_000;
+const MAX_NAME = 60;
+
+const isCount = (value: unknown) => value === undefined || (typeof value === "number" && Number.isFinite(value));
+
+/**
+ * A match another account sent is checked harder than one this device
+ * wrote: it goes into the history, the statistics and the account sync, so a
+ * broken one would break those screens on every device of the user.
+ */
+export function isReceivable(game: string, value: unknown): value is SharedMatch {
+  if (!isStoredMatch(value)) return false;
+  let size: number;
+  try {
+    size = JSON.stringify(value).length;
+  } catch {
+    return false;
+  }
+  if (size > MAX_RECEIVED_BYTES) return false;
+  if (value.id.length === 0 || value.id.length > 64 || value.gamemode.length > 40) return false;
+  if (Number.isNaN(Date.parse(value.timestamp)) || !isCount(value.durationMs)) return false;
+  if (value.players.length === 0 || value.players.length > 20) return false;
+  return value.players.every((raw) => {
+    const player = raw as MatchPlayer & { points?: unknown; doubled?: unknown };
+    if (typeof player !== "object" || player.name.trim().length === 0 || player.name.length > MAX_NAME) return false;
+    if (typeof player.score !== "number" || !Number.isFinite(player.score)) return false;
+    if (player.emoji !== undefined && (typeof player.emoji !== "string" || player.emoji.length > 16)) return false;
+    if (game === "yatzy") {
+      const { points, doubled } = player;
+      // Matches from before the sheet was stored have no points.
+      if (points === undefined) return doubled === undefined;
+      if (typeof points !== "object" || points === null || Array.isArray(points)) return false;
+      if (!Object.values(points).every((v) => typeof v === "number" || typeof v === "string")) return false;
+      if (doubled !== undefined && !(Array.isArray(doubled) && doubled.every((f) => typeof f === "string"))) return false;
+    }
+    return true;
+  });
+}
+
 /**
  * Adds received matches to a history. A newer copy replaces an older received
  * one (the owner corrected a score); a match this device recorded itself is
@@ -106,10 +145,11 @@ export function matchesToShare({
 export function receiveMatches(
   local: SharedMatch[],
   incoming: { match: unknown; sharedBy: string }[],
+  game = "",
 ): SharedMatch[] {
   const byId = new Map(local.map((m) => [m.id, m]));
   for (const { match, sharedBy } of incoming) {
-    if (!isStoredMatch(match)) continue;
+    if (!isReceivable(game, match)) continue;
     const existing = byId.get(match.id);
     if (existing && !existing.sharedBy) continue;
     byId.set(match.id, { ...match, sharedBy });

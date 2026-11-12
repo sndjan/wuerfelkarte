@@ -48,7 +48,9 @@ every match and statistic, and matches with them also land in their history.
 Links go both ways, so both people get each other's matches. That needs
 `supabase/migrations/20261110130000_player_links.sql` and
 `20261111120000_mutual_links.sql` (after the user_storage one); without them
-the section on `/konto` says it is not set up yet.
+the section on `/konto` says it is not set up yet. Then run
+`20261112120000_shared_matches_limit.sql`, which caps how many matches one
+account can send another.
 
 ### Kniffel Online
 

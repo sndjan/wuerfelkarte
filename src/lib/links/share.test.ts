@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RosterPlayer } from "@/games/shared/types";
-import { matchesToShare, receiveMatches, type PlayerLink, type SharedMatch } from "./share";
+import { isReceivable, matchesToShare, receiveMatches, type PlayerLink, type SharedMatch } from "./share";
 
 const JAN = "jan-id";
 const TIM = "tim-id";
@@ -130,5 +130,34 @@ describe("receiveMatches", () => {
     expect(merged.find((m) => m.id === "a")?.durationMs).toBe(9);
     expect(merged.find((m) => m.id === "b")?.durationMs).toBeUndefined();
     expect(merged).toHaveLength(2);
+  });
+});
+
+describe("isReceivable", () => {
+  const good = match("a", ["Jan", "Tim"]);
+
+  it("takes a match as the games store it", () => {
+    expect(isReceivable("wizard", good)).toBe(true);
+    expect(isReceivable("yatzy", good)).toBe(true);
+    const sheet = { ...good.players[0], points: { Einser: 3, Chance: "X" }, doubled: ["Einser"] };
+    expect(isReceivable("yatzy", { ...good, players: [sheet] })).toBe(true);
+  });
+
+  it("refuses what would break the history or the statistics", () => {
+    const player = good.players[0];
+    const broken: unknown[] = [
+      { ...good, timestamp: "gestern" },
+      { ...good, id: "x".repeat(65) },
+      { ...good, players: [] },
+      { ...good, players: [{ ...player, score: "viel" }] },
+      { ...good, players: [{ ...player, score: Number.NaN }] },
+      { ...good, players: [{ ...player, name: " " }] },
+      { ...good, players: [{ ...player, name: "x".repeat(61) }] },
+      { ...good, players: ["Jan"] },
+      { ...good, filler: "x".repeat(20_000) },
+    ];
+    for (const value of broken) expect(isReceivable("wizard", value)).toBe(false);
+    expect(isReceivable("yatzy", { ...good, players: [{ ...player, points: [1, 2] }] })).toBe(false);
+    expect(isReceivable("yatzy", { ...good, players: [{ ...player, points: { Einser: {} } }] })).toBe(false);
   });
 });

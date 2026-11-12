@@ -193,7 +193,9 @@ export async function runSharing(client: SupabaseClient, userId: string): Promis
     if (incoming.length === 0) continue;
     const key = matchesKey(game);
     const before = JSON.stringify(readJSON(key, []));
-    const merged = receiveMatches(readJSON<SharedMatch[]>(key, []), incoming);
+    const local = readJSON<SharedMatch[]>(key, []);
+    if (!Array.isArray(local)) continue;
+    const merged = receiveMatches(local, incoming, game);
     if (JSON.stringify(merged) !== before) {
       writeJSON(key, merged);
       changed = true;
