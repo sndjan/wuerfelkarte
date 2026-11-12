@@ -127,6 +127,25 @@ export type GameLoad =
 /** What the player on turn holds before rolling, sent live to the others. */
 export type LiveHolds = { turn: string; rolls: number; keep: boolean[]; preset?: number[] };
 
+/**
+ * A broadcast is whatever another client sent, unchecked by the server, so
+ * only a well-formed one is shown.
+ */
+export function parseHolds(payload: unknown): LiveHolds | null {
+  const holds = payload as Partial<LiveHolds> | null;
+  if (typeof holds !== "object" || holds === null) return null;
+  if (typeof holds.turn !== "string" || holds.turn.length > 100 || !Number.isInteger(holds.rolls)) return null;
+  const { keep, preset } = holds;
+  if (!Array.isArray(keep) || keep.length > 6 || !keep.every((k) => typeof k === "boolean")) return null;
+  if (preset !== undefined) {
+    if (!Array.isArray(preset) || preset.length > 2) return null;
+    if (!preset.every((f) => Number.isInteger(f) && f >= 1 && f <= 6)) return null;
+  }
+  return { turn: holds.turn, rolls: holds.rolls as number, keep, ...(preset ? { preset } : {}) };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** One online game, live: the row, its players, and the live holds of the player on turn. */
 export function useOnlineGame(gameId: string) {
   const { user } = useAuth();
@@ -139,6 +158,11 @@ export function useOnlineGame(gameId: string) {
   const reload = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase || !userId) return;
+    // The id comes from the address bar and goes into queries and filters.
+    if (!UUID.test(gameId)) {
+      setLoad({ state: "gone" });
+      return;
+    }
     const [game, players] = await Promise.all([
       supabase.from("online_games").select("*").eq("id", gameId).maybeSingle(),
       supabase.from("online_game_players").select("*").eq("game_id", gameId).order("invited_at"),
@@ -172,6 +196,7 @@ export function useOnlineGame(gameId: string) {
     const supabase = getSupabase();
     if (!supabase || !userId) return;
     void reload();
+    if (!UUID.test(gameId)) return;
     const channel = supabase
       .channel(`online-game:${gameId}`, { config: { broadcast: { self: false } } })
       .on("postgres_changes", { event: "*", schema: "public", table: "online_games", filter: `id=eq.${gameId}` }, (payload) => {
@@ -180,7 +205,10 @@ export function useOnlineGame(gameId: string) {
         else throttled();
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "online_game_players", filter: `game_id=eq.${gameId}` }, throttled)
-      .on("broadcast", { event: "holds" }, ({ payload }) => setHolds(payload as LiveHolds))
+      .on("broadcast", { event: "holds" }, ({ payload }) => {
+        const next = parseHolds(payload);
+        if (next) setHolds(next);
+      })
       .subscribe();
     channelRef.current = channel;
     // Realtime can miss events (a sleeping phone); a slow poll catches up.

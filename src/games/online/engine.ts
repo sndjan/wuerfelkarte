@@ -113,7 +113,7 @@ export function newState({
   missionInterval?: 1 | 2;
   now?: number;
 }): OnlineState {
-  if (!(gamemode in gamemodes)) fail("unknown gamemode");
+  if (!Object.hasOwn(gamemodes, gamemode)) fail("unknown gamemode");
   return {
     gamemode,
     diceMode,
@@ -428,7 +428,8 @@ export function applyReveal(state: OnlineState, now: number = Date.now()): Onlin
 export function applyCorrection(state: OnlineState, seatIndex: number, field: string, value: Cell): OnlineState {
   if (state.diceMode !== "physical") fail("no corrections");
   const seat = state.seats[seatIndex];
-  if (!seat || !isFilled(seat.points[field])) fail("field not filled");
+  // Only the mode's own fields: "constructor" would pass as filled otherwise.
+  if (!seat || !fieldKeys(state).includes(field) || !isFilled(seat.points[field])) fail("field not filled");
   if (value !== "X" && !fieldOptions(state.gamemode, field).includes(value)) fail("bad value");
   const seats = state.seats.map((s, i) =>
     i === seatIndex

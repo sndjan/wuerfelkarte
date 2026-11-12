@@ -200,6 +200,10 @@ migration `20261110130000_player_links.sql`):
      devices; they count in the statistics and show as „Geteilt von …“ in the
      full history. Received matches are never passed on.
 
+A received match is another account's data, so `isReceivable` (`share.ts`)
+checks its shape and size before it joins the history, and
+`20261112120000_shared_matches_limit.sql` caps the rows per pair of accounts.
+
 Either side can end a link; the shared rows go with it, copies already in the
 other history stay. Profiles are readable only by the account itself and
 accounts linked with it; looking up an ID happens inside `invite_player`.

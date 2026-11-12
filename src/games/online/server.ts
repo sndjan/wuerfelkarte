@@ -218,6 +218,11 @@ function leaveRunning(game: GameRow, userId: string): Partial<GameRow> {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Bounds for the lists and names in a request; real ones are far below. */
+const MAX_IDS = 20;
+const MAX_DICE = 6;
+const MAX_FIELD = 40;
+
 /** The request body is untrusted: ids must be ids and lists must be lists. */
 function validate(action: OnlineAction) {
   const ids = [
@@ -227,10 +232,15 @@ function validate(action: OnlineAction) {
     ...("invitees" in action ? (Array.isArray(action.invitees) ? action.invitees : [null]) : []),
   ];
   if (ids.some((id) => id !== undefined && (typeof id !== "string" || !UUID.test(id)))) deny("bad request");
-  if ("field" in action && typeof action.field !== "string") deny("bad request");
+  if (ids.length > MAX_IDS) deny("bad request");
+  if ("field" in action && (typeof action.field !== "string" || action.field.length > MAX_FIELD)) deny("bad request");
   if (action.type === "roll") {
-    if (!Array.isArray(action.keep) || !action.keep.every((k) => typeof k === "boolean")) deny("bad request");
-    if (action.preset !== undefined && !Array.isArray(action.preset)) deny("bad request");
+    if (!Array.isArray(action.keep) || action.keep.length > MAX_DICE) deny("bad request");
+    if (!action.keep.every((k) => typeof k === "boolean")) deny("bad request");
+    if (action.preset !== undefined) {
+      if (!Array.isArray(action.preset) || action.preset.length > MAX_DICE) deny("bad request");
+      if (!action.preset.every((f) => typeof f === "number")) deny("bad request");
+    }
   }
 }
 
@@ -250,7 +260,8 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
 
     case "create": {
       const { gamemode, diceMode, invitees } = action;
-      if (!(gamemode in gamemodes)) deny("bad gamemode");
+      // An own key only: "constructor" is `in` every object, and would be stored.
+      if (typeof gamemode !== "string" || !Object.hasOwn(gamemodes, gamemode)) deny("bad gamemode");
       if (diceMode !== "digital" && diceMode !== "physical") deny("bad dice mode");
       const unique = [...new Set(invitees)];
       if (unique.length < 1 || unique.length > MAX_PLAYERS - 1 || unique.includes(uid)) deny("bad invitees");

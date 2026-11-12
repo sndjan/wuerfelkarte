@@ -106,6 +106,33 @@ describe("invites", () => {
   });
 });
 
+describe("untrusted requests", () => {
+  it("only takes a gamemode the app has", async () => {
+    for (const gamemode of ["constructor", "__proto__", "toString", ["Wunder"], 7]) {
+      const action = { type: "create", gamemode, diceMode: "digital", invitees: [TIM] } as unknown as OnlineAction;
+      expect(await code(act(JAN, action))).toBe("bad gamemode");
+    }
+    expect(db.tables.online_games ?? []).toHaveLength(0);
+  });
+
+  it("refuses oversized or mistyped dice lists", async () => {
+    const gameId = await startedGame();
+    const roll = (extra: object) => code(act(JAN, { type: "roll", gameId, ...extra } as unknown as OnlineAction));
+    expect(await roll({ keep: Array(7).fill(false) })).toBe("bad request");
+    expect(await roll({ keep: Array(5).fill(false), preset: ["6"] })).toBe("bad request");
+    expect(await roll({ keep: "nein" })).toBe("bad request");
+  });
+
+  it("corrects only fields of the sheet", async () => {
+    const gameId = await startedGame("physical");
+    const host = game(gameId).host_id;
+    for (const field of ["constructor", "__proto__", "toString"]) {
+      const action: OnlineAction = { type: "correct", gameId, userId: host, field, value: "X" };
+      expect(await code(act(host, action))).toBe("field not filled");
+    }
+  });
+});
+
 describe("starting", () => {
   it("needs someone who accepted and withdraws open invites", async () => {
     const { gameId } = await act<{ gameId: string }>(JAN, {
