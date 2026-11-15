@@ -26,12 +26,12 @@ export const CATEGORY_DESCRIPTIONS: Record<SpeedrunCategory, string> = {
     "Heute würfeln alle dieselben Würfel. Zeit plus eine Sekunde pro verschenktem Punkt – der erste Lauf des Tages zählt für den Vergleich.",
 };
 
-/** "1:31,2" — minutes, seconds and tenths. */
+/** "1:31,234" — minutes, seconds and milliseconds. */
 export function formatTime(ms: number): string {
-  const tenths = Math.max(0, Math.round(ms / 100));
-  const minutes = Math.floor(tenths / 600);
-  const seconds = Math.floor((tenths % 600) / 10);
-  return `${minutes}:${String(seconds).padStart(2, "0")},${tenths % 10}`;
+  const total = Math.max(0, Math.round(ms));
+  const minutes = Math.floor(total / 60_000);
+  const seconds = Math.floor((total % 60_000) / 1000);
+  return `${minutes}:${String(seconds).padStart(2, "0")},${String(total % 1000).padStart(3, "0")}`;
 }
 
 /** "12,6" — seconds with one decimal, for penalties. */
