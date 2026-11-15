@@ -67,7 +67,7 @@ export function PlayerChip({
         <span className="text-lg">{player.emoji}</span>
         <span className="font-semibold">{player.name}</span>
         {player.active && selectionNumber != null && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-green-800 text-xs font-bold text-white">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-brand-strong text-xs font-extrabold text-on-brand">
             {selectionNumber}
           </span>
         )}

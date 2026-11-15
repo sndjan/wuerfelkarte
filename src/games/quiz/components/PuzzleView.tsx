@@ -54,8 +54,8 @@ function StepVerdict({ step }: { step: PuzzleProgress["steps"][number] }) {
     <>
       <span
         className={cn(
-          "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums text-white",
-          loss >= 3 ? "bg-orange-500" : "bg-brand-badge",
+          "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums text-on-danger",
+          loss >= 3 ? "bg-danger" : "bg-brand-badge",
         )}
       >
         −{formatLoss(loss)}

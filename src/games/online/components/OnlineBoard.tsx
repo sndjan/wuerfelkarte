@@ -302,8 +302,8 @@ export function OnlineBoard({
       : void reveal();
 
   const trophyClass = finished
-    ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-    : "rounded-full bg-white";
+    ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+    : "rounded-full bg-surface";
 
   return (
     <>
@@ -332,7 +332,7 @@ export function OnlineBoard({
             ) : (
               <Button
                 variant="outline"
-                className="rounded-full bg-white"
+                className="rounded-full bg-surface"
                 disabled
                 title={`${hostName} startet die Auswertung`}
                 aria-label={`Punkte verdeckt, ${hostName} startet die Auswertung`}
@@ -342,7 +342,7 @@ export function OnlineBoard({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full bg-white" aria-label="Menü">
+                <Button variant="outline" size="icon" className="rounded-full bg-surface" aria-label="Menü">
                   <EllipsisVertical />
                 </Button>
               </DropdownMenuTrigger>
@@ -429,7 +429,7 @@ export function OnlineBoard({
                 <>
                   <p className="text-sm text-muted-foreground">Starte die Auswertung, dann sehen alle die Punkte.</p>
                   <Button
-                    className="bg-yellow-400 text-black hover:bg-yellow-300"
+                    className="bg-gold text-on-gold hover:bg-gold/90"
                     disabled={busy}
                     onClick={askReveal}
                   >

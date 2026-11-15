@@ -12,7 +12,7 @@ export function GameTile({ game }: { game: GameSummary }) {
         <span className="text-4xl opacity-50">{game.emoji}</span>
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-bold text-foreground">{game.name}</h2>
-          <span className="rounded-full bg-brand-badge px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.03em] text-white">
+          <span className="rounded-full bg-gold px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.03em] text-on-gold">
             Bald
           </span>
         </div>

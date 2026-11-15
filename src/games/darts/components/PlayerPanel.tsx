@@ -131,7 +131,7 @@ export function PlayerPanel({
               </p>
             )}
             {busted && (
-              <p className="text-xs font-bold text-red-700 dark:text-red-400">
+              <p className="text-xs font-bold text-danger">
                 💥 Überworfen — Rest bleibt bei {remaining}
               </p>
             )}

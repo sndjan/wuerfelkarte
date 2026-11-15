@@ -26,8 +26,8 @@ export function AccountButton() {
         size="icon"
         className={
           initial
-            ? "rounded-full border-brand-accent bg-brand-accent font-extrabold text-white hover:bg-brand-accent/90 hover:text-white"
-            : "rounded-full bg-white"
+            ? "rounded-full border-transparent bg-brand-soft text-xl hover:bg-brand-soft/80"
+            : "rounded-full bg-surface"
         }
       >
         <Link

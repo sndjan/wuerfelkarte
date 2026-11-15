@@ -187,8 +187,8 @@ export function Board() {
               onClick={() => setScoresOpen(true)}
               className={
                 finished
-                  ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-                  : "rounded-full bg-white"
+                  ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+                  : "rounded-full bg-surface"
               }
             >
               🏆

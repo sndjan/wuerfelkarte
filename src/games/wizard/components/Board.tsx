@@ -145,8 +145,8 @@ export function Board() {
                     variant="outline"
                     className={
                       finished
-                        ? "rounded-full dark:bg-yellow-400 bg-yellow-400 hover:bg-gray-500 dark:text-black"
-                        : "rounded-full bg-white"
+                        ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+                        : "rounded-full bg-surface"
                     }
                   >
                     🏆
@@ -159,7 +159,7 @@ export function Board() {
                 variant="outline"
                 disabled
                 title="Punktestand ist versteckt"
-                className="rounded-full bg-white"
+                className="rounded-full bg-surface"
               >
                 <Lock size={16} />
                 <span className="hidden sm:block">Versteckt</span>

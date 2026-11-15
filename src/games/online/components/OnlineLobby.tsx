@@ -132,7 +132,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
               {p.user_id === game.host_id ? (
                 <Badge>Gastgeber</Badge>
               ) : p.status === "accepted" ? (
-                <Badge className="bg-green-700">Dabei</Badge>
+                <Badge>Dabei</Badge>
               ) : (
                 <Badge variant="secondary">Eingeladen …</Badge>
               )}

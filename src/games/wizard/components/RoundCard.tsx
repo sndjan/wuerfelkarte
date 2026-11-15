@@ -116,7 +116,7 @@ export function RoundCard({
           return (
             <div
               key={player.id}
-              className="flex items-center justify-between gap-2 rounded-xl bg-white dark:bg-[#212121] px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2"
             >
               <span className="flex items-center gap-2 truncate">
                 <span className="font-semibold truncate">
@@ -130,7 +130,7 @@ export function RoundCard({
                 )}
                 {shifted && (
                   <span
-                    className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-800 dark:bg-sky-950 dark:text-sky-300"
+                    className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[.05em] text-ink"
                     title={`Wolke: Vorhersage ${bid} → ${adjustedBid}`}
                   >
                     {wolke.emoji} {bid} → {adjustedBid}
@@ -142,8 +142,8 @@ export function RoundCard({
                   <span
                     className={
                       score >= 0
-                        ? "text-xs font-bold text-green-700 dark:text-green-400"
-                        : "text-xs font-bold text-red-700 dark:text-red-400"
+                        ? "text-xs font-bold text-brand-strong"
+                        : "text-xs font-bold text-danger"
                     }
                   >
                     {score >= 0 ? `+${score}` : score}
@@ -171,7 +171,7 @@ export function RoundCard({
           role="switch"
           aria-checked={round.bombTrick === true}
           onClick={() => onSetBombTrick(round.bombTrick !== true)}
-          className="flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-[#212121] px-3 py-2 text-left"
+          className="flex items-center justify-between gap-4 rounded-xl bg-surface px-3 py-2 text-left"
         >
           <span>
             <span className="block text-sm font-semibold">
@@ -199,7 +199,7 @@ export function RoundCard({
       )}
 
       {phase === "tricks" && wolkeInPlay && (
-        <div className="flex flex-col gap-2 rounded-xl bg-white dark:bg-[#212121] px-3 py-2">
+        <div className="flex flex-col gap-2 rounded-xl bg-surface px-3 py-2">
           <span className="text-sm font-semibold">
             {wolke.emoji} Wolke bei
           </span>
@@ -224,7 +224,7 @@ export function RoundCard({
                 className={cn(
                   "rounded-full border px-3 py-1 text-sm font-semibold",
                   round.wolke?.playerId === player.id
-                    ? "border-transparent bg-brand-accent text-white"
+                    ? "border-transparent bg-brand-strong text-on-brand"
                     : "border-border text-foreground",
                 )}
               >
@@ -245,7 +245,7 @@ export function RoundCard({
                   className={cn(
                     "w-14 rounded-full border py-1 text-sm font-bold",
                     round.wolke?.delta === delta
-                      ? "border-transparent bg-brand-accent text-white"
+                      ? "border-transparent bg-brand-strong text-on-brand"
                       : "border-border text-foreground",
                   )}
                 >
@@ -269,13 +269,13 @@ export function RoundCard({
           )}
         </div>
         {plusMinusWarning && (
-          <div className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <div className="text-xs font-semibold text-ink">
             ⚠️ Die Summe der Vorhersagen entspricht der Rundenzahl — bei
             Plus/Minus Eins nicht erlaubt.
           </div>
         )}
         {trickSumWarning && (
-          <div className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+          <div className="text-xs font-semibold text-ink">
             ⚠️ Die Stichsumme ({trickSum(round)}) entspricht nicht der Anzahl der
             zu gewinnenden Stiche ({winnableTricks}). Bitte prüfen.
           </div>

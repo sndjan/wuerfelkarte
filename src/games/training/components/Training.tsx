@@ -43,7 +43,7 @@ export function Training() {
             size="icon"
             aria-label="Neues Spiel"
             onClick={() => setConfirmRestart(true)}
-            className="rounded-full bg-white"
+            className="rounded-full bg-surface"
           >
             <RotateCcw />
           </Button>

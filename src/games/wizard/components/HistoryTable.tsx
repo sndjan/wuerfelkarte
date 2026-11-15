@@ -75,8 +75,8 @@ export function HistoryTable({
                           className={cn(
                             "ml-1 font-semibold",
                             score >= 0
-                              ? "text-green-700 dark:text-green-400"
-                              : "text-red-700 dark:text-red-400",
+                              ? "text-brand-strong"
+                              : "text-danger",
                           )}
                         >
                           {score >= 0 ? `+${score}` : score}

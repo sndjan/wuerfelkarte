@@ -1,92 +1,119 @@
 @import "tailwindcss";
+@import "./wk.css";
 
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --radius: 0.625rem;
-  --background: #F1F7F2;
-  --foreground: #1B2A21;
-  --card: #FFFFFF;
-  --card-foreground: #1B2A21;
-  --popover: #FFFFFF;
-  --popover-foreground: #1B2A21;
-  --primary: #1B2A21;
-  --primary-foreground: #FFFFFF;
-  --secondary: #DCEBDF;
-  --secondary-foreground: #1B2A21;
-  --muted: #DCEBDF;
-  --muted-foreground: #8FA294;
-  --accent: #DCEBDF;
-  --accent-foreground: #1B2A21;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #DCEBDF;
-  --input: #DCEBDF;
-  --ring: #2F9161;
-  --brand-accent: #2F9161;
-  --brand-badge: #D9A93C;
-  --hairline: #E3EEE5;
+  /* Würfelkarte-Design-System (Artefakt „Würfelkarte“, tokens.json). Die alten
+     shadcn-Namen bleiben als Aliasse, damit bestehende Klassen weiter greifen. */
+  --bg: #F1F7F2;
+  --surface: #FFFFFF;
+  --surface-sunken: #DCEBDF;
+  --ink: #1B2A21;
+  --ink-muted: #55695C;
+  --on-primary: #FFFFFF;
+  --brand: #2F9161;
+  --brand-strong: #257A50;
+  --on-brand: #FFFFFF;
+  --brand-soft: #E0EFE7;
   --gold: #F2C230;
+  --on-gold: #1B2A21;
   --silver: #C9D2CC;
   --bronze: #CD7F32;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --danger: oklch(0.577 0.245 27.325);
+  --on-danger: #FFFFFF;
+  --danger-soft: #FEE2E2;
+  --border: #DCEBDF;
+  --border-strong: #7A8F80;
+  --hairline: #E3EEE5;
+  --overlay: rgba(0, 0, 0, 0.5);
+  --wk-shadow-raised: 0 1px 2px rgba(27, 42, 33, 0.06);
+  --wk-shadow-float: 0 10px 24px rgba(27, 42, 33, 0.14);
+  --wk-font-display: var(--font-baloo), "Nunito", system-ui, sans-serif;
+  --wk-font-body: var(--font-nunito), system-ui, sans-serif;
+  --wk-r-sm: 8px;
+  --wk-r-md: 14px;
+  --wk-r-lg: 20px;
+  --wk-r-full: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --control-sm: 36px;
+  --control-md: 44px;
+  --control-lg: 56px;
+  --tile-height: 150px;
+  --page-max: 448px;
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--on-primary);
+  --secondary: var(--surface-sunken);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-sunken);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--surface-sunken);
+  --accent-foreground: var(--ink);
+  --destructive: var(--danger);
+  --input: var(--border-strong);
+  --ring: var(--brand);
+  --focus: var(--brand);
+  --brand-accent: var(--brand);
+  --brand-badge: var(--gold);
 }
 
 .dark {
-  --background: #12201A;
-  --foreground: #F1F7F2;
-  --card: #1B2A21;
-  --card-foreground: #F1F7F2;
-  --popover: #1B2A21;
-  --popover-foreground: #F1F7F2;
-  --primary: #F1F7F2;
-  --primary-foreground: #1B2A21;
-  --secondary: #1E3A2A;
-  --secondary-foreground: #F1F7F2;
-  --muted: #1E3A2A;
-  --muted-foreground: #7FA08A;
-  --accent: #1E3A2A;
-  --accent-foreground: #F1F7F2;
-  --destructive: oklch(0.704 0.191 22.216);
+  --bg: #12201A;
+  --surface: #1B2A21;
+  --surface-sunken: #1E3A2A;
+  --ink: #F1F7F2;
+  --ink-muted: #8FB09A;
+  --on-primary: #1B2A21;
+  --brand: #4CB37E;
+  --brand-strong: #4CB37E;
+  --on-brand: #12201A;
+  --brand-soft: #223F2F;
+  --danger: oklch(0.704 0.191 22.216);
+  --on-danger: #12201A;
+  --danger-soft: #950606;
   --border: rgba(241, 247, 242, 0.12);
-  --input: rgba(241, 247, 242, 0.15);
-  --ring: #4CB37E;
-  --brand-accent: #4CB37E;
-  --brand-badge: #D9A93C;
+  --border-strong: rgba(241, 247, 242, 0.45);
   --hairline: rgba(241, 247, 242, 0.12);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Vier Radien: Zellen 8, Würfel und Tasten 14, Karten 20, alles Antippbare mit Text voll rund. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 20px;
+  --radius-2xl: 20px;
+  --font-display: var(--wk-font-display);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-on-primary: var(--on-primary);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-on-brand: var(--on-brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-gold: var(--on-gold);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-border-strong: var(--border-strong);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -111,19 +138,8 @@
   --color-gold: var(--gold);
   --color-silver: var(--silver);
   --color-bronze: var(--bronze);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --shadow-raised: var(--wk-shadow-raised);
+  --shadow-float: var(--wk-shadow-float);
 }
 
 @layer base {
@@ -132,6 +148,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
     font-family: var(--font-nunito), sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {

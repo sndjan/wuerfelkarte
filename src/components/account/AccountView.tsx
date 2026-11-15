@@ -119,7 +119,7 @@ export function AccountView({ user }: { user: User }) {
         <span
           className={cn(
             BALOO,
-            "flex size-20 items-center justify-center rounded-[24px] bg-brand-accent text-4xl font-extrabold text-white shadow-sm",
+            "flex size-20 items-center justify-center rounded-[24px] bg-brand-soft text-4xl font-extrabold text-ink shadow-sm",
           )}
           aria-hidden="true"
         >

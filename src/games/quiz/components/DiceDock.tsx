@@ -81,7 +81,7 @@ export function DiceDock({
           {aside}
           {selected ? (
             <Button
-              className="h-11 flex-1 bg-brand-accent text-base text-white hover:bg-brand-accent/90"
+              className="h-11 flex-1 bg-primary text-base text-on-primary hover:bg-primary/90"
               disabled={animating}
               onClick={onScore}
             >

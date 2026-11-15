@@ -70,7 +70,7 @@ export function HistoryTable({
                           <span
                             className={cn(
                               "font-semibold",
-                              score === 0 && "text-green-700 dark:text-green-400",
+                              score === 0 && "text-brand-strong",
                             )}
                           >
                             {entry?.specialHand && "👑 "}

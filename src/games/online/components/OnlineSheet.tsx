@@ -55,7 +55,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                 key={seat.userId}
                 className={cn(
                   "max-w-0 truncate rounded-full px-1 py-1 text-center font-bold",
-                  !finished && i === state.current && "bg-brand-accent text-white",
+                  !finished && i === state.current && "bg-brand-strong text-on-brand",
                   seat.left && "text-muted-foreground line-through",
                 )}
                 title={seat.name}
@@ -81,16 +81,16 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                   const pick = picker?.(i, key) ?? null;
                   const background =
                           value === "X"
-                            ? "bg-red-100 dark:bg-[#950606]"
+                            ? "bg-danger-soft"
                             : value !== undefined
-                              ? "bg-gray-100 dark:bg-[#2f2f2f]"
+                              ? "bg-surface-sunken"
                               : status === "blocked"
-                                ? "bg-gray-200 opacity-60 dark:bg-[#1a1a1a]"
+                                ? "bg-surface opacity-50"
                                 : status === "forced"
-                                  ? "bg-amber-100 ring-2 ring-amber-400 dark:bg-amber-950/40 dark:ring-amber-500"
-                                  : "bg-white dark:bg-[#212121]";
+                                  ? "bg-surface ring-2 ring-gold"
+                                  : "bg-surface";
                   const doubledBadge = doubled && (
-                    <span className="pointer-events-none absolute -right-1 -top-1 z-10 rounded-full bg-green-700 px-1 text-[10px] font-bold text-white">
+                    <span className="pointer-events-none absolute -right-1 -top-1 z-10 rounded-full bg-brand-strong px-1 text-[10px] font-extrabold text-on-brand">
                       ×2
                     </span>
                   );
@@ -145,7 +145,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                         ) : status === "blocked" ? (
                           <span className="text-xs">🔒</span>
                         ) : status === "forced" ? (
-                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">Pflicht</span>
+                          <span className="text-[10px] font-bold text-ink">Pflicht</span>
                         ) : null}
                       </button>
                     </td>
@@ -161,7 +161,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                     return (
                       <td key={seat.userId} className="text-center text-xs tabular-nums">
                         {reached ? (
-                          <span className="rounded-full bg-green-800 px-1.5 py-0.5 font-bold text-white">
+                          <span className="rounded-full bg-brand-strong px-1.5 py-0.5 font-bold text-on-brand">
                             +{upper.bonus}
                           </span>
                         ) : (

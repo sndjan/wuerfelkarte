@@ -134,7 +134,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
         className={`flex flex-row justify-between w-full items-center ${compact ? "mb-[-14px]" : ""}`}
       >
         <button
-          className={`z-20 min-w-0 flex-1 font-bold bg-white dark:bg-card rounded-md hover:bg-gray-100 dark:hover:bg-secondary transition-colors cursor-pointer text-left ${
+          className={`z-20 min-w-0 flex-1 font-bold bg-surface rounded-full hover:bg-surface-sunken transition-colors cursor-pointer text-left ${
             compact ? "px-2.5 py-1 text-sm" : "px-3 py-1.5"
           }`}
           onClick={() => !badge && setNameDialogOpen(true)}
@@ -194,14 +194,14 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
           const isDoubled = doubledFields?.has(key) ?? false;
           const cellClass =
             own === "X"
-              ? "bg-red-100 hover:bg-red-200 dark:bg-[#950606] dark:hover:bg-[#a40b0b]"
+              ? "bg-danger-soft"
               : !isOpen
-                ? "bg-gray-100 hover:bg-gray-200 dark:bg-[#2f2f2f] dark:hover:bg-[#3b3b3b]"
+                ? "bg-surface-sunken"
                 : status === "blocked"
-                  ? "bg-gray-200 text-muted-foreground opacity-60 ring-1 ring-inset ring-gray-300 dark:bg-[#1a1a1a] dark:ring-[#333]"
+                  ? "bg-surface text-muted-foreground opacity-50"
                   : status === "forced"
-                    ? "bg-amber-100 hover:bg-amber-200 ring-2 ring-amber-400 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 dark:ring-amber-500"
-                    : "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
+                    ? "bg-surface ring-2 ring-gold"
+                    : "bg-surface hover:bg-surface-sunken/40";
           const quickFillValue = config.quickFill?.[key];
           // Most fields only offer the quick-fill while empty, and disappear
           // once a value is entered. Only the "Wunder" box (50, 100, 150, …)
@@ -251,12 +251,12 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                   }
                 />
                 {isDoubled && (
-                  <Badge className="absolute right-8 top-1/2 -translate-y-1/2 z-20 bg-green-700 font-bold pointer-events-none">
+                  <Badge className="absolute right-8 top-1/2 -translate-y-1/2 z-20 bg-brand-strong pointer-events-none">
                     ×2
                   </Badge>
                 )}
                 {isOpen && !isDoubled && status === "forced" && (
-                  <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs font-bold text-amber-600 dark:text-amber-400 pointer-events-none">
+                  <span className="absolute right-8 top-1/2 -translate-y-1/2 z-20 text-xs font-bold text-ink pointer-events-none">
                     Pflicht
                   </span>
                 )}
@@ -295,7 +295,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
               >
                 {fieldElement}
                 <div
-                  className={`w-full z-20 bg-white dark:bg-card rounded-md ${
+                  className={`w-full z-20 bg-surface rounded-md ${
                     compact ? "my-2 px-3 py-1.5" : "my-3 px-3 py-2"
                   }`}
                 >
@@ -309,7 +309,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                       )}
                     </span>
                     {bonusReached && (
-                      <Badge className="bg-green-800 font-bold">
+                      <Badge>
                         +{config.bonus.bonus}
                       </Badge>
                     )}
@@ -319,8 +319,8 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                     className="mt-2"
                     indicatorClassName={
                       bonusReached
-                        ? "bg-green-800 dark:bg-green-700"
-                        : "bg-green-700 dark:bg-green-400"
+                        ? "bg-brand-strong"
+                        : "bg-brand"
                     }
                   />
                 </div>

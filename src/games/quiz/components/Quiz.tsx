@@ -60,7 +60,7 @@ export function Quiz({ date }: { date?: string }) {
             size="icon"
             aria-label="Tutorial anzeigen"
             onClick={() => setTutorialOpen(true)}
-            className="rounded-full bg-white"
+            className="rounded-full bg-surface"
           >
             <CircleHelp />
           </Button>
@@ -157,7 +157,7 @@ export function Quiz({ date }: { date?: string }) {
         ))}
       </div>
       {collected > 0 && (
-        <span className="shrink-0 rounded-full bg-brand-accent px-2.5 py-0.5 text-xs font-bold tabular-nums text-white">
+        <span className="shrink-0 rounded-full bg-brand-strong px-2.5 py-0.5 text-xs font-bold tabular-nums text-on-brand">
           +{collected}
         </span>
       )}

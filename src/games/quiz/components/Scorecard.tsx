@@ -30,9 +30,9 @@ const UPPER = CATEGORIES.slice(0, 6);
 // The same pill states as the Yatzy player card's fields. Exported for the
 // intro's preview of the card.
 export const pill = "flex w-full items-center justify-between gap-2 rounded-full border border-input px-4 py-1.5 text-base shadow-xs transition-colors";
-export const filledPill = "bg-gray-100 dark:bg-[#2f2f2f]";
-export const crossedPill = "bg-red-100 dark:bg-[#950606]";
-export const openPill = "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
+export const filledPill = "bg-surface-sunken";
+export const crossedPill = "bg-danger-soft";
+export const openPill = "bg-surface hover:bg-surface-sunken/40";
 
 /** The puzzle's scorecard, styled like a player's Wunder sheet. */
 export function Scorecard({
@@ -77,7 +77,7 @@ export function Scorecard({
           key={category}
           className={cn(
             fieldPill,
-            "bg-white dark:bg-[#212121]",
+            "bg-surface",
             selected === category && "border-brand-accent ring-2 ring-brand-accent",
           )}
         >
@@ -107,7 +107,7 @@ export function Scorecard({
   };
 
   const bonus = (
-    <div className={cn("w-full rounded-md bg-white dark:bg-card", split ? "px-1 pt-0.5" : "my-1 px-3 py-2")}>
+    <div className={cn("w-full rounded-md bg-surface", split ? "px-1 pt-0.5" : "my-1 px-3 py-2")}>
       <div className="flex items-center justify-center gap-2 font-bold">
         <span>
           {upperSum}
@@ -115,13 +115,13 @@ export function Scorecard({
             <span className="text-xs font-normal text-muted-foreground">/{upperBonusThreshold}</span>
           )}
         </span>
-        {bonusReached && <Badge className="bg-green-800 font-bold">+{upperBonus}</Badge>}
+        {bonusReached && <Badge>+{upperBonus}</Badge>}
       </div>
       <Progress
         value={(upperSum / upperBonusThreshold) * 100}
         className="mt-2"
         indicatorClassName={
-          bonusReached ? "bg-green-800 dark:bg-green-700" : "bg-green-700 dark:bg-green-400"
+          bonusReached ? "bg-brand-strong" : "bg-brand"
         }
       />
     </div>
@@ -150,7 +150,7 @@ export function Scorecard({
   if (bare) return <div className="flex flex-col gap-2">{fields}</div>;
   return (
     <Card className="flex flex-col gap-2 p-4">
-      <div className="mb-1 flex w-full items-center rounded-md bg-white px-3 py-1.5 font-bold dark:bg-card">
+      <div className="mb-1 flex w-full items-center rounded-md bg-surface px-3 py-1.5 font-bold">
         {title}
       </div>
       {fields}

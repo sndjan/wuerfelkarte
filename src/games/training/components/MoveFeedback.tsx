@@ -8,11 +8,11 @@ import { MoveRanking } from "@/games/quiz/components/PuzzleResult";
 import { VERDICT_LABELS, verdict, type Verdict } from "../game";
 
 const VERDICT_COLORS: Record<Verdict, string> = {
-  best: "bg-brand-accent text-white",
-  great: "bg-brand-accent text-white",
-  good: "bg-brand-badge text-white",
-  inaccurate: "bg-orange-500 text-white",
-  mistake: "bg-destructive text-white",
+  best: "bg-brand-strong text-on-brand",
+  great: "bg-brand-strong text-on-brand",
+  good: "bg-gold text-on-gold",
+  inaccurate: "bg-danger text-on-danger",
+  mistake: "bg-danger text-on-danger",
 };
 
 export const verdictColor = (loss: number) => VERDICT_COLORS[verdict(loss)];

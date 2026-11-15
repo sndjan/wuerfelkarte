@@ -24,7 +24,7 @@ export function GamemodePills<K extends string>({
           onClick={() => onChange(key)}
           className={
             value === key
-              ? "rounded-full border border-brand-accent bg-brand-accent px-4 py-2 font-semibold text-white"
+              ? "rounded-full border border-brand-strong bg-brand-strong px-4 py-2 font-bold text-on-brand"
               : "rounded-full border border-border bg-card px-4 py-2 font-semibold text-foreground"
           }
         >

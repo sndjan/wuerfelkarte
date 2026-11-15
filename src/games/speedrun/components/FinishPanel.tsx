@@ -108,7 +108,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
           {game.category === "daily" && !game.ranked && " · Übung"}
         </span>
         {newPb && (
-          <span className="mt-2 rounded-full bg-gold px-3 py-1 text-xs font-extrabold tracking-wide text-black uppercase">
+          <span className="mt-2 rounded-full bg-gold px-3 py-1 text-xs font-extrabold tracking-wide text-on-gold uppercase">
             {oldPb ? "Neue Bestzeit" : "Erste Bestzeit"}
           </span>
         )}
@@ -121,8 +121,8 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
         {oldPb && (
           <span
             className={cn(
-              "rounded-full px-3 py-0.5 text-lg font-bold tabular-nums text-white",
-              match.wertungMs < oldPb.wertungMs ? "bg-brand-accent" : "bg-orange-500",
+              "rounded-full px-3 py-0.5 text-lg font-bold tabular-nums",
+              match.wertungMs < oldPb.wertungMs ? "bg-brand-strong text-on-brand" : "bg-danger text-on-danger",
             )}
             style={{ fontFamily: "var(--font-baloo)" }}
           >
@@ -134,7 +134,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
           <Tile
             label={counted ? "Strafe" : "Strafe · zählt nicht"}
             value={`+${formatSeconds(counted ? match.strafeMs : stats.loss * STRAFE_MS_PER_POINT)}`}
-            className="text-orange-300 dark:text-orange-700"
+            className="text-danger"
           />
           <Tile
             label={counted ? "Karte · zählt nicht" : "Karte"}
@@ -147,7 +147,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
       <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 lg:max-w-5xl lg:px-8">
         <div className="flex flex-col gap-4 lg:mx-auto lg:w-full lg:max-w-md">
           <div className="grid grid-cols-2 gap-2">
-            <Button className="h-12 rounded-full bg-brand-accent text-lg text-white hover:bg-brand-accent/90" onClick={onAgain}>
+            <Button className="h-12 rounded-full text-lg" onClick={onAgain}>
               <RotateCcw className="size-5" />
               Nochmal
             </Button>
@@ -181,13 +181,13 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
                     {turn.points === 0 && <span className="text-muted-foreground"> ✕</span>}
                   </span>
                   <span className="flex w-5 justify-center">
-                    {isGold && <Star className="size-4 fill-gold text-yellow-600" aria-label="Goldsplit" />}
+                    {isGold && <Star className="size-4 fill-gold text-on-gold" aria-label="Goldsplit" />}
                   </span>
                   <span className="w-14 text-right text-[15px] font-bold">{formatTime(split)}</span>
                   <span
                     className={cn(
                       "w-12 text-right text-sm font-extrabold",
-                      delta === null ? "text-muted-foreground" : delta < 0 ? "text-brand-accent" : "text-orange-600",
+                      delta === null ? "text-muted-foreground" : delta < 0 ? "text-brand-accent" : "text-danger",
                     )}
                   >
                     {delta === null ? "" : formatDelta(delta)}
@@ -212,7 +212,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
                 <Stat
                   label={counted ? "Punkte verschenkt = Strafe" : "Punkte verschenkt"}
                   value={formatSeconds(stats.loss * 1000)}
-                  className="text-orange-600"
+                  className="text-danger"
                 />
               </div>
               <h3 className="mt-1 font-bold">Größte Fehler</h3>
@@ -225,7 +225,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
                       <span className="flex text-xs font-semibold text-muted-foreground">
                         Zug {turn}
                         {counted && (
-                          <span className="ml-auto font-extrabold text-orange-600 tabular-nums">
+                          <span className="ml-auto font-extrabold text-danger tabular-nums">
                             +{formatSeconds(step.loss * STRAFE_MS_PER_POINT)} s
                           </span>
                         )}

@@ -355,8 +355,8 @@ export function Board() {
                   variant="outline"
                   className={
                     gameFinished
-                      ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-                      : "rounded-full bg-white"
+                      ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+                      : "rounded-full bg-surface"
                   }
                 >
                   🏆
@@ -367,7 +367,7 @@ export function Board() {
             <div className="hidden sm:block">
               <Button
                 variant="outline"
-                className="rounded-full bg-white"
+                className="rounded-full bg-surface"
                 aria-label="Spieler hinzufügen"
                 onClick={() => setAddPlayerOpen(true)}
               >
@@ -376,7 +376,7 @@ export function Board() {
             </div>
             <div className="hidden sm:block">
               <ResetPointsDialog onConfirm={handleResetAllPoints}>
-                <Button variant="outline" className="rounded-full bg-white">
+                <Button variant="outline" className="rounded-full bg-surface">
                   <RotateCcw />
                 </Button>
               </ResetPointsDialog>

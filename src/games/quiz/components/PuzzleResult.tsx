@@ -10,10 +10,10 @@ import { SmallDie } from "./Die";
 import { Scorecard } from "./Scorecard";
 
 const TIER_COLORS: Record<PointsTier, string> = {
-  perfect: "bg-brand-accent text-white",
-  great: "bg-brand-accent text-white",
-  good: "bg-brand-badge text-white",
-  close: "bg-orange-500 text-white",
+  perfect: "bg-brand-strong text-on-brand",
+  great: "bg-brand-strong text-on-brand",
+  good: "bg-gold text-on-gold",
+  close: "bg-danger text-on-danger",
   miss: "bg-muted text-muted-foreground",
 };
 
@@ -52,7 +52,7 @@ export function MoveRanking({ moves, open = false }: { moves: QuizMove[]; open?:
               "flex items-center gap-2 rounded-full border border-input px-3 py-1 text-sm",
               move.chosen
                 ? "border-brand-accent bg-brand-accent/10 font-semibold"
-                : "bg-white dark:bg-[#212121]",
+                : "bg-surface",
             )}
           >
             <span className="w-6 shrink-0 text-xs tabular-nums text-muted-foreground">
