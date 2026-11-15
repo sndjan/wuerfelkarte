@@ -53,6 +53,8 @@ the section on `/konto` says it is not set up yet. Then run
 account can send another, and `20261115120000_links_both_ways_at_once.sql`,
 which accepts an invite and links back in one step (so a link can never end
 up one-way) and links two people at once when both invited each other.
+`20261115130000_profile_emoji.sql` lets every account pick its emoji, which
+everyone linked to it then shows.
 
 ### Kniffel Online
 

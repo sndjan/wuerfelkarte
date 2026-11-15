@@ -326,7 +326,7 @@ export function PlayerLinks({ user }: { user: User }) {
   return (
     <>
       <ProfileCard
-        key={own ? handleOf(own) : "new"}
+        key={own ? `${handleOf(own)} ${own.emoji ?? ""}` : "new"}
         profile={own}
         suggestedName={suggestedName}
         onSaved={() => void reload()}
@@ -378,7 +378,7 @@ export function PlayerLinks({ user }: { user: User }) {
 
       <Section
         title="Mitspieler"
-        hint="Verknüpfte Spieler tragen ihren Kontonamen und bekommen eure Spiele."
+        hint="Verknüpfte Spieler tragen Namen und Emoji ihres Kontos und bekommen eure Spiele. Bei allen anderen wählst du das Emoji selbst."
       >
         {roster.length === 0 ? (
           <p className="text-sm text-muted-foreground">Noch keine Spieler.</p>

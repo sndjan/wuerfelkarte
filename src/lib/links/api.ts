@@ -22,9 +22,24 @@ type LinkRow = {
   status: "pending" | "accepted";
 };
 
-type ProfileRow = { user_id: string; name: string; tag: string };
+type ProfileRow = { user_id: string; name: string; tag: string; emoji?: string | null };
 
-const toProfile = (row: ProfileRow): Profile => ({ userId: row.user_id, name: row.name, tag: row.tag });
+const toProfile = (row: ProfileRow): Profile => ({
+  userId: row.user_id,
+  name: row.name,
+  tag: row.tag,
+  emoji: row.emoji ?? null,
+});
+
+/** 42703: undefined column — the profile_emoji migration has not been run yet. */
+const isMissingColumn = (error: PostgrestError) => error.code === "42703";
+
+/** Profiles with their emoji, or without it before the emoji column exists. */
+async function fetchProfiles(client: SupabaseClient) {
+  const withEmoji = await client.from("profiles").select("user_id, name, tag, emoji");
+  if (!withEmoji.error || !isMissingColumn(withEmoji.error)) return withEmoji;
+  return client.from("profiles").select("user_id, name, tag");
+}
 
 export type LinkState = {
   links: PlayerLink[];
@@ -36,7 +51,7 @@ export type LinkState = {
 export async function fetchLinkState(client: SupabaseClient): Promise<LinkState> {
   const [links, profiles] = await Promise.all([
     client.from("player_links").select("id, owner_id, player_id, player_name, invitee_id, status").order("created_at"),
-    client.from("profiles").select("user_id, name, tag"),
+    fetchProfiles(client),
   ]);
   if (links.error) fail(links.error);
   if (profiles.error) fail(profiles.error);
@@ -63,6 +78,18 @@ export async function setProfileName(
   if (isMissingTable(error)) return { error: "Noch nicht eingerichtet." };
   if (error.message.includes("invalid name")) return { error: "1–24 Zeichen, ohne #." };
   if (error.message.includes("name taken")) return { error: "Name zu beliebt. Nimm einen anderen." };
+  return { error: "Hat nicht geklappt." };
+}
+
+/** Sets (or, with null, clears) the account's emoji; a German error when it fails. */
+export async function setProfileEmoji(
+  client: SupabaseClient,
+  emoji: string | null,
+): Promise<{ profile: Profile } | { error: string }> {
+  const { data, error } = await client.rpc("set_profile_emoji", { p_emoji: emoji });
+  if (!error) return { profile: toProfile(data as ProfileRow) };
+  if (isMissingTable(error)) return { error: "Noch nicht eingerichtet." };
+  if (error.message.includes("no profile")) return { error: "Erst einen Namen wählen." };
   return { error: "Hat nicht geklappt." };
 }
 
