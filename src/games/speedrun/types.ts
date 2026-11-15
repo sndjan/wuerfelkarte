@@ -1,4 +1,5 @@
 import type { MatchPlayer, StoredMatch } from "@/games/shared/types";
+import type { LossBreakdown } from "@/games/shared/soloStats";
 import type { TrainingGame } from "@/games/training/types";
 
 /**
@@ -54,4 +55,6 @@ export type StoredSpeedrunMatch = StoredMatch<MatchPlayer> & {
   loss: number;
   decisions: number;
   optimal: number;
+  /** Where the points went; missing on runs stored before it existed. */
+  breakdown?: LossBreakdown;
 };

@@ -10,6 +10,7 @@ import {
   totalScore,
   trainingStats,
 } from "@/games/training/game";
+import { lossBreakdown } from "@/games/shared/soloStats";
 import { STRAFE_MS_PER_POINT } from "./config";
 import type { SpeedrunCategory, SpeedrunGame, StoredSpeedrunMatch, TurnDice } from "./types";
 
@@ -191,5 +192,6 @@ export function buildMatch(game: SpeedrunGame): StoredSpeedrunMatch {
     loss: stats.loss,
     decisions: stats.decisions,
     optimal: stats.optimal,
+    breakdown: lossBreakdown(game.turns),
   };
 }

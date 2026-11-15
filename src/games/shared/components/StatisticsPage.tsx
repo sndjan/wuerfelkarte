@@ -11,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { caboStorage } from "@/games/cabo/storage";
@@ -20,6 +21,7 @@ import { wizardStorage } from "@/games/wizard/storage";
 import { yatzyStorage } from "@/games/yatzy/storage";
 import { cn } from "@/lib/utils";
 import { useMatchHistory } from "../hooks/useMatchHistory";
+import { type SoloKey, SoloStatistics } from "./SoloStatistics";
 import { formatRate, headToHead, knownPlayers, playerSummary } from "../playerStats";
 import type { MatchPlayer, StoredMatch } from "../types";
 
@@ -39,6 +41,13 @@ const GAMES: StatGame[] = [
   { key: "darts", name: "Darts", emoji: "🎯", load: dartsStorage.loadMatches as () => StoredMatch<MatchPlayer>[] },
 ];
 
+/** The solo modes: one player, graded by the solver, so their own numbers. */
+const SOLO: { key: SoloKey; name: string; emoji: string }[] = [
+  { key: "quiz", name: "Quiz", emoji: "🧠" },
+  { key: "training", name: "Training", emoji: "🎓" },
+  { key: "speedrun", name: "Speedrun", emoji: "⏱️" },
+];
+
 /** How often a player scored in the five-of-a-kind field (Würfelkarte only). */
 function fiveOfAKind(name: string, matches: StoredMatch<MatchPlayer>[]): number {
   const lower = name.trim().toLowerCase();
@@ -53,6 +62,17 @@ function fiveOfAKind(name: string, matches: StoredMatch<MatchPlayer>[]): number 
 
 function Statistics() {
   const params = useSearchParams();
+  const solo = SOLO.find((g) => g.key === params.get("spiel"));
+  if (solo) {
+    return (
+      <div className="wk min-h-full bg-background">
+        <PageHeader title="Statistik" right={<GamePicker current={solo} />} />
+        <main className="mx-auto flex max-w-md flex-col gap-5 px-4 pb-8 md:grid md:max-w-[1180px] md:grid-cols-2 md:gap-8 md:px-8">
+          <SoloStatistics key={solo.key} mode={solo.key} />
+        </main>
+      </div>
+    );
+  }
   const game = GAMES.find((g) => g.key === params.get("spiel")) ?? GAMES[0];
   // Keyed by game: the history hook reads its storage once per mount.
   return <GameStatistics key={game.key} game={game} />;
@@ -60,7 +80,6 @@ function Statistics() {
 
 function GameStatistics({ game }: { game: StatGame }) {
   const params = useSearchParams();
-  const router = useRouter();
   const matches = useMatchHistory(game.load);
   const self = useSelfPlayer();
 
@@ -76,34 +95,11 @@ function GameStatistics({ game }: { game: StatGame }) {
   const current =
     players.find((p) => p.name.trim().toLowerCase() === picked?.trim().toLowerCase()) ?? players[0] ?? null;
 
-  const pickGame = (key: string) => {
-    const next = new URLSearchParams(params.toString());
-    next.set("spiel", key);
-    router.replace(`/statistik?${next.toString()}`);
-  };
-
   return (
     <div className="wk min-h-full bg-background">
       <PageHeader
         title="Statistik"
-        right={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" aria-label={`Spiel wählen: ${game.name}`}>
-                <span aria-hidden="true">{game.emoji}</span>
-                {game.name}
-                <ChevronDown className="size-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {GAMES.map((g) => (
-                <DropdownMenuItem key={g.key} onSelect={() => pickGame(g.key)}>
-                  <span aria-hidden="true">{g.emoji}</span> {g.name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
+        right={<GamePicker current={game} />}
       />
       <main className="mx-auto flex max-w-md flex-col gap-5 px-4 pb-8 md:grid md:max-w-[1180px] md:grid-cols-[340px_minmax(0,1fr)] md:gap-8 md:px-8">
         {players.length === 0 || !current ? (
@@ -125,6 +121,42 @@ function GameStatistics({ game }: { game: StatGame }) {
         )}
       </main>
     </div>
+  );
+}
+
+/** The game the statistics are about: the table games, then the solo modes. */
+function GamePicker({ current }: { current: { name: string; emoji: string } }) {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pickGame = (key: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set("spiel", key);
+    next.delete("spieler");
+    router.replace(`/statistik?${next.toString()}`);
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" aria-label={`Spiel wählen: ${current.name}`}>
+          <span aria-hidden="true">{current.emoji}</span>
+          {current.name}
+          <ChevronDown className="size-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {GAMES.map((g) => (
+          <DropdownMenuItem key={g.key} onSelect={() => pickGame(g.key)}>
+            <span aria-hidden="true">{g.emoji}</span> {g.name}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        {SOLO.map((g) => (
+          <DropdownMenuItem key={g.key} onSelect={() => pickGame(g.key)}>
+            <span aria-hidden="true">{g.emoji}</span> {g.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
