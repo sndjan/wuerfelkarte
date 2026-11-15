@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -153,7 +154,7 @@ export function ManagePlayersDialog({
                   className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2"
                 >
                   <span className="truncate font-semibold">
-                    {player.emoji ? `${player.emoji} ` : ""}
+                    {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                     {player.name}
                   </span>
                   <div className="flex items-center gap-1">
@@ -199,7 +200,9 @@ export function ManagePlayersDialog({
                         onClick={() => beginAdd(player.name, player.emoji)}
                         className="flex select-none items-center gap-2 rounded-full border bg-card px-4 py-2 text-foreground"
                       >
-                        <span className="text-lg">{player.emoji}</span>
+                        <span className="text-lg">
+                          <Emoji e={player.emoji} />
+                        </span>
                         <span className="font-semibold">{player.name}</span>
                       </button>
                     ))}
@@ -254,7 +257,7 @@ export function ManagePlayersDialog({
                       : "flex h-12 items-center justify-center rounded-xl bg-secondary text-2xl sm:h-14"
                   }
                 >
-                  {option}
+                  <Emoji e={option} />
                 </button>
               ))}
             </div>

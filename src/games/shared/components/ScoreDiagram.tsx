@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -118,7 +119,7 @@ export function ScoreDiagram({
               className={cn("wkx-avatar", !arrived && "bg-surface-sunken text-ink-muted")}
               aria-hidden="true"
             >
-              {arrived ? (player.emoji ?? "🙂") : "?"}
+              {arrived ? <Emoji e={player.emoji ?? "🙂"} autoPlay /> : "?"}
             </span>
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex min-h-5 items-center gap-2">

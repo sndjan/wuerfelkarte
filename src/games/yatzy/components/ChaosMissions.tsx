@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -79,11 +80,11 @@ export function ChaosMissions({
       <h2 className="text-lg font-bold">Mission {currentIndex + 1}</h2>
       <div className="flex w-full flex-col items-center px-2">
         <div className="flex w-full items-start gap-2 rounded-lg px-3 text-sm">
-          🎲
+          <Emoji e="🎲" trigger={currentIndex} />
           <span>{mission.diceRule}</span>
         </div>
         <div className="flex w-full items-start gap-2 rounded-lg px-3 py-1.5 text-sm">
-          🚧
+          <Emoji e="🚧" trigger={currentIndex} />
           <span>{mission.restriction}</span>
         </div>
       </div>

@@ -250,3 +250,21 @@ button.wk-listrow { width: 100%; text-align: left; }
 .wkx-wide .wk-dock-actions .wk-btn { height: var(--control-lg); }
 .wkx-stats-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
+
+@layer components {
+/* Noto emoji (src/components/emoji): 1em, sits on the text baseline like a glyph. */
+.wk-emoji { position: relative; display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; line-height: 1; flex-shrink: 0; }
+.wk-emoji > img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.wk-emoji-stage { position: absolute; inset: 0; visibility: hidden; pointer-events: none; }
+.wk-emoji-stage svg { display: block; }
+.wk-emoji[data-playing] > img { visibility: hidden; }
+.wk-emoji[data-playing] > .wk-emoji-stage { visibility: visible; }
+.wk-emoji-pop { animation: wk-emoji-pop 520ms cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes wk-emoji-pop {
+  0% { transform: scale(1) rotate(0); }
+  35% { transform: scale(1.3) rotate(-8deg); }
+  65% { transform: scale(.92) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) { .wk-emoji-pop { animation: none; } }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -149,7 +150,7 @@ export function Board() {
                         : "rounded-full bg-surface"
                     }
                   >
-                    🏆
+                    <Emoji e="🏆" />
                     <span className="hidden sm:block">Punkteauswertung</span>
                   </Button>
                 }
@@ -220,7 +221,7 @@ export function Board() {
                   className="rounded-full"
                   disabled={disabled}
                 >
-                  🏆 Punkteauswertung
+                  <Emoji e="🏆" /> Punkteauswertung
                 </Button>
               }
             />

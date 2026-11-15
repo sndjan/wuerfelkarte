@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useRouter } from "next/navigation";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -143,7 +144,7 @@ export function AllMatches() {
               return (
                 <div key={row.id} className="wk-listrow items-start">
                   <span className="wk-listrow-emoji" aria-hidden="true">
-                    {row.gameEmoji}
+                    <Emoji e={row.gameEmoji} />
                   </span>
                   <div className="wk-listrow-body flex flex-col gap-0.5">
                     <div className="flex items-baseline justify-between gap-2">

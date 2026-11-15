@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Dices, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -245,7 +246,7 @@ export function RunView({
           <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground lg:text-sm">
             {shortCategoryLabel(category)}
           </span>
-          <span className="font-bold tabular-nums">{filled === 0 ? "❌" : filled}</span>
+          <span className="font-bold tabular-nums">{filled === 0 ? <Emoji e="❌" label="gestrichen" /> : filled}</span>
         </div>
       );
     }
@@ -272,7 +273,7 @@ export function RunView({
               points > 0 ? "text-brand-accent" : "text-muted-foreground",
             )}
           >
-            {points > 0 ? `+${points}` : "❌"}
+            {points > 0 ? `+${points}` : <Emoji e="❌" label="gestrichen" />}
           </span>
         )}
       </button>

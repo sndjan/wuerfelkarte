@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -138,7 +139,7 @@ function GamePicker({ current }: { current: { name: string; emoji: string } }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" aria-label={`Spiel wählen: ${current.name}`}>
-          <span aria-hidden="true">{current.emoji}</span>
+          <Emoji e={current.emoji} label="" />
           {current.name}
           <ChevronDown className="size-4" aria-hidden="true" />
         </Button>
@@ -146,13 +147,13 @@ function GamePicker({ current }: { current: { name: string; emoji: string } }) {
       <DropdownMenuContent align="end">
         {GAMES.map((g) => (
           <DropdownMenuItem key={g.key} onSelect={() => pickGame(g.key)}>
-            <span aria-hidden="true">{g.emoji}</span> {g.name}
+            <Emoji e={g.emoji} label="" /> {g.name}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         {SOLO.map((g) => (
           <DropdownMenuItem key={g.key} onSelect={() => pickGame(g.key)}>
-            <span aria-hidden="true">{g.emoji}</span> {g.name}
+            <Emoji e={g.emoji} label="" /> {g.name}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -185,7 +186,7 @@ function PlayerPicker({
             onClick={() => onPick(p.name)}
           >
             <span className="wk-chip-emoji" aria-hidden="true">
-              {p.emoji ?? "🙂"}
+              <Emoji e={p.emoji ?? "🙂"} />
             </span>
             {p.name}
           </button>
@@ -201,7 +202,7 @@ function PlayerPicker({
             onClick={() => onPick(p.name)}
           >
             <span className="wkx-avatar" aria-hidden="true">
-              {p.emoji ?? "🙂"}
+              <Emoji e={p.emoji ?? "🙂"} />
             </span>
             <span className="wk-listrow-body">
               <span className="wk-listrow-title block">
@@ -308,7 +309,7 @@ function PlayerNumbers({
                   aria-label={`${name} gegen ${player.name}: ${wins} zu ${losses}. Statistik von ${player.name} zeigen`}
                 >
                   <span className="wkx-duel-name">
-                    <span aria-hidden="true">{player.emoji ?? "🙂"}</span>
+                    <Emoji e={player.emoji ?? "🙂"} label="" />
                     <span className="truncate">{player.name}</span>
                   </span>
                   <span className="wk-progress" aria-hidden="true">

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronRight, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -43,7 +44,7 @@ export function ResumeGameCard({
           className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3.5 text-ink no-underline"
         >
           <span className="text-2xl leading-none" aria-hidden="true">
-            {game.emoji}
+            <Emoji e={game.emoji} />
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate font-bold leading-6" style={{ fontFamily: "var(--font-baloo)" }}>

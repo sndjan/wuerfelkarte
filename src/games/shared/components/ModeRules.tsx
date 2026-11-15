@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { ArrowLeft, Play } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +32,7 @@ export function ModeRules({ game, mode }: { game: RuleGame; mode: RuleMode }) {
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5 px-4 pb-8 md:px-8">
         <div className="flex items-center gap-3">
           <span className="text-4xl" aria-hidden="true">
-            {game.emoji}
+            <Emoji e={game.emoji} />
           </span>
           <div className="flex min-w-0 flex-col">
             <span className="text-sm text-muted-foreground">{game.name}</span>

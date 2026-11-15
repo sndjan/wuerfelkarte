@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { cn } from "@/lib/utils";
 import { effectiveBid, playerRoundScore, totalScore } from "../scoring";
 import { WizardGame } from "../types";
@@ -40,7 +41,7 @@ export function HistoryTable({
                   className="px-3 py-2 text-left font-bold text-muted-foreground"
                   title={player.name}
                 >
-                  {player.emoji ? `${player.emoji} ` : ""}
+                  {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                   {player.name}
                 </th>
               ))}
@@ -93,7 +94,7 @@ export function HistoryTable({
               <td className="px-3 py-2">Σ</td>
               {game.players.map((player) => (
                 <td key={player.id} className="px-3 py-2">
-                  {revealed ? totalScore(game, player.id) : "🔒"}
+                  {revealed ? totalScore(game, player.id) : <Emoji e="🔒" label="verdeckt" />}
                 </td>
               ))}
             </tr>

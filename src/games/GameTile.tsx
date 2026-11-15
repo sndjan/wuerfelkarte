@@ -1,3 +1,4 @@
+import { Emoji } from "@/components/emoji/Emoji";
 import Link from "next/link";
 
 import type { GameSummary } from "./registry";
@@ -9,7 +10,9 @@ export function GameTile({ game }: { game: GameSummary }) {
         aria-disabled="true"
         className="flex h-[150px] w-full flex-col justify-between rounded-[20px] border-2 border-border bg-card p-5"
       >
-        <span className="text-4xl opacity-50">{game.emoji}</span>
+        <span className="text-4xl opacity-50">
+          <Emoji e={game.emoji} />
+        </span>
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-base font-bold text-foreground">{game.name}</h2>
           <span className="rounded-full bg-gold px-3 py-1 text-[11px] font-extrabold uppercase tracking-[.03em] text-on-gold">
@@ -25,7 +28,9 @@ export function GameTile({ game }: { game: GameSummary }) {
       href={game.href ?? `/${game.key}`}
       className="flex h-[150px] w-full flex-col justify-between rounded-[20px] bg-primary p-5 text-primary-foreground"
     >
-      <span className="text-4xl">{game.emoji}</span>
+      <span className="text-4xl">
+        <Emoji e={game.emoji} />
+      </span>
       <h2 className="text-base font-bold">{game.name}</h2>
     </Link>
   );

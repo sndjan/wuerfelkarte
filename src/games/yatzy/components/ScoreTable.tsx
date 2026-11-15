@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import JSConfetti from "js-confetti";
 import { AlertTriangle, Lock, RotateCcw, X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
@@ -224,7 +225,7 @@ export function ScoreTable({
                   aria-label={`${player.name}${index === activeIndex ? ", ist dran" : ""}${missing[index] > 0 ? `, ${missing[index] === 1 ? "ein Eintrag fehlt" : `${missing[index]} Einträge fehlen`}` : ""}. Spieler bearbeiten`}
                   className={cn("wkx-headbtn relative w-full", missing[index] > 0 && "ring-2 ring-danger")}
                 >
-                  <span aria-hidden="true">{player.emoji ?? "🙂"}</span>
+                  <Emoji e={player.emoji ?? "🙂"} label="" />
                   <span className="wkx-headbtn-name hidden md:inline">{player.name}</span>
                   {missing[index] > 0 && (
                     <span
@@ -298,7 +299,7 @@ export function ScoreTable({
           <AlertTriangle className="mt-0.5 size-5 shrink-0 text-danger" aria-hidden="true" />
           <p>
             <b>
-              {skipped.map((p) => `${p.emoji ? `${p.emoji} ` : ""}${p.name}`).join(", ")}
+              <EmojiText text={skipped.map((p) => `${p.emoji ? `${p.emoji} ` : ""}${p.name}`).join(", ")} />
             </b>{" "}
             {skipped.length === 1 ? "fehlt" : "fehlen"}{" "}
             {skipped.length === 1 && missing[players.indexOf(skipped[0])] > 1
@@ -311,7 +312,7 @@ export function ScoreTable({
       ) : (
         active && (
           <p className="wk-hint flex items-center justify-center gap-1.5 text-center">
-            <span aria-hidden="true">{active.emoji}</span>
+            {active.emoji && <Emoji key={active.id} e={active.emoji} label="" autoPlay />}
             <b className="text-ink">{active.name}</b> ist dran.{next && next !== active && ` Danach ${next.name}.`}
           </p>
         )

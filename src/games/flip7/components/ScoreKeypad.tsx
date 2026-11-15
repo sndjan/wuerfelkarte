@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Check, Delete, Minus } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -123,7 +124,7 @@ export function ScoreKeypad({
           )}
           {busts && (
             <span className="text-base font-semibold text-danger">
-              💥 Verzockt
+              <Emoji e="💥" /> Verzockt
             </span>
           )}
           {flip7Active &&
@@ -191,7 +192,7 @@ export function ScoreKeypad({
                       : "border-border bg-card text-muted-foreground",
                   )}
                 >
-                  {player.emoji ? `${player.emoji} ` : ""}
+                  {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                   {player.name} −{FLIP7_BONUS}
                 </button>
               ))}

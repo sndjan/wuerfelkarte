@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export function RoundCard({
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="min-w-0 flex-1 truncate font-semibold">
-                  {player.emoji ? `${player.emoji} ` : ""}
+                  {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                   {player.name}
                 </span>
                 <button
@@ -140,7 +141,7 @@ export function RoundCard({
                         : "border-border bg-card text-muted-foreground",
                     )}
                   >
-                    💥 Verzockt
+                    <Emoji e="💥" /> Verzockt
                   </button>
                   <span
                     className={cn(
@@ -184,7 +185,7 @@ export function RoundCard({
           disabled={!complete}
           onClick={reachesTarget ? onTargetReached : onAdvance}
         >
-          {complete && reachesTarget ? "🏁 Ziel erreicht" : "Runde abschließen"}
+          {complete && reachesTarget ? <><Emoji e="🏁" /> Ziel erreicht</> : "Runde abschließen"}
         </Button>
       )}
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import Link from "next/link";
 
 import { useAuth } from "@/lib/auth";
@@ -28,7 +29,7 @@ export function OnlineBanner() {
       className="wk-listrow wk-card-accent"
     >
       <span className="wk-listrow-emoji" aria-hidden="true">
-        🌐
+        <Emoji e="🌐" />
       </span>
       <div className="wk-listrow-body">
         <p className="wk-listrow-title">Einladung von {hostName(first)}</p>

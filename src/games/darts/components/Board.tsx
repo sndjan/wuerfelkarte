@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -191,7 +192,7 @@ export function Board() {
                   : "rounded-full bg-surface"
               }
             >
-              🏆
+              <Emoji e="🏆" />
               <span className="hidden sm:block">Punkteauswertung</span>
             </Button>
             <Menu
@@ -239,9 +240,13 @@ export function Board() {
             {legDecided || finished ? (
               <div className="flex flex-col gap-2 rounded-2xl bg-card p-4 lg:flex-1 lg:self-start">
                 <p className="font-bold">
-                  {finished
-                    ? `🏆 ${winner?.name ?? scoringPlayers[0]?.name} gewinnt die Partie`
-                    : `Leg ${legIndex + 1} an ${winner?.name ?? ""}`}
+                  {finished ? (
+                    <>
+                      <Emoji e="🏆" autoPlay /> {winner?.name ?? scoringPlayers[0]?.name} gewinnt die Partie
+                    </>
+                  ) : (
+                    `Leg ${legIndex + 1} an ${winner?.name ?? ""}`
+                  )}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {finished
@@ -255,7 +260,7 @@ export function Board() {
                       className="rounded-full"
                       onClick={() => setScoresOpen(true)}
                     >
-                      🏆 Punkteauswertung
+                      <Emoji e="🏆" /> Punkteauswertung
                     </Button>
                     <Button
                       type="button"
@@ -333,10 +338,14 @@ export function Board() {
         shareConfig={shareConfigFor(game)}
         subtitle={
           <>
-            🎯 {rulesLabel(game)} · {game.legs.length}{" "}
+            <Emoji e="🎯" /> {rulesLabel(game)} · {game.legs.length}{" "}
             {game.legs.length === 1 ? "Leg" : "Legs"}
-            {typeof elapsedMs === "number" &&
-              ` · ⏱ ${formatDuration(elapsedMs)}`}
+            {typeof elapsedMs === "number" && (
+              <>
+                {" · "}
+                <Emoji e="⏱" /> {formatDuration(elapsedMs)}
+              </>
+            )}
           </>
         }
       />

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import { Info } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -215,8 +216,12 @@ function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStand
   if (rank === 1) {
     return (
       <div className="flex flex-[1.15] flex-col items-center gap-1.5 rounded-2xl bg-card p-4 shadow-[0_0_24px_rgba(242,194,48,.35)]">
-        <span className="text-[18px] leading-none">👑</span>
-        <span className="text-[30px] leading-none">{standing.emoji}</span>
+        <span className="text-[18px] leading-none">
+          <Emoji e="👑" autoPlay />
+        </span>
+        <span className="text-[30px] leading-none">
+          <EmojiText text={standing.emoji ?? ""} />
+        </span>
         <span className={cn(BALOO, "text-base font-extrabold text-foreground")}>
           {standing.name}
         </span>
@@ -231,7 +236,9 @@ function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStand
   if (rank === 2) {
     return (
       <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-card p-4">
-        <span className="text-[26px] leading-none">{standing.emoji}</span>
+        <span className="text-[26px] leading-none">
+          <EmojiText text={standing.emoji ?? ""} />
+        </span>
         <span className="text-sm font-extrabold text-foreground">{standing.name}</span>
         <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
         <div className="flex h-14 w-full items-center justify-center rounded-t-[12px] bg-silver">
@@ -243,7 +250,9 @@ function PodiumCard({ rank, standing }: { rank: 1 | 2 | 3; standing: PlayerStand
 
   return (
     <div className="flex flex-1 flex-col items-center gap-1.5 rounded-2xl bg-card p-4">
-      <span className="text-[26px] leading-none">{standing.emoji}</span>
+      <span className="text-[26px] leading-none">
+          <EmojiText text={standing.emoji ?? ""} />
+        </span>
       <span className="text-sm font-extrabold text-foreground">{standing.name}</span>
       <span className="text-[11px] font-extrabold text-muted-foreground">{subline}</span>
       <div className="flex h-10 w-full items-center justify-center rounded-t-[12px] bg-bronze">
@@ -317,12 +326,14 @@ function RecordCard({
   return (
     <div className="flex flex-col gap-1 rounded-2xl bg-card p-3.5">
       <p className="text-[10px] font-extrabold uppercase tracking-[.05em] text-muted-foreground">
-        {label}
+        <EmojiText text={label} />
       </p>
       <p className={cn(BALOO, "text-xl font-extrabold text-foreground", valueClassName)}>
         {value}
       </p>
-      <p className="text-[11px] font-bold text-foreground">{sub}</p>
+      <p className="text-[11px] font-bold text-foreground">
+        {typeof sub === "string" ? <EmojiText text={sub} /> : sub}
+      </p>
     </div>
   );
 }
@@ -336,7 +347,7 @@ function FurtherPlayers({ standings }: { standings: PlayerStanding[] }) {
       {standings.slice(3).map((standing, index) => (
         <div key={standing.name} className="flex items-center justify-between gap-2">
           <span className="truncate text-[13px] font-bold text-foreground">
-            {index + 4}. {identity(standing.emoji, standing.name)}
+            {index + 4}. <EmojiText text={identity(standing.emoji, standing.name)} />
           </span>
           <span className="shrink-0 text-[13px] font-bold text-muted-foreground">
             {standing.wins} {pluralize(standing.wins, "Sieg", "Siege")} / {standing.games}{" "}

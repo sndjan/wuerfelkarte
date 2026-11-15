@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Copy, Hash, Repeat, RotateCcw, Share2, Star } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
@@ -243,7 +244,8 @@ export function FinishPanel({ game, matches, onAgain, onReplaySeed, onLeave }: F
               </div>
               <h3 className="mt-1 font-bold">Größte Fehler</h3>
               {mistakes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Kein einziger Fehler – jeder Zug war optimal. 🏆</p>
+                <p className="text-sm text-muted-foreground">Kein einziger Fehler – jeder Zug war optimal. <Emoji e="🏆" autoPlay />
+          </p>
               ) : (
                 <ol className="flex flex-col gap-4">
                   {mistakes.map(({ step, turn }, i) => (

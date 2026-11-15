@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { CalendarDays, Share2 } from "lucide-react";
 import { animate, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
@@ -150,7 +151,7 @@ export function DaySummary({ day, matches, streak, archive = false }: DaySummary
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { label: "Serie", value: `🔥 ${streak}` },
+          { label: "Serie", value: <><Emoji e="🔥" autoPlay={streak > 0} /> {streak}</> },
           { label: "Gespielt", value: matches.length },
           { label: "Perfekte Tage", value: perfectDays },
         ].map(({ label, value }) => (

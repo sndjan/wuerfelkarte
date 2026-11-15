@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,9 @@ export function SpecialCardSelector({
         className="flex w-full items-center justify-between gap-4 p-4 text-left"
       >
         <span className="min-w-0">
-          <span className="block text-sm font-medium">{summarize(value)}</span>
+          <span className="block text-sm font-medium">
+            <EmojiText text={summarize(value)} />
+          </span>
           <span className="block text-xs text-muted-foreground">
             {deckSize(value)} Karten im Deck · zum Ändern antippen
           </span>
@@ -112,7 +115,7 @@ export function SpecialCardSelector({
                 </span>
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold">
-                    {card.emoji} {card.name}
+                    <Emoji e={card.emoji} /> {card.name}
                     {partners.length > 0 && (
                       <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
                         immer mit{" "}

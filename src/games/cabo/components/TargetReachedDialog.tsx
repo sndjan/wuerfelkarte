@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,7 +51,7 @@ export function TargetReachedDialog({
         </DialogDescription>
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <Button type="button" onClick={onShowScores}>
-            🏆 Punkteauswertung
+            <Emoji e="🏆" /> Punkteauswertung
           </Button>
           <Button type="button" variant="outline" onClick={onContinue}>
             Weiterspielen

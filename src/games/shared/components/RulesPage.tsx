@@ -1,3 +1,4 @@
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
@@ -13,7 +14,7 @@ export function RulesPage() {
         {ruleGames.map((game) => (
           <section key={game.key} className="flex flex-col gap-2">
             <h2 className="flex items-center gap-2 text-lg font-bold">
-              <span aria-hidden="true">{game.emoji}</span>
+              <Emoji e={game.emoji} label="" />
               {game.name}
             </h2>
             <div className="overflow-hidden rounded-2xl border bg-card">

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import type { User } from "@supabase/supabase-js";
 import {
   AlertTriangle,
@@ -124,7 +125,7 @@ export function AccountView({ user }: { user: User }) {
     <div className="flex flex-col gap-4">
       <section className="wk-card flex-row items-center gap-4">
         <Link href="/konto/charakter" className="wkx-avatar wkx-avatar-lg" aria-label="Charakter ändern">
-          {self?.emoji ?? (user.email ?? "?").charAt(0).toUpperCase()}
+          {self?.emoji ? <Emoji e={self.emoji} trigger={self.emoji} /> : (user.email ?? "?").charAt(0).toUpperCase()}
           <span className="wkx-avatar-edit" aria-hidden="true">
             <Pencil className="size-4" />
           </span>

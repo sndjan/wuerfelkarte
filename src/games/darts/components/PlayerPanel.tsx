@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { cn } from "@/lib/utils";
 import { IN_RULE_LABELS } from "../gamemodes";
 import {
@@ -65,11 +66,11 @@ export function PlayerPanel({
           >
             <div className="flex items-center justify-between gap-2">
               <span className="min-w-0 flex-1 truncate font-bold">
-                {player.emoji ? `${player.emoji} ` : ""}
+                {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                 {player.name}
               </span>
               <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wide text-accent-foreground tabular-nums">
-                🏆 {playerStats?.legsWon ?? 0}/{game.legsToWin}
+                <Emoji e="🏆" trigger={playerStats?.legsWon} /> {playerStats?.legsWon ?? 0}/{game.legsToWin}
               </span>
             </div>
 
@@ -132,7 +133,7 @@ export function PlayerPanel({
             )}
             {busted && (
               <p className="text-xs font-bold text-danger">
-                💥 Überworfen — Rest bleibt bei {remaining}
+                <Emoji e="💥" autoPlay /> Überworfen — Rest bleibt bei {remaining}
               </p>
             )}
             {won && (

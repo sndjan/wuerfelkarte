@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import { ChevronLeft, ChevronRight, Dices } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -83,7 +84,9 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
         Schritt {step + 1} von {STEPS.length}
       </p>
       <p className="font-bold">{title}</p>
-      <p className="text-sm opacity-90">{text}</p>
+      <p className="text-sm opacity-90">
+        <EmojiText text={text} />
+      </p>
       <div className="mt-2 flex items-center justify-between gap-2">
         <Button
           variant="ghost"
@@ -145,11 +148,13 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
   return (
     <Card className="flex flex-col gap-2 p-3">
       <p className="text-center font-bold">Aufgabe 1 von 3</p>
-      {part("rolls", <p className="text-sm font-semibold">🎲 Noch 1 Wurf</p>)}
+      {part("rolls", <p className="text-sm font-semibold">
+          <Emoji e="🎲" /> Noch 1 Wurf
+        </p>)}
       {part(
         "enter",
         <p className="text-sm">
-          💡 Besser wäre <b>5 5 5 halten</b> gewesen (−1,2 Punkte).
+          <Emoji e="💡" /> Besser wäre <b>5 5 5 halten</b> gewesen (−1,2 Punkte).
         </p>,
         false,
       )}
@@ -180,10 +185,14 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
           </div>
           <div className={cn(pill, openPill, "text-sm")}>
             <span className="text-muted-foreground">Große Straße</span>
-            <span className="font-bold">❌</span>
+            <span className="font-bold">
+              <Emoji e="❌" />
+            </span>
           </div>
           <div className={cn(pill, crossedPill, "text-sm")}>
-            <span>❌</span>
+            <span>
+              <Emoji e="❌" />
+            </span>
             <span className="text-xs text-muted-foreground">Würfelkarte</span>
           </div>
         </div>,

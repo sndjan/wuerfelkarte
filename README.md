@@ -104,6 +104,7 @@ by cascade. The games on the device stay.
 | `npm start` | Serve the production build |
 | `npm test` | Vitest over the game logic, storage and migrations |
 | `npm run lint` | ESLint |
+| `npm run emoji` | Download the Noto emoji used in `src/` into `public/emoji/` (behind a proxy: `NODE_USE_ENV_PROXY=1`) |
 
 ## The games
 
@@ -129,6 +130,20 @@ by cascade. The games on the device stay.
 
 Seasonal decoration (Halloween, Christmas, Easter) appears in every game during
 its window and can be switched off from any game's menu.
+
+## Emoji
+
+Every emoji in the app is drawn from Google's Noto Emoji, so it looks the same
+on iOS, Android and desktop, and plays its Noto animation once when it, or the
+button it sits in, is tapped. The files live in `public/emoji/` and the app
+never loads them from Google. After using a new emoji anywhere in `src/`, run
+`npm run emoji` and commit the new files.
+
+Credits are on `/lizenzen` and in `public/emoji/LICENSE.md`: the animations
+are [Noto Emoji Animation](https://googlefonts.github.io/noto-emoji-animation/)
+by Google, CC BY 4.0; the static images are
+[Noto Emoji](https://github.com/googlefonts/noto-emoji) by Google, Apache
+License 2.0. Both are used unchanged.
 
 ## Code
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useRef, useState } from "react";
 import { PlayerEditMenu } from "./PlayerEditMenu";
 import { RosterPlayer } from "../types";
@@ -64,7 +65,9 @@ export function PlayerChip({
             : "relative flex select-none items-center gap-2 rounded-full bg-card px-4 py-2 text-foreground"
         }
       >
-        <span className="text-lg">{player.emoji}</span>
+        <span className="text-lg">
+          <Emoji e={player.emoji} />
+        </span>
         <span className="font-semibold">{player.name}</span>
         {player.active && selectionNumber != null && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-brand-strong text-xs font-extrabold text-on-brand">

@@ -85,13 +85,21 @@ export default function GamesOverview() {
               ))}
             </div>
           </section>
-          <Link
-            href="/regeln"
-            className="flex items-center gap-2 self-center rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
-          >
-            <BookOpen className="size-4" aria-hidden="true" />
-            Spielregeln
-          </Link>
+          <div className="flex items-center justify-center gap-1">
+            <Link
+              href="/regeln"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              <BookOpen className="size-4" aria-hidden="true" />
+              Spielregeln
+            </Link>
+            <Link
+              href="/lizenzen"
+              className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              Lizenzen
+            </Link>
+          </div>
         </div>
       </main>
     </div>

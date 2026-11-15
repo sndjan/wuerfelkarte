@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Check, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -190,7 +191,7 @@ function NewGame() {
                 diceMode === mode ? "border-brand-accent bg-brand-accent/10" : "border-border bg-card",
               )}
             >
-              <p className="font-semibold">{mode === "digital" ? "🎲 Digital" : "✋ Echte Würfel"}</p>
+              <p className="font-semibold">{mode === "digital" ? <><Emoji e="🎲" /> Digital</> : <><Emoji e="✋" /> Echte Würfel</>}</p>
               <p className="text-xs text-muted-foreground">
                 {mode === "digital" ? "Die App würfelt und rechnet." : "Jeder würfelt selbst und trägt ein."}
               </p>
@@ -226,7 +227,7 @@ function NewGame() {
         />
       </LobbySection>
       <Button className="h-12 text-base" disabled={busy} onClick={create}>
-        {busy ? <Loader2 className="animate-spin" /> : ONLINE_EMOJI} {selected.length > 0 ? "Einladen" : "Lobby öffnen"}
+        {busy ? <Loader2 className="animate-spin" /> : <Emoji e={ONLINE_EMOJI} />} {selected.length > 0 ? "Einladen" : "Lobby öffnen"}
       </Button>
       <p className="-mt-3 text-center text-xs text-muted-foreground">
         Mitspieler ohne Konto lädst du in der Lobby per Link ein.

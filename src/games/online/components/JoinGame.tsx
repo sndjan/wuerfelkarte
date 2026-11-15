@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -147,7 +148,7 @@ export function JoinGame({ code }: { code: string }) {
     <Frame>
       <Card className="flex flex-col gap-1 p-4">
         <p className="text-lg font-bold">
-          {ONLINE_EMOJI} {game.host} lädt dich ein
+          <Emoji e={ONLINE_EMOJI} autoPlay /> {game.host} lädt dich ein
         </p>
         <p className="text-sm text-muted-foreground">
           {gameLabel(game)} · {diceModeLabel(game.diceMode)}
@@ -174,7 +175,7 @@ export function JoinGame({ code }: { code: string }) {
             <Card className="flex flex-col gap-3 p-4">
               <div className="flex items-end gap-3">
                 <span className="wkx-avatar size-14 text-3xl" aria-hidden="true">
-                  {emoji}
+                  {emoji && <Emoji e={emoji} trigger={emoji} />}
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                   <label htmlFor="guest-name" className="text-sm font-bold">
@@ -204,7 +205,7 @@ export function JoinGame({ code }: { code: string }) {
                       aria-label={`Charakter ${option}`}
                       onClick={() => setEmoji(option)}
                     >
-                      {option}
+                      <Emoji e={option} label="" />
                     </button>
                   ))}
                 </div>

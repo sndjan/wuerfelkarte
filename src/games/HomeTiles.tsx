@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { waitingFor } from "./online/components/ActiveGameCard";
@@ -26,7 +27,7 @@ export function HeroTile({ game, className }: { game: GameSummary; className?: s
     >
       <div>
         <span className="wk-tile-emoji md:text-5xl" aria-hidden="true">
-          {game.emoji}
+          <Emoji e={game.emoji} />
         </span>
         <div>
           <h2 className="wk-tile-title md:text-2xl md:leading-8 md:font-extrabold">{game.name}</h2>
@@ -44,7 +45,7 @@ export function ModeTile({ game, className }: { game: GameSummary; className?: s
   return (
     <Link href={game.href ?? `/${game.key}`} className={cn("wk-tile h-32 p-4 md:h-auto md:p-5", className)}>
       <span className="wk-tile-emoji" aria-hidden="true">
-        {game.emoji}
+        <Emoji e={game.emoji} />
       </span>
       <div className="min-w-0">
         <h2 className="wk-tile-title">{game.name}</h2>
@@ -59,7 +60,7 @@ export function CompactTile({ game }: { game: GameSummary }) {
   return (
     <Link href={game.href ?? `/${game.key}`} className="wk-tile wk-tile-compact">
       <span className="wk-tile-emoji" aria-hidden="true">
-        {game.emoji}
+        <Emoji e={game.emoji} />
       </span>
       <h3 className="wk-tile-title">{game.name}</h3>
     </Link>

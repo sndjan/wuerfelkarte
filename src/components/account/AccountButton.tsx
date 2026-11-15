@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiText } from "@/components/emoji/Emoji";
 import { UserRound } from "lucide-react";
 import Link from "next/link";
 
@@ -36,7 +37,7 @@ export function AccountButton() {
           href="/konto"
           aria-label={initial ? "Profil" : "Anmelden"}
         >
-          {initial ?? <UserRound />}
+          {initial ? <EmojiText text={initial} /> : <UserRound />}
         </Link>
       </Button>
       {invited && (
