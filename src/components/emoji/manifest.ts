@@ -105,6 +105,7 @@ export const NOTO_EMOJI: Record<string, { k: string; a: 0 | 1 }> = {
   "🦋": { k: "1f98b", a: 1 },
   "🦖": { k: "1f996", a: 1 },
   "🦝": { k: "1f99d", a: 1 },
+  "🦦": { k: "1f9a6", a: 1 },
   "🧙": { k: "1f9d9", a: 0 },
   "🧙‍♂": { k: "1f9d9_200d_2642", a: 0 },
   "🧚": { k: "1f9da", a: 0 },

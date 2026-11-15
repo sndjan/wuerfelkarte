@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { THEME_EMOJIS } from "@/components/common/seasonal/useSeasonalTheme";
 import { games } from "@/games/registry";
-import { EMOJI_OPTIONS } from "@/games/shared/types";
+import { EMOJI_OPTIONS, RETIRED_EMOJI } from "@/games/shared/types";
 
 import { NOTO_EMOJI } from "./manifest";
 import { notoEntry } from "./player";
@@ -20,8 +20,12 @@ describe("Noto emoji", () => {
   });
 
   it("has a drawing for every character, game and season emoji", () => {
-    const used = [...EMOJI_OPTIONS, ...games.map((g) => g.emoji), ...Object.values(THEME_EMOJIS).flat()];
+    const used = [...EMOJI_OPTIONS, ...RETIRED_EMOJI, ...games.map((g) => g.emoji), ...Object.values(THEME_EMOJIS).flat()];
     expect(used.filter((e) => !notoEntry(e))).toEqual([]);
+  });
+
+  it("animates every character a player can pick", () => {
+    expect(EMOJI_OPTIONS.filter((e) => notoEntry(e)?.a !== 1)).toEqual([]);
   });
 
   it("ships every file the manifest names", () => {

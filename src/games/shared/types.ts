@@ -18,11 +18,21 @@ export type RosterPlayer = {
   formerNames?: string[];
 };
 
-/** The characters a player can pick (Profil → Charakter, lobbies). The first eight are the original set. */
+/**
+ * The characters a player can pick (Profil → Charakter, lobbies): only
+ * animals with an animated Noto emoji, so every one of them moves when tapped.
+ */
 export const EMOJI_OPTIONS = [
-  "🦄", "🐶", "🦝", "🐸", "🐼", "🦊", "🐻", "😺",
-  "🐙", "🦁", "🐯", "🐨", "🐷", "🐵", "🐔", "🐧",
-  "🦉", "🐝", "🐢", "🐬", "🦖", "🐲", "👻", "🤖",
+  "🦄", "🦦", "🦝", "🐸", "🐼", "🦊", "🐻", "😺",
+  "🐙", "🦁", "🐧", "🦉", "🐝", "🐢", "🐬", "🦖",
+];
+
+/**
+ * Characters that used to be pickable. Players may still carry them, so they
+ * keep their Noto drawing (`npm run emoji` finds them here) but are no longer offered.
+ */
+export const RETIRED_EMOJI = [
+  "🐶", "🐯", "🐨", "🐷", "🐵", "🐔", "🐲", "👻", "🤖",
   "👽", "🧙", "🥷", "🤠", "🎩", "🚀",
 ];
 
