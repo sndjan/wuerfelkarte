@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import {
 import { SPEEDRUN_NAME } from "../config";
 import { useSpeedrun } from "../hooks/useSpeedrun";
 import { isFinished } from "../run";
+import type { SpeedrunCategory } from "../types";
+import { Countdown } from "./Countdown";
 import { FinishPanel } from "./FinishPanel";
 import { RunView } from "./RunView";
 import { StartPanel } from "./StartPanel";
@@ -29,9 +31,17 @@ export function Speedrun() {
     useSpeedrun();
   const [confirmAbort, setConfirmAbort] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
+  /** The run waiting for its countdown; it (and its clock) only starts when the countdown ends. */
+  const [pending, setPending] = useState<{ which: SpeedrunCategory; seed?: string } | null>(null);
+  const begin = (which: SpeedrunCategory, seed?: string) => setPending({ which, seed });
+  const launch = () => {
+    if (pending) start(pending.which, pending.seed);
+    setPending(null);
+  };
+  const cancel = useCallback(() => setPending(null), []);
 
   // Start, run and finish are separate screens: each opens at the top.
-  const screen = !game ? "start" : isFinished(game) ? "finish" : "run";
+  const screen = pending ? "countdown" : !game ? "start" : isFinished(game) ? "finish" : "run";
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [screen]);
@@ -50,6 +60,15 @@ export function Speedrun() {
     );
   }
 
+  if (pending) {
+    return (
+      <>
+        {header}
+        <Countdown onDone={launch} onCancel={cancel} />
+      </>
+    );
+  }
+
   if (!game) {
     return (
       <>
@@ -58,8 +77,8 @@ export function Speedrun() {
           category={category}
           matches={matches}
           ready={status === "ready"}
-          onStart={() => start()}
-          onStartSeed={(seed) => start(category, seed)}
+          onStart={() => begin(category)}
+          onStartSeed={(seed) => begin(category, seed)}
         />
       </>
     );
@@ -72,8 +91,8 @@ export function Speedrun() {
         <FinishPanel
           game={game}
           matches={matches}
-          onAgain={() => start(category)}
-          onReplaySeed={() => start(category, game.seed)}
+          onAgain={() => begin(category)}
+          onReplaySeed={() => begin(category, game.seed)}
           onLeave={leave}
         />
       </>
