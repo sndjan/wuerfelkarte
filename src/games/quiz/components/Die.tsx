@@ -71,7 +71,12 @@ export function Die({ value, held = false, rolling = false, onToggle }: DieProps
       <motion.span
         className="size-full"
         animate={rolling ? { rotate: [0, -14, 12, -8, 6, 0], y: [0, -4, 0, -3, 0, 0] } : { rotate: 0, y: 0 }}
-        transition={{ duration: rolling ? ROLL_MS / 1000 : 0.1, ease: "easeInOut" }}
+        // Keeps shaking while a roll waits for its result (online: the server).
+        transition={
+          rolling
+            ? { duration: ROLL_MS / 1000, ease: "easeInOut", repeat: Infinity }
+            : { duration: 0.1, ease: "easeInOut" }
+        }
       >
         <Face value={rolling ? face : value} className="size-full" />
       </motion.span>

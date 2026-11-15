@@ -2,7 +2,7 @@ import { readJSON, writeJSON } from "@/games/shared/storage";
 import { yatzyStorage } from "@/games/yatzy/storage";
 import { getSupabase } from "@/lib/supabase";
 import { toMatch } from "./engine";
-import type { GameRow, OnlineAction } from "./types";
+import type { GameRow, LinkPreview, OnlineAction } from "./types";
 
 /** The browser side of /api/online: sends a move with the account's token. */
 
@@ -15,6 +15,8 @@ const MESSAGES: Record<string, string> = {
   "not linked": "Nur verknüpfte Mitspieler können eingeladen werden.",
   "bad invitees": "Lade 1 bis 5 Mitspieler ein.",
   "too many": "Höchstens 6 Spieler.",
+  "not lobby": "Das Spiel hat schon angefangen.",
+  "bad name": "Name: 1–24 Zeichen, ohne #.",
   "too few": "Mindestens ein Mitspieler muss zugesagt haben.",
   gone: "Dieses Spiel gibt es nicht mehr.",
   "not your turn": "Du bist gerade nicht dran.",
@@ -48,6 +50,27 @@ export async function callOnline<T = Record<string, unknown>>(action: OnlineActi
   if (!response.ok) throw new OnlineError(MESSAGES[body.error ?? ""] ?? "Hat nicht geklappt.");
   return body;
 }
+
+/** The game behind an invite link; null when the link leads nowhere (any more). */
+export async function peekLink(code: string): Promise<LinkPreview | null> {
+  let response: Response;
+  try {
+    response = await fetch("/api/online", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "peek", code } satisfies OnlineAction),
+    });
+  } catch {
+    throw new OnlineError("Keine Verbindung.");
+  }
+  const body = (await response.json().catch(() => ({}))) as { error?: string } & LinkPreview;
+  if (response.status === 404) return null;
+  if (!response.ok) throw new OnlineError(MESSAGES[body.error ?? ""] ?? "Hat nicht geklappt.");
+  return body;
+}
+
+/** The address a host shares so others can join the lobby, guests included. */
+export const inviteUrl = (code: string) => `${window.location.origin}/online/beitreten/${code}`;
 
 /**
  * Puts a finished online game into the local Yatzy history (once), where it

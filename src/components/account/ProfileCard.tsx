@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Copy, Loader2, Pencil } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,10 @@ import { syncNow } from "@/lib/sync/client";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
-/** The account's name and ID ("Jan#4821"), which others use to link a player to it. */
+/**
+ * The account's name and ID ("Jan#4821"), which others use to link a player
+ * to it, and its emoji, which everyone linked to it sees.
+ */
 export function ProfileCard({
   profile,
   suggestedName,
@@ -27,6 +31,8 @@ export function ProfileCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // The character is picked on /konto/charakter (profile and own roster entry together).
+  const emoji = profile?.emoji ?? null;
 
   const save = async () => {
     const supabase = getSupabase();
@@ -106,39 +112,57 @@ export function ProfileCard({
   }
 
   return (
-    <section className="flex items-center gap-3 rounded-[20px] bg-card p-5">
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Konto-ID
-        </p>
-        <p className={`${BALOO} truncate text-2xl font-extrabold`}>
-          {profile!.name}
-          <span className="text-muted-foreground">#{profile!.tag}</span>
-        </p>
+    <section className="wk-card">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/konto/charakter"
+          aria-label="Charakter wählen"
+          className={
+            emoji
+              ? "wkx-avatar size-12 text-2xl"
+              : "flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border-strong text-xs font-bold text-muted-foreground"
+          }
+        >
+          {emoji ?? "Emoji"}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Konto-ID
+          </p>
+          <p className={`${BALOO} truncate text-2xl font-extrabold`}>
+            {profile!.name}
+            <span className="text-muted-foreground">#{profile!.tag}</span>
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          aria-label="Konto-ID kopieren"
+          onClick={() => void copy()}
+        >
+          {copied ? <Check /> : <Copy />}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          aria-label="Name ändern"
+          onClick={() => {
+            setName(profile!.name);
+            setEditing(true);
+          }}
+        >
+          <Pencil />
+        </Button>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="rounded-full"
-        aria-label="Konto-ID kopieren"
-        onClick={() => void copy()}
-      >
-        {copied ? <Check /> : <Copy />}
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="rounded-full"
-        aria-label="Name ändern"
-        onClick={() => {
-          setName(profile!.name);
-          setEditing(true);
-        }}
-      >
-        <Pencil />
-      </Button>
+      {error && (
+        <p role="alert" className="text-sm font-medium text-destructive">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

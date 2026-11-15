@@ -42,10 +42,10 @@ export function CharacterPage() {
     }
     const supabase = getSupabase();
     if (user && supabase) {
-      const message = await setProfileEmoji(supabase, current);
-      if (message) {
+      const result = await setProfileEmoji(supabase, current);
+      if ("error" in result) {
         setSaving(false);
-        setError(message);
+        setError(result.error);
         return;
       }
       void syncNow();

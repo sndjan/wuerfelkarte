@@ -30,6 +30,7 @@ import { gamemodes } from "@/games/yatzy/gamemodes";
 import { callOnline, OnlineError } from "../client";
 import { fieldOptions, wunderFieldOf } from "../dice";
 import {
+  applyEntry,
   canAddExtraWunder,
   canKeep,
   candidateFields,
@@ -39,6 +40,7 @@ import {
   fieldKeys,
   forcedKeeps,
   nextRoll,
+  physicalEntry,
   scoresRevealed,
   seatScore,
   type Cell,
@@ -57,6 +59,9 @@ const labelOf = (state: OnlineState, field: string) =>
   gamemodes[state.gamemode].fields.find((f) => f.key === field)?.label ?? field;
 
 const MEDALS = ["🥇", "🥈", "🥉"];
+
+/** The roller's dice shake at least this long from the tap, however fast the server is. */
+const MIN_OWN_ROLL_MS = 300;
 
 /** The running (or finished) online game. */
 export function OnlineBoard({
@@ -118,8 +123,11 @@ export function OnlineBoard({
   // Shake the thrown dice whenever a roll lands, for everyone watching. The
   // roller gets the same roll twice (the API's answer and Realtime), so the
   // stop timer lives outside the effect: a second copy must not cancel it.
+  // The roller's dice already shake from the tap on (`rollStarted`), while
+  // the server rolls; once the faces arrive they settle right away.
   const lastRoll = useRef({ turnId, rolls: turn.rolls });
   const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rollStarted = useRef<number | null>(null);
   useEffect(
     () => () => {
       if (rollTimer.current) clearTimeout(rollTimer.current);
@@ -132,10 +140,13 @@ export function OnlineBoard({
     if (prev.turnId !== turnId || turn.rolls <= prev.rolls) return;
     setRolling(turn.thrown);
     if (rollTimer.current) clearTimeout(rollTimer.current);
+    const started = rollStarted.current;
+    rollStarted.current = null;
+    const shakeFor = started === null ? ROLL_MS : Math.max(0, MIN_OWN_ROLL_MS - (Date.now() - started));
     rollTimer.current = setTimeout(() => {
       rollTimer.current = null;
       setRolling(null);
-    }, ROLL_MS);
+    }, shakeFor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnId, turn.rolls]);
 
@@ -188,18 +199,55 @@ export function OnlineBoard({
   const roll = async () => {
     setSelected(null);
     const sendKeep = turn.rolls === 0 ? turn.dice.map(() => false) : keep.map((k, i) => k || forced[i]);
+    // Shake at once; the server's answer stops it (the effect above).
+    if (rollTimer.current) clearTimeout(rollTimer.current);
+    rollTimer.current = null;
+    rollStarted.current = Date.now();
+    setRolling(
+      turn.rolls === 0
+        ? turn.dice.map((_, i) => i >= presetFaces.length)
+        : sendKeep.map((k) => kind === "all-dice" || !k),
+    );
     const ok = await run({
       type: "roll",
       gameId: game.id,
       keep: sendKeep,
       ...(turn.rolls === 0 && presetFaces.length > 0 ? { preset: presetFaces } : {}),
     });
-    if (ok) sendHolds({ turn: turnId, rolls: turn.rolls + 1, keep });
+    if (ok) {
+      sendHolds({ turn: turnId, rolls: turn.rolls + 1, keep });
+    } else {
+      rollStarted.current = null;
+      setRolling(null);
+    }
+  };
+
+  /**
+   * Enters a field: shown at once with the same rules the server applies (an
+   * entry has no dice to wait for), then confirmed by the server's answer. If
+   * the server refuses, the board goes back to how it was.
+   */
+  const enter = async (field: string, value?: Cell) => {
+    const before = game;
+    try {
+      const entry =
+        value === undefined ? digitalEntry(state, field) : physicalEntry(state, field, value, pendingExtra);
+      accept({ ...game, state: applyEntry(state, mySeat, field, entry) });
+    } catch {
+      // The server will say what is wrong.
+    }
+    const ok = await run({
+      type: "score",
+      gameId: game.id,
+      field,
+      ...(value === undefined ? {} : { value, extraWunder: pendingExtra }),
+    });
+    if (!ok) accept(before);
   };
 
   const score = async () => {
     if (!selected) return;
-    await run({ type: "score", gameId: game.id, field: selected });
+    await enter(selected);
   };
 
   const onCell = (seat: number, field: string) => {
@@ -224,7 +272,7 @@ export function OnlineBoard({
           options,
           value: "",
           onChange: (v) => {
-            if (v !== "reset") void run({ type: "score", gameId: game.id, field, value: asCell(v), extraWunder: pendingExtra });
+            if (v !== "reset") void enter(field, asCell(v));
           },
         };
       }

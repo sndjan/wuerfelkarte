@@ -9,12 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { activePlayers, loadRoster, saveRoster } from "@/games/shared/roster";
 import type { RosterPlayer } from "@/games/shared/types";
-import {
-  acceptLink,
-  invitePlayer,
-  linkBack,
-  removeLink,
-} from "@/lib/links/api";
+import { acceptInvite, invitePlayer, removeLink } from "@/lib/links/api";
 import { entryFor, linkedEntries } from "@/lib/links/entries";
 import { loadSelfPlayerId, saveSelfPlayerId } from "@/lib/links/self";
 import {
@@ -78,25 +73,28 @@ function InviteForm({
   const [handle, setHandle] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<{
+    handle: string;
+    linked: boolean;
+  } | null>(null);
 
   const send = async () => {
     const supabase = getSupabase();
     if (!supabase) return;
     setSending(true);
     setError(null);
-    const message = await invitePlayer(
+    const result = await invitePlayer(
       supabase,
       player.id,
       player.name,
       handle,
     );
     setSending(false);
-    if (message) {
-      setError(message);
+    if ("error" in result) {
+      setError(result.error);
       return;
     }
-    setSentTo(handle.trim());
+    setSentTo({ handle: handle.trim(), linked: result.status === "accepted" });
     onInvited();
   };
 
@@ -114,12 +112,23 @@ function InviteForm({
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-background p-3">
         <p className="text-sm leading-relaxed">
-          <b>{sentTo}</b> eingeladen.
+          {sentTo.linked ? (
+            <>
+              Mit <b>{sentTo.handle}</b> verknüpft – in beide Richtungen.
+            </>
+          ) : (
+            <>
+              <b>{sentTo.handle}</b> eingeladen. Sobald angenommen, seid ihr
+              gegenseitig verknüpft.
+            </>
+          )}
         </p>
         <div className="flex gap-2">
-          <Button type="button" size="sm" onClick={() => void share()}>
-            <Share2 /> Teilen
-          </Button>
+          {!sentTo.linked && (
+            <Button type="button" size="sm" onClick={() => void share()}>
+              <Share2 /> Teilen
+            </Button>
+          )}
           <Button type="button" size="sm" variant="ghost" onClick={onClose}>
             Fertig
           </Button>
@@ -278,10 +287,9 @@ export function PlayerLinks({ user }: { user: User }) {
     return candidates.find((p) => sameName(p.name, name))?.id ?? NEW_ENTRY;
   };
 
-  // Links back right away with the entry the user picked; the sync then
-  // renames it and sends both histories.
+  // Accepts and links back with the entry the user picked, in one go; the
+  // sync then renames it and sends both histories.
   const accept = async (invite: PlayerLink) => {
-    if (!(await acceptLink(supabase, invite.id))) return false;
     const name = profiles.get(invite.ownerId)?.name ?? invite.playerName;
     let playerId = whoIs(invite);
     if (playerId === NEW_ENTRY) {
@@ -290,7 +298,7 @@ export function PlayerLinks({ user }: { user: User }) {
       setRoster(entry.roster);
       playerId = entry.playerId;
     }
-    return linkBack(supabase, invite.id, playerId, name);
+    return acceptInvite(supabase, invite.id, playerId, name);
   };
 
   const act = async (id: string, action: () => Promise<boolean>) => {
@@ -317,7 +325,7 @@ export function PlayerLinks({ user }: { user: User }) {
   return (
     <>
       <ProfileCard
-        key={own ? handleOf(own) : "new"}
+        key={own ? `${handleOf(own)} ${own.emoji ?? ""}` : "new"}
         profile={own}
         suggestedName={suggestedName}
         onSaved={() => void reload()}
@@ -369,7 +377,7 @@ export function PlayerLinks({ user }: { user: User }) {
 
       <Section
         title="Mitspieler"
-        hint="Verknüpfte Spieler tragen ihren Kontonamen und bekommen eure Spiele."
+        hint="Verknüpfte Spieler tragen Namen und Emoji ihres Kontos und bekommen eure Spiele. Bei allen anderen wählst du das Emoji selbst."
       >
         {roster.length === 0 ? (
           <p className="text-sm text-muted-foreground">Noch keine Spieler.</p>
@@ -437,7 +445,10 @@ export function PlayerLinks({ user }: { user: User }) {
                       player={player}
                       ownHandle={own ? handleOf(own) : null}
                       onClose={() => setInviting(null)}
-                      onInvited={() => void reload()}
+                      onInvited={() => {
+                        // A mutual invite links at once: renames and sharing start.
+                        void reload().then(() => syncNow());
+                      }}
                       onMarkSelf={() => markSelf(player.id)}
                     />
                   )}

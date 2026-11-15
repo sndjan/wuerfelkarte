@@ -28,11 +28,18 @@ const toProfile = (row: ProfileRow): Profile => ({
   userId: row.user_id,
   name: row.name,
   tag: row.tag,
-  ...(row.emoji ? { emoji: row.emoji } : {}),
+  emoji: row.emoji ?? null,
 });
 
 /** 42703: undefined column — the profile_emoji migration has not been run yet. */
 const isMissingColumn = (error: PostgrestError) => error.code === "42703";
+
+/** Profiles with their emoji, or without it before the emoji column exists. */
+async function fetchProfiles(client: SupabaseClient) {
+  const withEmoji = await client.from("profiles").select("user_id, name, tag, emoji");
+  if (!withEmoji.error || !isMissingColumn(withEmoji.error)) return withEmoji;
+  return client.from("profiles").select("user_id, name, tag");
+}
 
 export type LinkState = {
   links: PlayerLink[];
@@ -42,15 +49,10 @@ export type LinkState = {
 
 /** Links this account made and the ones addressed to it, with the profiles behind them (RLS decides). */
 export async function fetchLinkState(client: SupabaseClient): Promise<LinkState> {
-  const [links, withEmoji] = await Promise.all([
+  const [links, profiles] = await Promise.all([
     client.from("player_links").select("id, owner_id, player_id, player_name, invitee_id, status").order("created_at"),
-    client.from("profiles").select("user_id, name, tag, emoji"),
+    fetchProfiles(client),
   ]);
-  // Before the profile_emoji migration the column is missing; read the profiles without it.
-  const profiles =
-    withEmoji.error && isMissingColumn(withEmoji.error)
-      ? await client.from("profiles").select("user_id, name, tag")
-      : withEmoji;
   if (links.error) fail(links.error);
   if (profiles.error) fail(profiles.error);
   return {
@@ -79,40 +81,68 @@ export async function setProfileName(
   return { error: "Hat nicht geklappt." };
 }
 
-/** Sets the user's character; linked accounts show the player with it. Returns a German error or null. */
-export async function setProfileEmoji(client: SupabaseClient, emoji: string): Promise<string | null> {
-  const { error } = await client.rpc("set_profile_emoji", { p_emoji: emoji });
-  if (!error) return null;
-  if (isMissingTable(error)) return "Für Mitspieler noch nicht eingerichtet.";
-  if (error.message.includes("no profile")) return "Erst im Profil einen Namen wählen.";
-  return "Hat nicht geklappt.";
+/** Sets (or, with null, clears) the account's emoji; a German error when it fails. */
+export async function setProfileEmoji(
+  client: SupabaseClient,
+  emoji: string | null,
+): Promise<{ profile: Profile } | { error: string }> {
+  const { data, error } = await client.rpc("set_profile_emoji", { p_emoji: emoji });
+  if (!error) return { profile: toProfile(data as ProfileRow) };
+  if (isMissingTable(error)) return { error: "Noch nicht eingerichtet." };
+  if (error.message.includes("no profile")) return { error: "Erst einen Namen wählen." };
+  return { error: "Hat nicht geklappt." };
 }
 
-/** German message for a failed invite, or null when it worked. */
+export type InviteResult =
+  /** Waiting for the other person to accept. */
+  | { status: "pending" }
+  /** They had already invited (or linked) this user: linked both ways at once. */
+  | { status: "accepted" }
+  | { error: string };
+
+/** Invites the account behind `handle` as one roster player; a German message when it fails. */
 export async function invitePlayer(
   client: SupabaseClient,
   playerId: string,
   playerName: string,
   handle: string,
-): Promise<string | null> {
-  const { error } = await client.rpc("invite_player", {
+): Promise<InviteResult> {
+  const { data, error } = await client.rpc("invite_player", {
     p_player_id: playerId,
     p_player_name: playerName,
     p_handle: handle.trim(),
   });
-  if (!error) return null;
-  if (isMissingTable(error)) return "Noch nicht eingerichtet.";
-  if (error.message.includes("invalid handle")) return "Format: Name#1234";
-  if (error.message.includes("unknown handle")) return "Konto-ID nicht gefunden.";
-  if (error.message.includes("own handle")) return "Das bist du selbst.";
-  if (error.message.includes("no profile")) return "Erst oben einen Namen wählen.";
-  if (error.message.includes("too many")) return "Zu viele Verknüpfungen.";
-  return "Hat nicht geklappt.";
+  if (!error) return { status: (data as LinkRow | null)?.status === "accepted" ? "accepted" : "pending" };
+  if (isMissingTable(error)) return { error: "Noch nicht eingerichtet." };
+  if (error.message.includes("invalid handle")) return { error: "Format: Name#1234" };
+  if (error.message.includes("unknown handle")) return { error: "Konto-ID nicht gefunden." };
+  if (error.message.includes("own handle")) return { error: "Das bist du selbst." };
+  if (error.message.includes("no profile")) return { error: "Erst oben einen Namen wählen." };
+  if (error.message.includes("too many")) return { error: "Zu viele Verknüpfungen." };
+  return { error: "Hat nicht geklappt." };
 }
 
-export async function acceptLink(client: SupabaseClient, linkId: string): Promise<boolean> {
-  const { error } = await client.rpc("accept_player_link", { p_link_id: linkId });
-  return !error;
+/**
+ * Accepts an invite and links back to the inviter as roster player
+ * `playerId`, both directions in one go. Before accept_invite() is set up,
+ * the two older calls do the same, less safely.
+ */
+export async function acceptInvite(
+  client: SupabaseClient,
+  linkId: string,
+  playerId: string,
+  playerName: string,
+): Promise<boolean> {
+  const { error } = await client.rpc("accept_invite", {
+    p_link_id: linkId,
+    p_player_id: playerId,
+    p_player_name: playerName,
+  });
+  if (!error) return true;
+  if (!isMissingTable(error)) return false;
+  const accepted = await client.rpc("accept_player_link", { p_link_id: linkId });
+  if (accepted.error) return false;
+  return linkBack(client, linkId, playerId, playerName);
 }
 
 /** Records the owner of an accepted invite as one of this user's roster players. */

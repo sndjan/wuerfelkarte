@@ -98,7 +98,8 @@ export function AccountView({ user }: { user: User }) {
     setSigningOut(true);
     // Sends whatever is still waiting, so nothing played here is missing on the other devices.
     await syncNow();
-    await getSupabase()?.auth.signOut();
+    // Only this device; the default (global) would sign out every other device too.
+    await getSupabase()?.auth.signOut({ scope: "local" });
     setSigningOut(false);
   };
 

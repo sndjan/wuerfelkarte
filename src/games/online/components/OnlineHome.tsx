@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
 import { LobbySection } from "@/games/shared/components/LobbyShell";
 import { gamemodes } from "@/games/yatzy/gamemodes";
-import { useAuth } from "@/lib/auth";
+import { isGuest, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { callOnline, OnlineError } from "../client";
 import { ONLINE_EMOJI, diceModeLabel, gameLabel, hostName } from "../config";
@@ -85,7 +85,7 @@ export function CandidateList({
         <Link href="/konto" className="font-semibold text-brand-accent underline">
           Konto
         </Link>{" "}
-        mit ihrer Konto-ID.
+        mit ihrer Konto-ID, oder öffne die Lobby und teile dort einen Link.
       </Card>
     );
   }
@@ -223,9 +223,12 @@ function NewGame() {
           onToggle={(id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))}
         />
       </LobbySection>
-      <Button className="h-12 text-base" disabled={busy || selected.length === 0} onClick={create}>
-        {busy ? <Loader2 className="animate-spin" /> : ONLINE_EMOJI} Einladen
+      <Button className="h-12 text-base" disabled={busy} onClick={create}>
+        {busy ? <Loader2 className="animate-spin" /> : ONLINE_EMOJI} {selected.length > 0 ? "Einladen" : "Lobby öffnen"}
       </Button>
+      <p className="-mt-3 text-center text-xs text-muted-foreground">
+        Mitspieler ohne Konto lädst du in der Lobby per Link ein.
+      </p>
     </>
   );
 }
@@ -244,8 +247,8 @@ export function OnlineHome() {
     body = (
       <Card className="flex flex-col gap-3 p-4">
         <p className="text-sm">
-          Online spielt ihr jeder auf dem eigenen Handy. Dafür braucht jeder ein Konto, und ihr verknüpft euch über
-          eure Konto-IDs.
+          Online spielt ihr jeder auf dem eigenen Handy. Wer ein Spiel eröffnet, braucht ein Konto; Mitspieler kommen
+          auch ohne Konto über einen Link dazu.
         </p>
         <Button asChild>
           <Link href="/konto">Anmelden</Link>
@@ -277,7 +280,19 @@ export function OnlineHome() {
             </LobbySection>
           )
         )}
-        {!online.active && <NewGame />}
+        {!online.active &&
+          (isGuest(user) ? (
+            <Card className="flex flex-col gap-3 p-4">
+              <p className="text-sm">
+                Du spielst als Gast. Um selbst ein Spiel zu eröffnen, melde dich mit deiner E-Mail an.
+              </p>
+              <Button asChild>
+                <Link href="/konto">Anmelden</Link>
+              </Button>
+            </Card>
+          ) : (
+            <NewGame />
+          ))}
       </>
     );
   }
