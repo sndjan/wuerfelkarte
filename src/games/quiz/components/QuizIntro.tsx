@@ -60,7 +60,7 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
 
       <Section title="Worum geht's">
         <p>
-          Du spielst <b>einen ganzen Zug</b> aus einem laufenden Kniffel-Spiel. Gesucht
+          Du spielst <b>einen ganzen Zug</b> aus einem laufenden Spiel. Gesucht
           ist der <b>beste Zug</b> – nicht der, der jetzt die meisten Punkte
           bringt.
         </p>
@@ -81,7 +81,7 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
           <p className="text-sm">
             <b>Beispiel:</b> Noch 2 Würfe. Viererpasch sofort eintragen bringt
             25 Punkte – und ist trotzdem ein Fehler. Besser:{" "}
-            <b>6 6 6 6 halten</b> und auf den Kniffel würfeln.
+            <b>6 6 6 6 halten</b> und auf den 5er-Pasch würfeln.
             Das bringt im Schnitt rund 17 Punkte mehr.
           </p>
         </div>

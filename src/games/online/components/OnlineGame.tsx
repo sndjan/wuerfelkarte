@@ -14,7 +14,7 @@ import { OnlineLobby } from "./OnlineLobby";
 function Message({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full bg-background">
-      <PageHeader backHref="/online" title="Kniffel Online" />
+      <PageHeader backHref="/online" title="Online" />
       <div className="mx-auto flex max-w-md flex-col gap-3 px-4">
         <Card className="flex flex-col gap-3 p-4 text-sm">{children}</Card>
       </div>
@@ -49,7 +49,7 @@ export function OnlineGame({ gameId }: { gameId: string }) {
       <Message>
         Dieses Spiel gibt es nicht (mehr), oder du bist nicht dabei.
         <Button asChild variant="outline">
-          <Link href="/online">Zu Kniffel Online</Link>
+          <Link href="/online">Zu Online</Link>
         </Button>
       </Message>
     );
@@ -61,7 +61,7 @@ export function OnlineGame({ gameId }: { gameId: string }) {
       <Message>
         Das Spiel wurde abgebrochen.
         <Button asChild variant="outline">
-          <Link href="/online">Zu Kniffel Online</Link>
+          <Link href="/online">Zu Online</Link>
         </Button>
       </Message>
     );
@@ -72,7 +72,7 @@ export function OnlineGame({ gameId }: { gameId: string }) {
         <Message>
           Du bist nicht (mehr) in diesem Spiel.
           <Button asChild variant="outline">
-            <Link href="/online">Zu Kniffel Online</Link>
+            <Link href="/online">Zu Online</Link>
           </Button>
         </Message>
       );

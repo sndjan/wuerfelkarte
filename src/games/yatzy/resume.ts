@@ -25,7 +25,7 @@ export function runningYatzyGame(): RunningGame | null {
   );
   return {
     gameKey: "yatzy",
-    gameName: "Yatzy",
+    gameName: "Würfelkarte",
     emoji: YATZY_EMOJI,
     href: `/yatzy/${gamemodeSlug(gamemode)}`,
     modeName: gamemodes[gamemode].name,

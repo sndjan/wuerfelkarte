@@ -40,14 +40,14 @@ const wunderPlusFields: PointField[] = [
   { key: "Vierer", label: "Vierer", options: [4, 8, 12, 16, 20] },
   { key: "Fünfer", label: "Fünfer", options: [5, 10, 15, 20, 25] },
   { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
-  { key: "Dreierpasch", label: "Dreierpasch", options: [...standardOptions] },
-  { key: "Viererpasch", label: "Viererpasch", options: [...standardOptions] },
+  { key: "Dreierpasch", label: "3er-Pasch", options: [...standardOptions] },
+  { key: "Viererpasch", label: "4er-Pasch", options: [...standardOptions] },
   { key: "Full House", label: "Full House", options: [25] },
   { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
   { key: "Große Straße", label: "Große Straße", options: [40] },
   {
     key: "Wunder",
-    label: "Wunder",
+    label: "5er-Pasch",
     options: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
   },
   { key: "Chance", label: "Chance", options: [...standardOptions] },
@@ -88,18 +88,18 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
       {
         key: "Dreierpasch",
-        label: "Dreierpasch",
+        label: "3er-Pasch",
         options: standardOptions,
       },
       {
         key: "Viererpasch",
-        label: "Viererpasch",
+        label: "4er-Pasch",
         options: standardOptions,
       },
       { key: "Full House", label: "Full House", options: [25] },
       { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
       { key: "Große Straße", label: "Große Straße", options: [40] },
-      { key: "Wunder", label: "Wunder", options: [50] },
+      { key: "Wunder", label: "5er-Pasch", options: [50] },
       { key: "Chance", label: "Chance", options: standardOptions },
     ],
     bonus: {
@@ -132,7 +132,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
     description:
       "Kompetitives Duell: Jedes Feld kann nur ein Spieler erfolgreich holen.",
     information: [
-      "Battle macht Kniffel zum taktischen Duell – jede Entscheidung beeinflusst alle Mitspieler:",
+      "Battle macht die Würfelkarte zum taktischen Duell – jede Entscheidung beeinflusst alle Mitspieler:",
       "• Wer ein Feld einträgt, blockiert es automatisch in den Spalten aller anderen Spieler.",
       "• Wer ein Feld streicht, zwingt alle anderen, dieses Pflichtfeld als Nächstes zu versuchen.",
       "• Es gibt kein harmloses Streichen: Jedes Streichen bewaffnet die ×2-Wette für deine Gegner.",
@@ -156,18 +156,18 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30] },
       {
         key: "Dreierpasch",
-        label: "Dreierpasch",
+        label: "3er-Pasch",
         options: standardOptions,
       },
       {
         key: "Viererpasch",
-        label: "Viererpasch",
+        label: "4er-Pasch",
         options: standardOptions,
       },
       { key: "Full House", label: "Full House", options: [25] },
       { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
       { key: "Große Straße", label: "Große Straße", options: [40] },
-      { key: "Wunder", label: "Wunder", options: [50] },
+      { key: "Wunder", label: "5er-Pasch", options: [50] },
       { key: "Chance", label: "Chance", options: standardOptions },
     ],
     bonus: {
@@ -226,7 +226,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       { key: "Sechser", label: "Sechser", options: [6, 12, 18, 24, 30, 36] },
       {
         key: "Viererpasch",
-        label: "Viererpasch",
+        label: "4er-Pasch",
         options: extendedOptions,
       },
       {

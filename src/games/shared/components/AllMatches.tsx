@@ -64,7 +64,7 @@ export function AllMatches() {
       return {
         id: `yatzy:${match.id}`,
         gameEmoji: YATZY_EMOJI,
-        gameName: "Yatzy",
+        gameName: "Würfelkarte",
         gamemodeName: yatzyGamemodes[match.gamemode]?.name ?? match.gamemode,
         timestamp: match.timestamp,
         sharedBy: sharedByOf(match),

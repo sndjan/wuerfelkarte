@@ -237,7 +237,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
               )}
               <p className="text-xs text-muted-foreground">
                 Gewertet wird jede Entscheidung, nicht der Wurf: jeder verschenkte erwartete Punkt kostet eine
-                Sekunde. Ein Kniffel aus Glück macht den Lauf nicht besser, eine verpasste Straße nach richtigem
+                Sekunde. Ein 5er-Pasch aus Glück macht den Lauf nicht besser, eine verpasste Straße nach richtigem
                 Halten nicht schlechter.
               </p>
             </Card>

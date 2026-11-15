@@ -284,7 +284,7 @@ export function OnlineHome() {
 
   return (
     <div className="min-h-full bg-background">
-      <PageHeader backHref="/" title="Kniffel Online" right={<AccountButton />} />
+      <PageHeader backHref="/" title="Online" right={<AccountButton />} />
       <div className="mx-auto flex max-w-md flex-col gap-6 px-4 pb-10">{body}</div>
     </div>
   );

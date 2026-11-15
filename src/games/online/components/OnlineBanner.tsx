@@ -28,7 +28,7 @@ export function OnlineBanner() {
       className="mb-6 flex items-center justify-between gap-3 rounded-[20px] border-2 border-brand-accent bg-brand-accent/10 p-4"
     >
       <span className="font-bold">
-        🌐 {hostName(first)} lädt dich zu Kniffel Online ein
+        🌐 {hostName(first)} lädt dich zu einer Online-Würfelkarte ein
         {online.invites.length > 1 && ` (+${online.invites.length - 1})`}
       </span>
       <span className="shrink-0 text-sm font-semibold">Ansehen →</span>
