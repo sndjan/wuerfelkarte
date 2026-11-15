@@ -1,10 +1,11 @@
 "use client";
 
-import { Play } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { Hash, Play } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { dateKey } from "@/games/quiz/puzzles";
 import {
@@ -15,6 +16,7 @@ import {
   formatTime,
 } from "../config";
 import { goldSegments, personalBest, sumOfBest } from "../records";
+import { normalizeSeed } from "../run";
 import { dailyAttempted } from "../storage";
 import type { SpeedrunCategory, StoredSpeedrunMatch } from "../types";
 
@@ -33,11 +35,16 @@ type StartPanelProps = {
   matches: StoredSpeedrunMatch[];
   ready: boolean;
   onStart: () => void;
+  /** Starts a run on a typed-in seed. */
+  onStartSeed: (seed: string) => void;
 };
 
 /** Category, personal best and recent runs — and the button that starts the clock. */
-export function StartPanel({ category, onCategory, matches, ready, onStart }: StartPanelProps) {
+export function StartPanel({ category, onCategory, matches, ready, onStart, onStartSeed }: StartPanelProps) {
   const runs = useMemo(() => matches.filter((m) => m.category === category), [matches, category]);
+  const [seedOpen, setSeedOpen] = useState(false);
+  const [seedInput, setSeedInput] = useState("");
+  const seed = normalizeSeed(seedInput);
   const pb = personalBest(matches, category);
   const best = sumOfBest(goldSegments(matches, category));
   const recent = runs.slice(-5).reverse();
@@ -60,28 +67,30 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-md flex-col gap-4 px-4 pb-6">
-      <div role="tablist" aria-label="Kategorie" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
-        {CATEGORIES.map((c) => {
-          const selected = c === category;
-          const open = c === "daily" && !dailyAttempted(today);
-          return (
-            <button
-              key={c}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => onCategory(c)}
-              className={cn(
-                "flex h-10 items-center justify-center gap-1.5 rounded-full text-[15px] font-bold transition-colors",
-                selected ? "bg-card font-extrabold shadow-sm" : "text-foreground/80 hover:bg-card/50",
-              )}
-            >
-              {CATEGORY_LABELS[c]}
-              {open && <span className="size-2 rounded-full bg-brand-badge" aria-label="heute noch offen" />}
-            </button>
-          );
-        })}
-      </div>
+      {CATEGORIES.length > 1 && (
+        <div role="tablist" aria-label="Kategorie" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
+          {CATEGORIES.map((c) => {
+            const selected = c === category;
+            const open = c === "daily" && !dailyAttempted(today);
+            return (
+              <button
+                key={c}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => onCategory(c)}
+                className={cn(
+                  "flex h-10 items-center justify-center gap-1.5 rounded-full text-[15px] font-bold transition-colors",
+                  selected ? "bg-card font-extrabold shadow-sm" : "text-foreground/80 hover:bg-card/50",
+                )}
+              >
+                {CATEGORY_LABELS[c]}
+                {open && <span className="size-2 rounded-full bg-brand-badge" aria-label="heute noch offen" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <p className="-mt-1 px-1 text-sm text-muted-foreground">{CATEGORY_DESCRIPTIONS[category]}</p>
 
@@ -149,6 +158,9 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
                   {run.category === "daily" && !run.ranked && (
                     <span className="rounded-full bg-muted px-2 text-xs font-bold">Übung</span>
                   )}
+                  {run.customSeed && run.seed && (
+                    <span className="rounded-full bg-muted px-2 font-mono text-xs font-bold">{run.seed}</span>
+                  )}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {counted ? `Strafe +${formatSeconds(run.strafeMs)}` : `${run.score} P.`}
@@ -173,6 +185,45 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
         <p className="text-center text-xs text-muted-foreground">
           Die Uhr startet mit dem ersten Wurf und hält nicht an · Leertaste am Rechner
         </p>
+        {seedOpen ? (
+          <form
+            className="mt-2 flex flex-col gap-2 rounded-2xl bg-muted p-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (ready && seed) onStartSeed(seed);
+            }}
+          >
+            <label htmlFor="speedrun-seed" className="text-sm font-bold">
+              Seed eingeben
+            </label>
+            <div className="flex gap-2">
+              <Input
+                id="speedrun-seed"
+                value={seedInput}
+                onChange={(event) => setSeedInput(event.target.value)}
+                placeholder="z. B. K7M2QX"
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                autoFocus
+                className="bg-card font-mono text-base uppercase"
+              />
+              <Button type="submit" disabled={!ready || !seed} className="shrink-0">
+                <Play className="fill-current" />
+                Los
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Gleicher Seed, gleiche Würfel – so kannst du einen Lauf nachspielen oder gegen Freunde antreten.
+              Läufe mit eigenem Seed zählen nicht für deine Bestzeit.
+            </p>
+          </form>
+        ) : (
+          <Button variant="ghost" size="sm" className="self-center text-muted-foreground" onClick={() => setSeedOpen(true)}>
+            <Hash />
+            Mit Seed spielen
+          </Button>
+        )}
       </div>
     </div>
   );

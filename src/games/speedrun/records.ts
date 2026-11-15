@@ -7,7 +7,7 @@ import type { SpeedrunCategory, StoredSpeedrunMatch } from "./types";
  */
 
 const ofCategory = (matches: readonly StoredSpeedrunMatch[], category: SpeedrunCategory) =>
-  matches.filter((m) => m.category === category && m.splits?.length === TURNS);
+  matches.filter((m) => m.category === category && !m.customSeed && m.splits?.length === TURNS);
 
 /** The fastest run of the category by Wertungszeit, or null. */
 export function personalBest(

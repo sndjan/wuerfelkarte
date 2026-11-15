@@ -22,6 +22,8 @@ export type SpeedrunGame = TrainingGame & {
   category: SpeedrunCategory;
   /** Every die of the run follows from it, so a run can always be replayed. */
   seed: string;
+  /** The player typed the seed in: the run never counts for a personal best. */
+  customSeed?: boolean;
   /** Tagesrun only: the day as YYYY-MM-DD. */
   date?: string;
   /** Tagesrun only: false for attempts after the day's first. */
@@ -36,6 +38,10 @@ export type StoredSpeedrunMatch = StoredMatch<MatchPlayer> & {
   category: SpeedrunCategory;
   date?: string;
   ranked?: boolean;
+  /** The run's seed, so it can be replayed from the history. */
+  seed?: string;
+  /** Played on a typed-in seed: shown, never a personal best. */
+  customSeed?: boolean;
   timeMs: number;
   /** One second per expected point given away; 0 in Any%. */
   strafeMs: number;

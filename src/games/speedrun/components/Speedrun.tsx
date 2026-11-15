@@ -60,6 +60,7 @@ export function Speedrun() {
           matches={matches}
           ready={status === "ready"}
           onStart={() => start()}
+          onStartSeed={(seed) => start(category, seed)}
         />
       </>
     );
@@ -69,7 +70,13 @@ export function Speedrun() {
     return (
       <>
         {header}
-        <FinishPanel game={game} matches={matches} onAgain={() => start(game.category)} onLeave={leave} />
+        <FinishPanel
+          game={game}
+          matches={matches}
+          onAgain={() => start(category)}
+          onReplaySeed={() => start(category, game.seed)}
+          onLeave={leave}
+        />
       </>
     );
   }

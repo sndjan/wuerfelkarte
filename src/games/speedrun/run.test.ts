@@ -17,6 +17,8 @@ import {
   elapsedMs,
   isFinished,
   newRun,
+  newSeed,
+  normalizeSeed,
   splits,
   strafeMs,
   turnDice,
@@ -111,6 +113,27 @@ describe("dice from the seed", () => {
   });
 });
 
+describe("seeds", () => {
+  it("hands out short codes without look-alike characters", () => {
+    for (let i = 0; i < 50; i++) expect(newSeed()).toMatch(/^[A-HJKMNP-Z2-9]{6}$/);
+  });
+
+  it("reads a typed-in seed leniently", () => {
+    expect(normalizeSeed(" k7m 2qx ")).toBe("K7M2QX");
+    expect(normalizeSeed("   ")).toBeNull();
+    expect(normalizeSeed("free:123:abc")).toBe("free:123:abc");
+  });
+
+  it("replays the same dice on a typed-in seed and marks the run", () => {
+    const original = newRun("classic", { now: 0 });
+    const replay = newRun("classic", { now: 1, seed: original.seed, customSeed: true });
+    expect(replay.customSeed).toBe(true);
+    expect(turnDice(replay.seed)).toEqual(turnDice(original.seed));
+    const finished = playOptimal(replay);
+    expect(buildMatch(finished)).toMatchObject({ seed: original.seed, customSeed: true });
+  });
+});
+
 describe("Wertungszeit", () => {
   it("has no penalty when every decision is the solver's", () => {
     const run = playOptimal(newRun("classic", { now: 0 }));
@@ -185,6 +208,12 @@ describe("records", () => {
     expect(gold[0]).toBe(5000);
     expect(sumOfBest(gold)).toBe(5000 + 7000 * (TURNS - 1));
     expect(sumOfBest(goldSegments([], "classic"))).toBeNull();
+  });
+
+  it("leaves runs on a typed-in seed out of the records", () => {
+    const seeded = { ...match("seeded", "classic", Array(TURNS).fill(100)), customSeed: true };
+    expect(personalBest([slow, seeded], "classic")?.id).toBe("slow");
+    expect(goldSegments([seeded], "classic")[0]).toBeNull();
   });
 
   it("marks splits gold, ahead or behind", () => {
