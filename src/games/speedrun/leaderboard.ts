@@ -1,5 +1,6 @@
 import { getSupabase } from "@/lib/supabase";
 import { readJSON, writeJSON } from "@/games/shared/storage";
+import { normalizeSeed } from "./run";
 import type { StoredSpeedrunMatch } from "./types";
 
 /**
@@ -13,6 +14,8 @@ export type LeaderboardRow = {
   name: string;
   emoji: string | null;
   wertungMs: number;
+  /** The run's seed, ready to play; null when the server has none or it is not playable. */
+  seed: string | null;
   isMe: boolean;
 };
 
@@ -56,12 +59,13 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardRow[] | n
     const { data, error } = await supabase.rpc("get_speedrun_leaderboard", { p_limit: limit });
     if (error || !Array.isArray(data)) return null;
     return (
-      data as { rank: number | string; name: string; emoji: string | null; wertung_ms: number; is_me: boolean }[]
+      data as { rank: number | string; name: string; emoji: string | null; wertung_ms: number; seed?: string | null; is_me: boolean }[]
     ).map((row) => ({
       rank: Number(row.rank),
       name: row.name,
       emoji: row.emoji,
       wertungMs: Number(row.wertung_ms),
+      seed: typeof row.seed === "string" ? normalizeSeed(row.seed) : null,
       isMe: Boolean(row.is_me),
     }));
   } catch {

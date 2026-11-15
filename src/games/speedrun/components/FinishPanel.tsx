@@ -210,7 +210,7 @@ export function FinishPanel({ game, matches, onAgain, onReplaySeed, onLeave }: F
                   <span className="flex w-5 justify-center">
                     {isGold && <Star className="size-4 fill-gold text-on-gold" aria-label="Goldsplit" />}
                   </span>
-                  <span className="w-14 text-right text-[15px] font-bold">{formatTime(split)}</span>
+                  <span className="w-20 text-right text-[15px] font-bold">{formatTime(split)}</span>
                   <span
                     className={cn(
                       "w-12 text-right text-sm font-extrabold",

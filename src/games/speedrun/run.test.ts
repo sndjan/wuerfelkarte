@@ -244,8 +244,9 @@ describe("storage and resume", () => {
 
 describe("formatting and distribution", () => {
   it("formats times German style", () => {
-    expect(formatTime(91_234)).toBe("1:31,2");
-    expect(formatTime(5_000)).toBe("0:05,0");
+    expect(formatTime(91_234)).toBe("1:31,234");
+    expect(formatTime(61_005.6)).toBe("1:01,006");
+    expect(formatTime(5_000)).toBe("0:05,000");
     expect(formatSeconds(12_640)).toBe("12,6");
     expect(formatDelta(-1_200)).toBe("−1,2");
     expect(formatDelta(800)).toBe("+0,8");

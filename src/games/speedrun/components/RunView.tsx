@@ -74,7 +74,7 @@ function LiveClock({ game, strafe, pbSplits, variant, caption }: ClockProps) {
     <span
       className={cn(
         "leading-none font-extrabold tabular-nums",
-        variant === "compact" ? "text-5xl" : "text-[88px] tracking-tight",
+        variant === "compact" ? "text-5xl" : "text-[68px] tracking-tight",
       )}
       style={{ fontFamily: "var(--font-baloo)" }}
       role="timer"
@@ -396,7 +396,7 @@ export function RunView({
                   {done && pb ? formatDelta(runSplits[i] - pb.splits[i]) : ""}
                 </span>
                 <span
-                  className={cn("w-16 text-right text-sm font-bold", !done && "text-primary-foreground/50")}
+                  className={cn("w-20 text-right text-sm font-bold", !done && "text-primary-foreground/50")}
                 >
                   {done ? formatTime(runSplits[i]) : pb ? formatTime(pb.splits[i]) : ""}
                 </span>

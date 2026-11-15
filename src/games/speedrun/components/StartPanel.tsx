@@ -65,7 +65,7 @@ export function StartPanel({ category, matches, ready, onStart, onStartSeed }: S
         )}
       </div>
 
-      <Leaderboard pb={pb} />
+      <Leaderboard pb={pb} onPlaySeed={ready ? onStartSeed : undefined} />
 
       <div className="sticky bottom-0 mt-auto -mx-4 flex flex-col gap-2 bg-background px-4 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <Button
@@ -131,8 +131,17 @@ const LEADERBOARD_SIZE = 5;
 /**
  * The global top five. A signed-in account sends its best first, so the list
  * already holds it; signed out, a link to sign in takes the account's place.
+ * Each row shows its run's seed; tapping it plays the same dice (as a run on
+ * a typed-in seed, so it does not count for the Bestzeit).
  */
-function Leaderboard({ pb }: { pb: StoredSpeedrunMatch | null }) {
+function Leaderboard({
+  pb,
+  onPlaySeed,
+}: {
+  pb: StoredSpeedrunMatch | null;
+  /** Undefined while the solver loads. */
+  onPlaySeed?: (seed: string) => void;
+}) {
   const { user, loading, available } = useAuth();
   const [rows, setRows] = useState<LeaderboardRow[] | null | undefined>(undefined);
   const account = user && !isGuest(user) ? user : null;
@@ -166,34 +175,63 @@ function Leaderboard({ pb }: { pb: StoredSpeedrunMatch | null }) {
         <p className="px-4 pb-4 text-sm text-muted-foreground">Noch leer – hol dir Platz 1.</p>
       ) : (
         <ol>
-          {rows.map((row, i) => (
-            <li
-              key={`${row.rank}-${row.name}-${i}`}
-              className={cn(
-                "flex h-9 items-center gap-3 border-t border-hairline px-4 tabular-nums",
-                row.isMe && "bg-brand-soft font-bold",
-                // The own row below the top ten, after a gap.
-                i > 0 && row.rank > rows[i - 1].rank + 1 && "border-t-2 border-dashed",
-              )}
-            >
-              <span
+          {rows.map((row, i) => {
+            const seed = row.seed;
+            const cells = (
+              <>
+                <span
+                  className={cn(
+                    "w-6 text-right text-sm font-bold",
+                    row.rank === 1 ? "text-gold" : "text-muted-foreground",
+                  )}
+                >
+                  {row.rank}
+                </span>
+                <span className="w-6 text-center" aria-hidden="true">
+                  <Emoji e={row.emoji ?? "🙂"} />
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {row.name}
+                  {row.isMe && " (du)"}
+                </span>
+                {seed && (
+                  <span className="max-w-24 truncate font-mono text-xs font-semibold text-muted-foreground">
+                    {seed}
+                  </span>
+                )}
+                <span className="font-bold">{formatTime(row.wertungMs)}</span>
+                {seed && <Play className="size-3.5 shrink-0 fill-current text-brand-accent" aria-hidden="true" />}
+              </>
+            );
+            const rowClass = cn(
+              "flex h-9 w-full items-center gap-3 px-4 text-left tabular-nums",
+              row.isMe && "bg-brand-soft font-bold",
+            );
+            return (
+              <li
+                key={`${row.rank}-${row.name}-${i}`}
                 className={cn(
-                  "w-6 text-right text-sm font-bold",
-                  row.rank === 1 ? "text-gold" : "text-muted-foreground",
+                  "border-t border-hairline",
+                  // The own row below the top ten, after a gap.
+                  i > 0 && row.rank > rows[i - 1].rank + 1 && "border-t-2 border-dashed",
                 )}
               >
-                {row.rank}
-              </span>
-              <span className="w-6 text-center" aria-hidden="true">
-                <Emoji e={row.emoji ?? "🙂"} />
-              </span>
-              <span className="min-w-0 flex-1 truncate">
-                {row.name}
-                {row.isMe && " (du)"}
-              </span>
-              <span className="font-bold">{formatTime(row.wertungMs)}</span>
-            </li>
-          ))}
+                {seed ? (
+                  <button
+                    type="button"
+                    className={cn(rowClass, "cursor-pointer hover:bg-muted disabled:cursor-default")}
+                    disabled={!onPlaySeed}
+                    aria-label={`Seed ${seed} von ${row.name} spielen`}
+                    onClick={() => onPlaySeed?.(seed)}
+                  >
+                    {cells}
+                  </button>
+                ) : (
+                  <div className={rowClass}>{cells}</div>
+                )}
+              </li>
+            );
+          })}
         </ol>
       )}
       {!loading && !account && (

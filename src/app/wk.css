@@ -267,4 +267,14 @@ button.wk-listrow { width: 100%; text-align: left; }
   100% { transform: scale(1) rotate(0); }
 }
 @media (prefers-reduced-motion: reduce) { .wk-emoji-pop { animation: none; } }
+/* Speedrun countdown: each number pops in, then settles. */
+.wk-countdown { animation: wk-countdown 1000ms cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes wk-countdown {
+  0% { transform: scale(.4); opacity: 0; }
+  25% { transform: scale(1.1); opacity: 1; }
+  45% { transform: scale(1); }
+  85% { opacity: 1; }
+  100% { transform: scale(.9); opacity: .2; }
+}
+@media (prefers-reduced-motion: reduce) { .wk-countdown { animation: none; } }
 }
