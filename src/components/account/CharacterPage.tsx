@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -79,7 +80,7 @@ export function CharacterPage() {
                 aria-label={`Charakter ${emoji}`}
                 onClick={() => setPicked(emoji)}
               >
-                {emoji}
+                <Emoji e={emoji} label="" />
               </button>
             ))}
           </div>

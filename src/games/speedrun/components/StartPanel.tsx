@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { BarChart3, BookOpen, Hash, Play, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -184,7 +185,7 @@ function Leaderboard({ pb }: { pb: StoredSpeedrunMatch | null }) {
                 {row.rank}
               </span>
               <span className="w-6 text-center" aria-hidden="true">
-                {row.emoji ?? "🙂"}
+                <Emoji e={row.emoji ?? "🙂"} />
               </span>
               <span className="min-w-0 flex-1 truncate">
                 {row.name}

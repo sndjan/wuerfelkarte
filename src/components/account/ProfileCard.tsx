@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Check, Copy, Loader2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -123,7 +124,7 @@ export function ProfileCard({
               : "flex size-12 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-border-strong text-xs font-bold text-muted-foreground"
           }
         >
-          {emoji ?? "Emoji"}
+          {emoji ? <Emoji e={emoji} /> : "Emoji"}
         </Link>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">

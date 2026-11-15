@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Fragment } from "react";
 
 import { GridSelect } from "@/components/ui/grid-select";
@@ -36,7 +37,7 @@ type OnlineSheetProps = {
   picker?: (seat: number, field: string) => CellPicker | null;
 };
 
-const cellText = (value: number | "X" | undefined) => (value === undefined ? "" : value === "X" ? "❌" : String(value));
+const cellText = (value: number | "X" | undefined) => (value === undefined ? "" : value === "X" ? <Emoji e="❌" label="gestrichen" /> : String(value));
 
 /** Every player's column side by side, as on the paper sheet. */
 export function OnlineSheet({ state, mySeat, preview, tappable, selected, correctable, hideTotals, onCell, picker, className }: OnlineSheetProps & { className?: string }) {
@@ -60,7 +61,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                 )}
                 title={seat.name}
               >
-                {seat.emoji && <span aria-hidden="true">{seat.emoji} </span>}
+                {seat.emoji && <><Emoji e={seat.emoji} label="" />{" "}</>}
                 {i === mySeat ? "Du" : seat.name}
               </th>
             ))}
@@ -141,10 +142,12 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                               entry.value === "X" ? "text-xs opacity-40 grayscale" : "text-brand-accent",
                             )}
                           >
-                            {entry.value === "X" ? "❌" : `+${entry.doubled ? entry.value * 2 : entry.value}`}
+                            {entry.value === "X" ? <Emoji e="❌" label="gestrichen" /> : `+${entry.doubled ? entry.value * 2 : entry.value}`}
                           </span>
                         ) : status === "blocked" ? (
-                          <span className="text-xs">🔒</span>
+                          <span className="text-xs">
+                            <Emoji e="🔒" label="gesperrt" />
+                          </span>
                         ) : status === "forced" ? (
                           <span className="text-[10px] font-bold text-ink">Pflicht</span>
                         ) : null}

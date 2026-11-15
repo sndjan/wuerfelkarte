@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -45,9 +46,13 @@ export function LegWonDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {matchDecided
-              ? `🏆 ${winnerName} gewinnt die Partie`
-              : `Leg ${legNumber} an ${winnerName}`}
+            {matchDecided ? (
+              <>
+                <Emoji e="🏆" autoPlay /> {winnerName} gewinnt die Partie
+              </>
+            ) : (
+              `Leg ${legNumber} an ${winnerName}`
+            )}
           </DialogTitle>
         </DialogHeader>
         <DialogDescription>
@@ -57,7 +62,7 @@ export function LegWonDialog({
           {matchDecided ? (
             <>
               <Button type="button" onClick={onShowScores}>
-                🏆 Punkteauswertung
+                <Emoji e="🏆" /> Punkteauswertung
               </Button>
               <Button type="button" variant="outline" onClick={onRematch}>
                 Revanche
@@ -69,7 +74,7 @@ export function LegWonDialog({
                 Nächstes Leg
               </Button>
               <Button type="button" variant="outline" onClick={onShowScores}>
-                🏆 Zwischenstand
+                <Emoji e="🏆" /> Zwischenstand
               </Button>
             </>
           )}

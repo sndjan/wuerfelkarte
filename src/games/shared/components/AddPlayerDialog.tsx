@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -65,7 +66,7 @@ export function AddPlayerDialog({ onAdd }: AddPlayerDialogProps) {
                   : "flex h-14 items-center justify-center rounded-xl bg-secondary text-2xl"
               }
             >
-              {option}
+              <Emoji e={option} />
             </button>
           ))}
         </div>

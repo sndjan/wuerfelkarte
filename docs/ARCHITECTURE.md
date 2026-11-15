@@ -55,6 +55,19 @@ Seasonal decoration (`components/common/seasonal/`) covers the whole year:
 Halloween, Christmas and Easter, then Winter, Spring, Summer and Autumn, each
 with three of the app's own drawings in `public/images/saison`.
 
+Emoji are never plain text in the UI: `<Emoji e="🏆" />` (or `<EmojiText>`
+for a string that mixes words and emoji) from `components/emoji/` draws the
+static Noto SVG from `public/emoji/`, 1em big. `EmojiTriggers` (mounted in
+`providers.tsx`) listens to every tap: tapping an emoji, or a button, link or
+option that holds one, plays its Noto Lottie animation once; emoji Google
+didn't animate get a short CSS bounce instead. `autoPlay` plays on mount
+(winner lines, banners), `trigger` plays when a value changes. `lottie-web`
+and each animation's JSON are only downloaded on the first play; reduced
+motion turns all of it off. The share PNG uses the same SVGs; share *text*
+and the canvas confetti keep the system's emoji. `src/components/emoji/manifest.ts`
+lists what exists and is written by `npm run emoji`; an emoji missing from it
+falls back to text.
+
 ## A game
 
 Each playable game is one folder with the same shape:

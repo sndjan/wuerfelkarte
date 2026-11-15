@@ -1,3 +1,4 @@
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronsRight } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -43,14 +44,20 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
   return (
     <div className="flex flex-col gap-7 px-4 pb-8">
       <div className="flex flex-col items-center gap-1 pt-2 text-center">
-        <span className="text-6xl">{QUIZ_EMOJI}</span>
+        <span className="text-6xl">
+          <Emoji e={QUIZ_EMOJI} autoPlay />
+        </span>
         <h2 className="mt-2 text-2xl font-extrabold">
           So funktioniert das Tagesquiz
         </h2>
         <p className="text-sm text-muted-foreground">
           {day}.{month}.{year}
-          {streak > 0 &&
-            ` · 🔥 ${streak} ${streak === 1 ? "Tag" : "Tage"} Serie`}
+          {streak > 0 && (
+            <>
+              {" · "}
+              <Emoji e="🔥" /> {streak} {streak === 1 ? "Tag" : "Tage"} Serie
+            </>
+          )}
         </p>
         <Button variant="ghost" size="sm" className="mt-1 text-muted-foreground" onClick={onStart}>
           Tutorial überspringen

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { cn } from "@/lib/utils";
 import { isFlip7Penalised, playerRoundScore, totalScore } from "../scoring";
 import { Flip7Game } from "../types";
@@ -38,7 +39,7 @@ export function HistoryTable({
                   className="px-3 py-2 text-left font-bold text-muted-foreground"
                   title={player.name}
                 >
-                  {player.emoji ? `${player.emoji} ` : ""}
+                  {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                   {player.name}
                 </th>
               ))}
@@ -66,7 +67,7 @@ export function HistoryTable({
                         <span className="text-muted-foreground">·</span>
                       ) : entry?.busted ? (
                         <span className="font-semibold text-danger">
-                          💥 {score}
+                          <Emoji e="💥" /> {score}
                         </span>
                       ) : (
                         <span
@@ -76,7 +77,7 @@ export function HistoryTable({
                           )}
                         >
                           {entry?.flip7 && "7️⃣ "}
-                          {isFlip7Penalised(round, player.id) && "💔 "}
+                          {isFlip7Penalised(round, player.id) && <><Emoji e="💔" />{" "}</>}
                           {score}
                         </span>
                       )}
@@ -91,7 +92,7 @@ export function HistoryTable({
               <td className="px-3 py-2">Σ</td>
               {game.players.map((player) => (
                 <td key={player.id} className="px-3 py-2">
-                  {revealed ? totalScore(game, player.id) : "🔒"}
+                  {revealed ? totalScore(game, player.id) : <Emoji e="🔒" label="verdeckt" />}
                 </td>
               ))}
             </tr>

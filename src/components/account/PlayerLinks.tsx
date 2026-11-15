@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import type { User } from "@supabase/supabase-js";
 import { Check, Link2, Loader2, Share2, UserRound, X } from "lucide-react";
 import NextLink from "next/link";
@@ -214,7 +215,7 @@ function WhoIsIt({
           : "h-9 rounded-full border bg-card px-3 text-sm font-bold"
       }
     >
-      {label}
+      <EmojiText text={label} />
     </button>
   );
   return (
@@ -390,7 +391,7 @@ export function PlayerLinks({ user }: { user: User }) {
                 <li key={player.id} className="flex flex-col gap-2 py-2">
                   <div className="flex items-center gap-3">
                     <span className="wkx-avatar" aria-hidden="true">
-                      {player.emoji}
+                      <Emoji e={player.emoji} />
                     </span>
                     <NextLink
                       href={`/statistik?spieler=${encodeURIComponent(player.name)}`}

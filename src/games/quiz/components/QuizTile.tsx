@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -33,7 +34,9 @@ export function QuizTile({ game }: { game: GameSummary }) {
       className="col-span-2 flex h-[150px] w-full items-stretch justify-between gap-4 rounded-[20px] bg-primary p-5 text-primary-foreground"
     >
       <div className="flex flex-col justify-between">
-        <span className="text-4xl">{game.emoji}</span>
+        <span className="text-4xl">
+          <Emoji e={game.emoji} />
+        </span>
         <div>
           <h2 className="text-base font-bold">{game.name}</h2>
           <p className="text-sm opacity-75">{state?.status ?? "Tagesquiz"}</p>
@@ -41,7 +44,7 @@ export function QuizTile({ game }: { game: GameSummary }) {
       </div>
       <div className="flex flex-col items-center justify-center self-start rounded-xl bg-primary-foreground/10 px-3 py-2">
         <span className="text-xl font-extrabold tabular-nums" style={{ fontFamily: "var(--font-baloo)" }}>
-          🔥 {state?.streak ?? 0}
+          <Emoji e="🔥" /> {state?.streak ?? 0}
         </span>
         <span className="text-[9px] font-extrabold uppercase tracking-[.05em] opacity-75">
           {state?.streak === 1 ? "Tag Serie" : "Tage Serie"}

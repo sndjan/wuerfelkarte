@@ -1,3 +1,4 @@
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export function TrainingSummary({
         <h2 className="font-bold">Größte Fehler</h2>
         {mistakes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Kein einziger Fehler – jeder Zug war optimal. 🏆
+            Kein einziger Fehler – jeder Zug war optimal. <Emoji e="🏆" autoPlay />
           </p>
         ) : (
           <ol className="flex flex-col gap-4">

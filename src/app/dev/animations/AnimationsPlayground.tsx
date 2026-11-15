@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiText } from "@/components/emoji/Emoji";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -94,7 +95,9 @@ export function AnimationsPlayground() {
             key={id}
             className="flex flex-col items-center gap-4 rounded-xl border p-6"
           >
-            <h2 className="font-semibold">{label}</h2>
+            <h2 className="font-semibold">
+              <EmojiText text={label} />
+            </h2>
 
             <div className="relative flex h-64 w-full items-end justify-center">
               <div className="flex flex-col items-center self-stretch justify-end">

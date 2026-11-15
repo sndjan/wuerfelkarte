@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect } from "react";
 
@@ -122,7 +123,7 @@ function Banner({
             animate={{ opacity: 1, y: 0, transition: { delay: 0.7 } }}
             exit={{ opacity: 0, transition: { duration: 0.1 } }}
           >
-            {shout.emoji} {shout.name}
+            {shout.emoji && <Emoji e={shout.emoji} autoPlay />} {shout.name}
           </motion.span>
         </motion.div>
 

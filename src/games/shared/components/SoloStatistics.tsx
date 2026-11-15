@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useMemo } from "react";
 
 import { categoryLabel } from "@/games/quiz/feedback";
@@ -225,7 +226,8 @@ function Weaknesses({
         {!breakdown ? (
           <p className="wk-hint">{NO_BREAKDOWN[mode]}</p>
         ) : total === 0 ? (
-          <p className="wk-hint">Kein einziger Punkt verschenkt – jeder Zug war der beste. 🏆</p>
+          <p className="wk-hint">Kein einziger Punkt verschenkt – jeder Zug war der beste. <Emoji e="🏆" autoPlay />
+          </p>
         ) : (
           <>
             <div className="flex flex-col gap-2">

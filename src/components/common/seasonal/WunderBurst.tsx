@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
@@ -247,7 +248,7 @@ function Overlay({
                 transition: { delay: burstAt, duration: 1.4, ease: "easeOut" },
               }}
             >
-              {particle}
+              <Emoji e={particle} label="" />
             </motion.span>
           );
         })}
@@ -288,7 +289,7 @@ function Overlay({
           animate={{ opacity: 1, y: 0, transition: { delay: textDelay + 0.4 } }}
           exit={{ opacity: 0, transition: { duration: 0.1 } }}
         >
-          {shout.emoji} {shout.name}
+          {shout.emoji && <Emoji e={shout.emoji} autoPlay />} {shout.name}
         </motion.span>
       </div>
     </motion.div>

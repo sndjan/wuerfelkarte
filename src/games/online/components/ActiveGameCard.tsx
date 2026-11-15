@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +28,7 @@ export function ActiveGameCard({ game, userId }: { game: GameWithPlayers; userId
   return (
     <Link href={`/online/${game.id}`} className={cn("wk-listrow", mine && "wk-card-accent")}>
       <span className="wk-listrow-emoji" aria-hidden="true">
-        {ONLINE_EMOJI}
+        <Emoji e={ONLINE_EMOJI} />
       </span>
       <div className="wk-listrow-body">
         <p className="wk-listrow-title">

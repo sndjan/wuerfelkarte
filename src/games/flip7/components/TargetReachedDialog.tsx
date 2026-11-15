@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,13 +54,13 @@ export function TargetReachedDialog({
                 Entscheidungsrunde spielen
               </Button>
               <Button type="button" variant="outline" onClick={onShowScores}>
-                🏆 Punkteauswertung
+                <Emoji e="🏆" /> Punkteauswertung
               </Button>
             </>
           ) : (
             <>
               <Button type="button" onClick={onShowScores}>
-                🏆 Punkteauswertung
+                <Emoji e="🏆" /> Punkteauswertung
               </Button>
               <Button type="button" variant="outline" onClick={onContinue}>
                 Weiterspielen

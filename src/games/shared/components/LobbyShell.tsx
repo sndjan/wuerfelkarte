@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
@@ -131,7 +132,7 @@ export function LobbyShell({
           disabled={!canStart}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {emoji} Spiel starten
+          <Emoji e={emoji} /> Spiel starten
         </button>
 
         {footer}

@@ -1,3 +1,4 @@
+import { EmojiText } from "@/components/emoji/Emoji";
 import { X } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -145,7 +146,9 @@ export function Scorecard({
   if (bare) return <div className="flex flex-col gap-1.5">{fields}</div>;
   return (
     <Card className="flex flex-col gap-1.5 p-4">
-      <h3 className="wk-card-title mb-1">{title}</h3>
+      <h3 className="wk-card-title mb-1">
+        <EmojiText text={title} />
+      </h3>
       {fields}
     </Card>
   );

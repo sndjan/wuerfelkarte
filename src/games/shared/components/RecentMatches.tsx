@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -100,7 +101,7 @@ export function RecentMatches<TMatch extends StoredMatch<MatchPlayer>>({
               )}
               {winner && (
                 <p className="font-bold text-brand-accent">
-                  🏆 {winner.name} · {winner.score}
+                  <Emoji e="🏆" /> {winner.name} · {winner.score}
                 </p>
               )}
             </div>

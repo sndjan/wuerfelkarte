@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -111,7 +112,7 @@ export function SignInForm({ linkFailed }: { linkFailed?: boolean }) {
           className="flex size-20 items-center justify-center rounded-[24px] bg-card text-4xl shadow-sm"
           aria-hidden="true"
         >
-          {step === "code" ? "📬" : "🎲"}
+          <Emoji key={step} e={step === "code" ? "📬" : "🎲"} autoPlay={step === "code"} />
         </span>
         <h2 className={cn(BALOO, "mt-2 text-2xl font-extrabold")}>
           {step === "code" ? "Schau in dein Postfach" : "Anmelden"}

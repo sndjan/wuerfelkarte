@@ -1,5 +1,6 @@
 "use client";
 
+import { emojiImageHtml } from "@/components/emoji/player";
 import { Share2 } from "lucide-react";
 import { useState } from "react";
 import { toPng } from "html-to-image";
@@ -141,15 +142,15 @@ async function generateScoreImage(
       const barWidth = (metricOf(player.score) / maxMetric) * 100;
       const color = BAR_COLORS[index] ?? NEUTRAL_BAR;
       const displayName = player.emoji
-        ? `${player.emoji} ${player.name}`
-        : player.name;
+        ? `${emojiImageHtml(player.emoji, escapeHtml)} ${escapeHtml(player.name)}`
+        : escapeHtml(player.name);
       return `
         <div style="position:relative; width:100%; height:${rowHeight}px; border-radius:12px; margin-bottom:${rowGap}px; overflow:hidden;">
           <div style="position:absolute; top:0; left:0; height:100%; width:100%; background:#2a2a2a; border-radius:12px;"></div>
           <div style="position:absolute; top:0; left:0; height:100%; width:${barWidth}%; background:${color}; border-radius:12px;"></div>
           <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 24px;">
             <div style="font-weight:700; font-size:${scoreFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(String(player.score))}</div>
-            <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${escapeHtml(displayName)}</div>
+            <div style="font-weight:500; font-size:${nameFontSize}px; color:#fafafa; text-shadow:0 1px 4px rgba(0,0,0,0.9);">${displayName}</div>
           </div>
         </div>
       `;
@@ -158,7 +159,7 @@ async function generateScoreImage(
 
   const iconHTML = config.imageSrc
     ? `<img src="${config.imageSrc}" alt="" style="width: 80px; height: 80px; object-fit: contain;" />`
-    : `<div style="font-size:80px;">${config.emoji}</div>`;
+    : `<div style="font-size:80px; line-height:1;">${emojiImageHtml(config.emoji, escapeHtml)}</div>`;
 
   const wrapper = document.createElement("div");
   wrapper.setAttribute("aria-hidden", "true");

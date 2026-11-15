@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -120,7 +121,7 @@ export function RoundCard({
             >
               <span className="flex items-center gap-2 truncate">
                 <span className="font-semibold truncate">
-                  {player.emoji ? `${player.emoji} ` : ""}
+                  {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                   {player.name}
                 </span>
                 {player.id === dealer?.id && (
@@ -133,7 +134,7 @@ export function RoundCard({
                     className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[.05em] text-ink"
                     title={`Wolke: Vorhersage ${bid} → ${adjustedBid}`}
                   >
-                    {wolke.emoji} {bid} → {adjustedBid}
+                    <Emoji e={wolke.emoji} /> {bid} → {adjustedBid}
                   </span>
                 )}
               </span>
@@ -175,7 +176,7 @@ export function RoundCard({
         >
           <span>
             <span className="block text-sm font-semibold">
-              {bombe.emoji} Bombenstich
+              <Emoji e={bombe.emoji} /> Bombenstich
             </span>
             <span className="block text-xs text-muted-foreground">
               Der Stich mit der Bombe gehört niemandem — es gibt einen Stich
@@ -201,7 +202,7 @@ export function RoundCard({
       {phase === "tricks" && wolkeInPlay && (
         <div className="flex flex-col gap-2 rounded-xl bg-surface px-3 py-2">
           <span className="text-sm font-semibold">
-            {wolke.emoji} Wolke bei
+            <Emoji e={wolke.emoji} /> Wolke bei
           </span>
           <div className="flex flex-wrap gap-2">
             <button
@@ -228,7 +229,7 @@ export function RoundCard({
                     : "border-border text-foreground",
                 )}
               >
-                {player.emoji ? `${player.emoji} ` : ""}
+                {player.emoji && <><Emoji e={player.emoji} />{" "}</>}
                 {player.name}
               </button>
             ))}
@@ -270,13 +271,13 @@ export function RoundCard({
         </div>
         {plusMinusWarning && (
           <div className="text-xs font-semibold text-ink">
-            ⚠️ Die Summe der Vorhersagen entspricht der Rundenzahl — bei
+            <Emoji e="⚠️" /> Die Summe der Vorhersagen entspricht der Rundenzahl — bei
             Plus/Minus Eins nicht erlaubt.
           </div>
         )}
         {trickSumWarning && (
           <div className="text-xs font-semibold text-ink">
-            ⚠️ Die Stichsumme ({trickSum(round)}) entspricht nicht der Anzahl der
+            <Emoji e="⚠️" /> Die Stichsumme ({trickSum(round)}) entspricht nicht der Anzahl der
             zu gewinnenden Stiche ({winnableTricks}). Bitte prüfen.
           </div>
         )}

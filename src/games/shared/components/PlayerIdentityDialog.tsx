@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -179,7 +180,7 @@ export function PlayerIdentityDialog({
                       : "flex h-12 items-center justify-center rounded-xl bg-secondary text-2xl sm:h-14"
                   }
                 >
-                  {option}
+                  <Emoji e={option} />
                 </button>
               ))}
             </div>
@@ -204,7 +205,9 @@ export function PlayerIdentityDialog({
                   }}
                   className="flex select-none items-center gap-2 rounded-full bg-card border px-4 py-2 text-foreground"
                 >
-                  <span className="text-lg">{player.emoji}</span>
+                  <span className="text-lg">
+                    <Emoji e={player.emoji} />
+                  </span>
                   <span className="font-semibold">{player.name}</span>
                 </button>
               ))}

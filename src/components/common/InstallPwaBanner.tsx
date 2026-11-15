@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Share, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -81,7 +82,9 @@ export function InstallPwaBanner() {
       >
         <X size={18} />
       </button>
-      <span className="text-2xl">📲</span>
+      <span className="text-2xl">
+        <Emoji e="📲" autoPlay />
+      </span>
       <div className="flex-1 text-sm">
         {showIosHint ? (
           <>

@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Lock } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -154,7 +155,7 @@ export function Board() {
                     : "rounded-full bg-surface"
                 }
               >
-                🏆
+                <Emoji e="🏆" />
                 <span className="hidden sm:block">Punkteauswertung</span>
               </Button>
             ) : (
@@ -217,7 +218,7 @@ export function Board() {
                 className="rounded-full"
                 onClick={() => setScoresOpen(true)}
               >
-                🏆 Punkteauswertung
+                <Emoji e="🏆" /> Punkteauswertung
               </Button>
               <Button
                 type="button"
@@ -258,9 +259,14 @@ export function Board() {
         shareConfig={shareConfigFor(game)}
         subtitle={
           <>
-            🎯 Ziel: &lt; {game.targetScore + 1} Punkte · {game.rounds.length}{" "}
+            <Emoji e="🎯" /> Ziel: &lt; {game.targetScore + 1} Punkte · {game.rounds.length}{" "}
             {game.rounds.length === 1 ? "Runde" : "Runden"}
-            {typeof elapsedMs === "number" && ` · ⏱ ${formatDuration(elapsedMs)}`}
+            {typeof elapsedMs === "number" && (
+              <>
+                {" · "}
+                <Emoji e="⏱" /> {formatDuration(elapsedMs)}
+              </>
+            )}
           </>
         }
       />

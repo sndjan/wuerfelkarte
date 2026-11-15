@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { ChevronDownIcon, RotateCcw } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -199,7 +200,7 @@ function GridSelect({
     setOpen(false);
   };
 
-  const displayValue = value === "" ? null : value === "X" ? "❌" : value;
+  const displayValue = value === "" ? null : value === "X" ? <Emoji e="❌" label="gestrichen" /> : value;
 
   return (
     <>
@@ -325,7 +326,7 @@ function GridSelect({
                 className="rounded-full"
                 onClick={() => select("X")}
               >
-                ❌{" "}
+                <Emoji e="❌" label="Streichen" />
               </Button>
             </div>
           </div>,

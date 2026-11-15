@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { EllipsisVertical, Info, LogOut, UserX, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -369,13 +370,14 @@ export function OnlineBoard({
                 onOpenChange={setScoreOpen}
                 trigger={
                   <Button variant="outline" className={trophyClass}>
-                    🏆
+                    <Emoji e="🏆" />
                   </Button>
                 }
               />
             ) : isHost ? (
               <Button variant="outline" className={trophyClass} disabled={busy} onClick={askReveal}>
-                🏆<span className="hidden sm:block">Auswertung starten</span>
+                <Emoji e="🏆" />
+                <span className="hidden sm:block">Auswertung starten</span>
               </Button>
             ) : (
               <Button
@@ -385,7 +387,7 @@ export function OnlineBoard({
                 title={`${hostName} startet die Auswertung`}
                 aria-label={`Punkte verdeckt, ${hostName} startet die Auswertung`}
               >
-                🏆
+                <Emoji e="🏆" />
               </Button>
             )}
             <DropdownMenu>
@@ -463,7 +465,7 @@ export function OnlineBoard({
               {ranking.map((p, i) => (
                 <div key={p.id} className="flex items-center justify-between font-semibold">
                   <span>
-                    {MEDALS[i] ?? `${i + 1}.`} {p.name}
+                    {MEDALS[i] ? <Emoji e={MEDALS[i]} autoPlay /> : `${i + 1}.`} {p.name}
                   </span>
                   <span className="tabular-nums">{p.score}</span>
                 </div>
@@ -481,7 +483,7 @@ export function OnlineBoard({
                     disabled={busy}
                     onClick={askReveal}
                   >
-                    🏆 Auswertung starten
+                    <Emoji e="🏆" /> Auswertung starten
                   </Button>
                 </>
               ) : (

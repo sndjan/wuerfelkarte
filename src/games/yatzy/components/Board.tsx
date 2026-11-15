@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Eye, EyeOff, RotateCcw, UserRoundPlus } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -323,7 +324,7 @@ export function Board() {
                       : "rounded-full bg-surface"
                   }
                 >
-                  🏆
+                  <Emoji e="🏆" />
                   <span className="hidden md:block">Auswertung</span>
                 </Button>
               }

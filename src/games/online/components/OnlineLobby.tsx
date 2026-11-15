@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { Check, Link2, Loader2, Play, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -158,7 +159,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
         {players.map((p) => (
           <Card key={p.user_id} className="flex flex-row items-center justify-between gap-2 px-4 py-2">
             <span className="min-w-0 truncate font-semibold">
-              {p.emoji && <span aria-hidden="true">{p.emoji} </span>}
+              {p.emoji && <><Emoji e={p.emoji} label="" />{" "}</>}
               {p.name}
               <span className="font-normal text-muted-foreground">{p.tag ? `#${p.tag}` : " · Gast"}</span>
             </span>

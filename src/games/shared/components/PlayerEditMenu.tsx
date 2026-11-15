@@ -1,5 +1,6 @@
 "use client";
 
+import { Emoji } from "@/components/emoji/Emoji";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,7 +77,7 @@ export function PlayerEditMenu({
                   : "flex h-14 items-center justify-center rounded-xl bg-secondary text-2xl"
               }
             >
-              {option}
+              <Emoji e={option} />
             </button>
           ))}
         </div>
