@@ -14,8 +14,6 @@ interface MenuProps {
   seasonalTheme: Theme;
   isThemeActive?: boolean;
   onToggleTheme: () => void;
-  compactMode: boolean;
-  onToggleCompactMode: () => void;
 }
 
 export function Menu({
@@ -26,8 +24,6 @@ export function Menu({
   seasonalTheme,
   isThemeActive,
   onToggleTheme,
-  compactMode,
-  onToggleCompactMode,
 }: MenuProps) {
   return (
     <GameMenu
@@ -39,7 +35,6 @@ export function Menu({
         },
       ]}
       gamemodeInfo={gamemodeInfo}
-      compactMode={{ value: compactMode, onToggle: onToggleCompactMode }}
       resetRounds={{ label: "Werte zurücksetzen", onSelect: onResetPoints }}
       onResetAll={onResetAll}
       seasonalTheme={

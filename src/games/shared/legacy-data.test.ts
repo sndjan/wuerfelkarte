@@ -54,6 +54,7 @@ describe("a browser upgrading from the pre-refactor app", () => {
       missionEveryRound: true,
       balancedMode: false,
       compactMode: false,
+      hideScores: false,
     });
   });
 

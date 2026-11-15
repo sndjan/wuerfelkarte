@@ -31,6 +31,8 @@ interface EditPlayerProps {
   moveToLeft: () => void;
   nameDialogOpen?: boolean;
   onNameDialogOpenChange?: (open: boolean) => void;
+  /** Replaces the ⋮ button, e.g. the player's head in the score table. */
+  trigger?: React.ReactNode;
 }
 
 export function EditPlayer({
@@ -44,6 +46,7 @@ export function EditPlayer({
   moveToLeft,
   nameDialogOpen,
   onNameDialogOpenChange,
+  trigger,
 }: EditPlayerProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
@@ -64,9 +67,11 @@ export function EditPlayer({
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="z-20">
-            <EllipsisVertical />
-          </Button>
+          {trigger ?? (
+            <Button variant="ghost" size="icon" className="z-20">
+              <EllipsisVertical />
+            </Button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56">
           <DropdownMenuLabel>Optionen</DropdownMenuLabel>
