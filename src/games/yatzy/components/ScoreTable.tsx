@@ -196,7 +196,8 @@ export function ScoreTable({
 
   return (
     <div className="relative isolate flex flex-1 flex-col gap-3">
-      <ThemeManager theme={theme} isThemeActive={isThemeActive} compact={players.length > 4} />
+      {/* Only the two small motifs: the large one would sit on the hint under the table. */}
+      <ThemeManager theme={theme} isThemeActive={isThemeActive} compact />
       <WunderBurst
         shout={shout}
         onBurst={() => {
