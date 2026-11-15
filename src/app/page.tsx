@@ -1,96 +1,73 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
-
 import { AccountButton } from "@/components/account/AccountButton";
 import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { PageHeader } from "@/components/common/PageHeader";
-import { Input } from "@/components/ui/input";
+import { CompactTile, HeroTile, ModeTile } from "@/games/HomeTiles";
+import { OnlineBanner } from "@/games/online/components/OnlineBanner";
+import { games } from "@/games/registry";
+import { loadRunningGames } from "@/games/runningGames";
 import { ResumeGameCard } from "@/games/shared/components/ResumeGameCard";
 import { StatsOverviewCard } from "@/games/shared/components/StatsOverviewCard";
 import { useRunningGames } from "@/games/shared/hooks/useRunningGames";
-import { loadRunningGames } from "@/games/runningGames";
-import { games } from "@/games/registry";
-import { GameTile } from "@/games/GameTile";
-import { QuizTile } from "@/games/quiz/components/QuizTile";
-import { OnlineBanner } from "@/games/online/components/OnlineBanner";
 
-const matchesQuery = (game: (typeof games)[number], query: string): boolean => {
-  const haystack = [game.name, ...(game.alternativeNames ?? [])];
-  return haystack.some((name) => name.toLowerCase().includes(query));
-};
+const MODE_KEYS = ["online", "quiz", "training", "speedrun"];
+const byKey = (key: string) => games.find((game) => game.key === key)!;
 
+/**
+ * Home: the Würfelkarte first and large, its four modes below, then the
+ * statistics strip and the other games small. On an iPad the modes take the
+ * left column and everything else the right one, so nothing scrolls.
+ */
 export default function GamesOverview() {
-  const [query, setQuery] = useState("");
   const { running: runningGames, discard } = useRunningGames(loadRunningGames);
-
-  const visibleGames = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return games;
-    return games.filter((game) => matchesQuery(game, normalized));
-  }, [query]);
+  const others = games.filter(
+    (game) => !game.locked && game.key !== "yatzy" && !MODE_KEYS.includes(game.key),
+  );
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="wk min-h-full bg-background">
       <PageHeader
         left={
-          <span
-            className="text-2xl font-extrabold"
-            style={{ fontFamily: "var(--font-baloo)" }}
-          >
-            <span className="text-foreground">würfelkarte</span>
-            <span className="text-brand-accent">.com</span>
+          <span className="wk-wordmark">
+            würfelkarte<b>.com</b>
           </span>
         }
         right={<AccountButton />}
       />
       <InstallPwaBanner />
-      <div className="mx-auto max-w-md px-4 py-6">
-        <OnlineBanner />
-        {runningGames.length > 0 && (
-          <div className="mb-6 flex flex-col gap-2">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-              Weiterspielen
-            </h2>
-            {runningGames.map((game) => (
-              <ResumeGameCard
-                key={game.gameKey}
-                game={game}
-                showGameName
-                onDiscard={discard}
-              />
+      <main className="mx-auto flex max-w-md flex-col gap-5 px-4 pb-8 md:grid md:min-h-[calc(100dvh-80px)] md:max-w-[1180px] md:grid-cols-[minmax(0,1fr)_380px] md:gap-8 md:px-8">
+        <section className="wk-section md:flex-1">
+          <h2 className="wk-overline hidden md:block">Würfelkarte</h2>
+          <div className="wk-tiles md:flex-1 md:grid-rows-[1.1fr_1fr_1fr]">
+            <HeroTile game={byKey("yatzy")} />
+            {MODE_KEYS.map((key) => (
+              <ModeTile key={key} game={byKey(key)} />
             ))}
           </div>
-        )}
-        <div className="relative mb-4">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Spiel suchen..."
-            className="rounded-full bg-card pl-9"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          {visibleGames
-            .filter((game) => game.featured)
-            .map((game) => (
-              <QuizTile key={game.key} game={game} />
-            ))}
-          {!query.trim() && <StatsOverviewCard />}
-          {visibleGames
-            .filter((game) => !game.featured)
-            .map((game) => (
-              <GameTile key={game.key} game={game} />
-            ))}
-          {visibleGames.length === 0 && (
-            <p className="col-span-2 py-6 text-center text-sm text-muted-foreground">
-              Kein Spiel gefunden.
-            </p>
+        </section>
+
+        <div className="flex flex-col gap-5 md:gap-6">
+          <OnlineBanner />
+          {runningGames.length > 0 && (
+            <section className="wk-section">
+              <h2 className="wk-overline">Weiterspielen</h2>
+              {runningGames.map((game) => (
+                <ResumeGameCard key={game.gameKey} game={game} showGameName onDiscard={discard} />
+              ))}
+            </section>
           )}
+          <StatsOverviewCard />
+          <section className="wk-section">
+            <h2 className="wk-overline">Weitere Spiele</h2>
+            <div className="wk-tiles gap-3">
+              {others.map((game) => (
+                <CompactTile key={game.key} game={game} />
+              ))}
+            </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

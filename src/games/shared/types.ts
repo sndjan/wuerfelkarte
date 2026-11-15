@@ -18,7 +18,13 @@ export type RosterPlayer = {
   formerNames?: string[];
 };
 
-export const EMOJI_OPTIONS = ["🦄", "🐶", "🦝", "🐸", "🐼", "🦊", "🐻", "😺"];
+/** The characters a player can pick (Profil → Charakter, lobbies). The first eight are the original set. */
+export const EMOJI_OPTIONS = [
+  "🦄", "🐶", "🦝", "🐸", "🐼", "🦊", "🐻", "😺",
+  "🐙", "🦁", "🐯", "🐨", "🐷", "🐵", "🐔", "🐧",
+  "🦉", "🐝", "🐢", "🐬", "🦖", "🐲", "👻", "🤖",
+  "👽", "🧙", "🥷", "🤠", "🎩", "🚀",
+];
 
 /** A player inside a running game. */
 export type GamePlayer = {

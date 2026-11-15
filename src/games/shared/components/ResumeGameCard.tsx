@@ -38,25 +38,24 @@ export function ResumeGameCard({
   return (
     <div className="flex flex-col gap-1">
       <div className="relative">
-        <Link
-          href={game.href}
-          className="flex items-center justify-between gap-3 rounded-2xl border-2 border-brand-accent bg-card p-4"
-        >
-          <span className="text-3xl">{game.emoji}</span>
-          <div className="min-w-0 flex-1">
-            <p className={canDiscard ? "truncate pr-6 font-bold" : "truncate font-bold"}>
+        <Link href={game.href} className="wk-listrow wk-card-accent">
+          <span className="wk-listrow-emoji" aria-hidden="true">
+            {game.emoji}
+          </span>
+          <div className="wk-listrow-body">
+            <p className={canDiscard ? "wk-listrow-title pr-6" : "wk-listrow-title"}>
               {showGameName ? `${game.gameName} · ${game.modeName}` : game.modeName}
             </p>
-            <p className="truncate text-sm text-muted-foreground">
-              {game.players
-                .map((p) => (p.emoji ? `${p.emoji} ${p.name}` : p.name))
-                .join(", ")}
-            </p>
-            <p className="text-sm font-semibold text-brand-accent">{game.progress}</p>
+            {game.players.length > 0 && (
+              <p className="wk-listrow-sub">
+                {game.players.map((p) => (p.emoji ? `${p.emoji} ${p.name}` : p.name)).join(", ")}
+              </p>
+            )}
+            <p className="wk-listrow-meta">{game.progress}</p>
           </div>
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+          <span className="wk-btn wk-btn-sm wk-btn-primary">
             Weiterspielen
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4" aria-hidden="true" />
           </span>
         </Link>
         {canDiscard && (
@@ -64,7 +63,7 @@ export function ResumeGameCard({
             type="button"
             onClick={() => setConfirming(true)}
             aria-label="Spiel verwerfen"
-            className="absolute top-2 right-2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
+            className="absolute top-2 right-2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-danger"
           >
             <Trash2 className="size-4" />
           </button>

@@ -25,20 +25,17 @@ export function waitingFor(game: GameWithPlayers, userId: string): { mine: boole
 export function ActiveGameCard({ game, userId }: { game: GameWithPlayers; userId: string }) {
   const { mine, text } = waitingFor(game, userId);
   return (
-    <Link
-      href={`/online/${game.id}`}
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-[20px] border-2 p-4",
-        mine ? "border-brand-accent bg-brand-accent/10" : "border-border bg-card",
-      )}
-    >
-      <div className="min-w-0">
-        <p className="truncate font-bold">
-          {ONLINE_EMOJI} {gameLabel(game)} · {diceModeLabel(game.dice_mode)}
+    <Link href={`/online/${game.id}`} className={cn("wk-listrow", mine && "wk-card-accent")}>
+      <span className="wk-listrow-emoji" aria-hidden="true">
+        {ONLINE_EMOJI}
+      </span>
+      <div className="wk-listrow-body">
+        <p className="wk-listrow-title">
+          {gameLabel(game)} · {diceModeLabel(game.dice_mode)}
         </p>
-        <p className={cn("text-sm", mine ? "font-semibold text-brand-accent" : "text-muted-foreground")}>{text}</p>
+        <p className={mine ? "wk-listrow-meta" : "wk-listrow-sub"}>{text}</p>
       </div>
-      <span className="shrink-0 text-sm font-semibold">Öffnen →</span>
+      <span className={cn("wk-btn wk-btn-sm", mine ? "wk-btn-primary" : "wk-btn-outline")}>Öffnen</span>
     </Link>
   );
 }
