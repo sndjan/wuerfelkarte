@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
-import { RulesDialog } from "@/games/shared/components/RulesDialog";
+import { RulesLink } from "@/games/shared/components/Rules";
 import { LobbySection } from "@/games/shared/components/LobbyShell";
 import { gamemodes } from "@/games/yatzy/gamemodes";
 import { isGuest, useAuth } from "@/lib/auth";
@@ -176,7 +176,7 @@ function NewGame() {
         {gamemodes[gamemode].description && (
           <p className="text-sm text-muted-foreground">{gamemodes[gamemode].description}</p>
         )}
-        <RulesDialog title={gamemodes[gamemode].name} lines={gamemodes[gamemode].information ?? []} />
+        <RulesLink game="yatzy" mode={gamemode} />
       </LobbySection>
       <LobbySection title="Würfel">
         <div className="grid grid-cols-2 gap-2">

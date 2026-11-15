@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
-import { RulesDialog } from "@/games/shared/components/RulesDialog";
+import { RulesLink } from "@/games/shared/components/Rules";
 import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import {
@@ -120,10 +120,7 @@ export function Lobby() {
             <p className="text-sm text-muted-foreground">
               {dartsGamemodes[selectedGamemode].description}
             </p>
-            <RulesDialog
-              title={dartsGamemodes[selectedGamemode].name}
-              lines={dartsGamemodes[selectedGamemode].information}
-            />
+            <RulesLink game="darts" mode={selectedGamemode} />
           </LobbySection>
 
           <LobbySection title="Startpunkte">

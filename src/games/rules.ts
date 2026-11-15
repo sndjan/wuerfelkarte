@@ -13,8 +13,10 @@ import { gamemodes as yatzyGamemodes } from "./yatzy/gamemodes";
  */
 
 export type RuleMode = {
-  /** Anchor on the rules page, e.g. "yatzy-wunderplus". */
+  /** Unique across games, e.g. "yatzy-wunderplus". */
   id: string;
+  /** The mode's part of its rules route, e.g. "wunderplus". */
+  slug: string;
   name: string;
   description?: string;
   /** An intro line, then the rules ("• …"). */
@@ -31,9 +33,16 @@ export type RuleGame = {
 
 type ModeConfig = { name: string; description?: string; information?: readonly string[] };
 
+/** "WunderPlus" → "wunderplus": a mode key as it appears in a rules route. */
+export const modeSlug = (mode: string) => mode.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** The rules screen of one mode, e.g. "/regeln/yatzy/wunderplus". */
+export const rulesHref = (game: string, mode: string) => `/regeln/${game}/${modeSlug(mode)}`;
+
 const modesOf = (key: string, configs: Record<string, ModeConfig>): RuleMode[] =>
   Object.entries(configs).map(([mode, config]) => ({
-    id: `${key}-${mode.toLowerCase().replace(/[^a-z0-9]/g, "")}`,
+    id: `${key}-${modeSlug(mode)}`,
+    slug: modeSlug(mode),
     name: config.name,
     description: config.description,
     lines: config.information ?? [],
@@ -43,6 +52,7 @@ const SOLO_MODES: Record<string, RuleMode[]> = {
   quiz: [
     {
       id: "quiz",
+      slug: "quiz",
       name: "Tagesquiz",
       description: "Jeden Tag drei Aufgaben – für alle dieselben.",
       lines: [
@@ -57,6 +67,7 @@ const SOLO_MODES: Record<string, RuleMode[]> = {
   training: [
     {
       id: "training",
+      slug: "training",
       name: "Training",
       description: "Eine ganze Karte allein, mit Rückmeldung nach jedem Zug.",
       lines: [
@@ -70,6 +81,7 @@ const SOLO_MODES: Record<string, RuleMode[]> = {
   speedrun: [
     {
       id: "speedrun",
+      slug: "speedrun",
       name: "Speedrun",
       description: CATEGORY_DESCRIPTIONS.classic,
       lines: [
@@ -84,6 +96,7 @@ const SOLO_MODES: Record<string, RuleMode[]> = {
   online: [
     {
       id: "online",
+      slug: "online",
       name: "Online",
       description: "Zusammen spielen, jeder am eigenen Handy.",
       lines: [
@@ -121,3 +134,10 @@ export const ruleGames: RuleGame[] = games
     href: game.href,
     modes: GAME_MODES[game.key],
   }));
+
+/** A game and one of its modes, by the slugs of their rules route. */
+export function findRules(game: string, mode: string): { game: RuleGame; mode: RuleMode } | null {
+  const found = ruleGames.find((g) => g.key === game);
+  const rules = found?.modes.find((m) => m.slug === mode);
+  return found && rules ? { game: found, mode: rules } : null;
+}

@@ -7,7 +7,7 @@ import { GamemodePills } from "@/games/shared/components/GamemodePills";
 import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import { RecentMatches } from "@/games/shared/components/RecentMatches";
-import { RulesDialog } from "@/games/shared/components/RulesDialog";
+import { RulesLink } from "@/games/shared/components/Rules";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
 import { mostPlayedGamemode } from "@/games/shared/stats";
 import { YATZY_EMOJI, gamemodeSlug } from "../config";
@@ -97,10 +97,7 @@ export function Lobby() {
               {gamemodes[selectedGamemode].description}
             </p>
           )}
-          <RulesDialog
-            title={gamemodes[selectedGamemode].name}
-            lines={gamemodes[selectedGamemode].information ?? []}
-          />
+          <RulesLink game="yatzy" mode={selectedGamemode} />
         </LobbySection>
       )}
     </LobbyShell>
