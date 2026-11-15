@@ -30,6 +30,31 @@ The rule that keeps this honest: **nothing under `src/games/` or
 `src/components/` may import from `src/app/`.** Routes depend on games, never
 the other way round.
 
+## Design system
+
+Colours, radii, spacing and type come from the Würfelkarte design system
+(Artefakt „Würfelkarte“): its tokens live in `src/app/globals.css` (the old
+shadcn names stay as aliases, so `bg-card` is `surface`), its component
+classes (`wk-*`, plus the `wkx-*` pieces from the screen designs) in
+`src/app/wk.css`, inside `@layer components` so Tailwind utilities still win.
+No palette colours (`green-800`, `yellow-400`) or hex values in components.
+The page header carries at most two actions; Hell/Dunkel and Vollbild live in
+every game menu and on `/konto`.
+
+Screens: the home page (Würfelkarte first and dark, the four modes, the
+statistics strip, the other games small; two columns on an iPad), `/statistik`
+(any player of any table game, from the stored histories via
+`games/shared/playerStats.ts`), `/konto/charakter` (the account's character,
+see [Account names and linked players](#account-names-and-linked-players)) and
+the Würfelkarte board, which is one table for 2–8 players
+(`yatzy/components/ScoreTable.tsx`): a tap opens the values beside the field,
+a second tap enters the usual value, the bonus bar is coloured by
+`yatzy/bonus.ts`. The scoreboard (`ScoreDialog`) is a sheet from the bottom.
+
+Seasonal decoration (`components/common/seasonal/`) covers the whole year:
+Halloween, Christmas and Easter, then Winter, Spring, Summer and Autumn, each
+with three of the app's own drawings in `public/images/saison`.
+
 ## A game
 
 Each playable game is one folder with the same shape:
@@ -165,7 +190,10 @@ account deletion open in place, which sits better on a phone.
 ### Account names and linked players
 
 Every account picks a name and gets a four-digit tag, its Konto-ID
-(„Jan#4821“, `profiles`, set through `set_profile_name`). A roster player can
+(„Jan#4821“, `profiles`, set through `set_profile_name`), and may pick a
+character (`profiles.emoji`, `set_profile_emoji`, migration
+`20261115120000_profile_emoji.sql`). Linked accounts show the player with it,
+exactly like the name (`names.ts`); the own roster entry takes it too. A roster player can
 be linked to another account by that ID (`/konto` → „Mitspieler verknüpfen“,
 migration `20261110130000_player_links.sql`):
 
@@ -208,7 +236,7 @@ Either side can end a link; the shared rows go with it, copies already in the
 other history stay. Profiles are readable only by the account itself and
 accounts linked with it; looking up an ID happens inside `invite_player`.
 
-## Kniffel Online
+## Online
 
 `/online` and `/online/[id]` (`src/games/online/`) play Yatzy with linked
 accounts, each on their own device. Unlike every other game it lives on the
