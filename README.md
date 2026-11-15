@@ -50,7 +50,9 @@ Links go both ways, so both people get each other's matches. That needs
 `20261111120000_mutual_links.sql` (after the user_storage one); without them
 the section on `/konto` says it is not set up yet. Then run
 `20261112120000_shared_matches_limit.sql`, which caps how many matches one
-account can send another.
+account can send another, and `20261115120000_links_both_ways_at_once.sql`,
+which accepts an invite and links back in one step (so a link can never end
+up one-way) and links two people at once when both invited each other.
 
 ### Kniffel Online
 
