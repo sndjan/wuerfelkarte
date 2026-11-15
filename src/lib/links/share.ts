@@ -8,8 +8,8 @@ import type { MatchPlayer, RosterPlayer, StoredMatch } from "@/games/shared/type
 /** Games played around a table with named players; the solo modes have no one to share with. */
 export const SHARED_GAMES = ["yatzy", "wizard", "flip7", "cabo", "darts"] as const;
 
-/** An account's public identity: the name it picked plus a tag, "Jan#4821". */
-export type Profile = { userId: string; name: string; tag: string };
+/** An account's public identity: the name it picked plus a tag, "Jan#4821", and its emoji. */
+export type Profile = { userId: string; name: string; tag: string; emoji?: string | null };
 
 export const handleOf = (profile: Pick<Profile, "name" | "tag">) => `${profile.name}#${profile.tag}`;
 

@@ -298,3 +298,63 @@ describe("wrongKeyReason", async () => {
     expect(wrongKeyReason(jwt("anon"))).toBe('is a legacy key with role "anon"');
   });
 });
+
+describe("invite links", () => {
+  const GUEST = "00000000-0000-4000-8000-000000000009";
+
+  const lobbyWithLink = async () => {
+    const { gameId } = await act<{ gameId: string }>(JAN, { type: "create", gamemode: "Wunder", diceMode: "digital", invitees: [] });
+    const { code: link } = await act<{ code: string }>(JAN, { type: "link", gameId });
+    return { gameId, link };
+  };
+
+  it("lets the host open a lobby without invitees and share one stable code", async () => {
+    const { gameId, link } = await lobbyWithLink();
+    expect(link).toMatch(/^[A-Za-z0-9_-]{24}$/);
+    expect((await act<{ code: string }>(JAN, { type: "link", gameId })).code).toBe(link);
+    expect(await code(act(TIM, { type: "link", gameId }))).toBe("not host");
+  });
+
+  it("shows the game behind a link and lets a guest join under the name they typed", async () => {
+    const { gameId, link } = await lobbyWithLink();
+    expect(await act(GUEST, { type: "peek", code: link })).toMatchObject({ gameId, host: "Jan", players: ["Jan"], open: true });
+
+    expect(await code(act(GUEST, { type: "join", code: link }))).toBe("bad name");
+    expect(await act(GUEST, { type: "join", code: link, name: " Lisa " })).toEqual({ gameId });
+    expect(players(gameId).map((p) => [p.name, p.tag, p.status, p.active])).toEqual([
+      ["Jan", "4821", "accepted", true],
+      ["Lisa", "", "accepted", true],
+    ]);
+    // Opening the link again just leads back in.
+    expect(await act(GUEST, { type: "join", code: link, name: "Lisa" })).toEqual({ gameId });
+
+    await act(JAN, { type: "start", gameId });
+    expect(game(gameId).state!.seats.map((s) => s.name).sort()).toEqual(["Jan", "Lisa"]);
+  });
+
+  it("joins an account under its own name and turns an open invite into a seat", async () => {
+    const { gameId: withTim } = await act<{ gameId: string }>(JAN, { type: "create", gamemode: "Wunder", diceMode: "digital", invitees: [TIM] });
+    const { code: link } = await act<{ code: string }>(JAN, { type: "link", gameId: withTim });
+    await act(TIM, { type: "join", code: link, name: "Egal" });
+    await act(STRANGER, { type: "join", code: link });
+    expect(players(withTim).map((p) => [p.name, p.status])).toEqual([
+      ["Jan", "accepted"],
+      ["Tim", "accepted"],
+      ["Fremd", "accepted"],
+    ]);
+  });
+
+  it("refuses unknown codes, started games and players busy elsewhere", async () => {
+    const { gameId, link } = await lobbyWithLink();
+    expect(await code(act(GUEST, { type: "join", code: "x".repeat(24), name: "Lisa" }))).toBe("gone");
+    expect(await code(act(GUEST, { type: "join", code: "../etc", name: "Lisa" }))).toBe("gone");
+
+    await act(TIM, { type: "create", gamemode: "Wunder", diceMode: "digital", invitees: [] });
+    expect(await code(act(TIM, { type: "join", code: link }))).toBe("busy");
+
+    await act(EVA, { type: "join", code: link });
+    await act(JAN, { type: "start", gameId });
+    expect(await code(act(GUEST, { type: "join", code: link, name: "Lisa" }))).toBe("not lobby");
+    expect((await act<{ open: boolean }>(GUEST, { type: "peek", code: link })).open).toBe(false);
+  });
+});

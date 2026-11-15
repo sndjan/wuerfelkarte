@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageHeader } from "@/components/common/PageHeader";
-import { useAuth } from "@/lib/auth";
+import { isGuest, useAuth } from "@/lib/auth";
 import { AccountView } from "./AccountView";
 import { SignInForm } from "./SignInForm";
 
@@ -27,10 +27,17 @@ function AccountContent() {
       </p>
     );
   }
-  return user ? (
-    <AccountView user={user} />
-  ) : (
-    <SignInForm linkFailed={linkFailed} />
+  if (user && !isGuest(user)) return <AccountView user={user} />;
+  return (
+    <>
+      {user && (
+        <p className="mt-6 rounded-[20px] bg-card p-4 text-sm leading-relaxed">
+          Du spielst gerade als Gast. Mit einem Konto landen deine Spiele auf
+          all deinen Geräten, und du kannst selbst Online-Spiele eröffnen.
+        </p>
+      )}
+      <SignInForm linkFailed={linkFailed} />
+    </>
   );
 }
 

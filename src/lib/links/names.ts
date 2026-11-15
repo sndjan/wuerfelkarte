@@ -6,6 +6,8 @@ import { handleOf, sameName, type PlayerLink, type Profile } from "./share";
  * account renames itself, the roster entry takes the new name and every
  * stored match and running game follows, so statistics keep counting one
  * person. The same goes for the roster entry marked as the user themselves.
+ * Once the account has picked an emoji, the entry shows that one too; the
+ * emoji of unlinked players stays the device's choice.
  *
  * Statistics tell players apart by name, so two roster players must never
  * share one. When the account name is already taken:
@@ -108,6 +110,7 @@ export function accountRenames({
     if (player.name !== wanted || (player.formerNames ?? []).join() !== formerNames.join()) {
       rename(playerId, { name: wanted, formerNames: formerNames.length ? formerNames : undefined });
     }
+    if (profile.emoji && player.emoji !== profile.emoji) rename(playerId, { emoji: profile.emoji });
   }
   return { roster: next, names, notices };
 }

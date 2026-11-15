@@ -165,15 +165,18 @@ account deletion open in place, which sits better on a phone.
 ### Account names and linked players
 
 Every account picks a name and gets a four-digit tag, its Konto-ID
-(„Jan#4821“, `profiles`, set through `set_profile_name`). A roster player can
+(„Jan#4821“, `profiles`, set through `set_profile_name`), and can pick an
+emoji (`set_profile_emoji`, migration `20261115130000_profile_emoji.sql`). A roster player can
 be linked to another account by that ID (`/konto` → „Mitspieler verknüpfen“,
 migration `20261110130000_player_links.sql`):
 
 1. Jan enters „Tim#0193“ for his roster entry „Timmi“ (`invite_player`).
 2. Tim sees the invite under „Einladungen“ (a dot on the header button),
    picks which of his roster entries is Jan („Wer ist das bei dir?“, or a new
-   one) and accepts (`accept_player_link`, then `link_back`, migration
-   `20261111120000_mutual_links.sql`), or declines (deletes it). Links go both
+   one) and accepts (`accept_invite`, which accepts and calls `link_back` in
+   one transaction, migrations `20261111120000_mutual_links.sql` and
+   `20261115120000_links_both_ways_at_once.sql`), or declines (deletes it).
+   If Tim had invited Jan as well, Jan's invite links both at once. Links go both
    ways from here: Tim's entry for Jan is linked to Jan's account, and ending
    the link from either side ends both.
 3. After each account sync, on both sides, `src/lib/links/runner.ts`:
@@ -188,7 +191,9 @@ migration `20261110130000_player_links.sql`):
      his account, Jan's data follows. Statistics count by name, so two roster
      players never share one: an unlinked „Tim“ in the way becomes „Tim (2)“
      (his matches too) and a warning toast says so; if two linked accounts
-     are both called Tim, the second gets „Tim (2)“.
+     are both called Tim, the second gets „Tim (2)“. Once Tim has picked an
+     account emoji, Jan's entry shows it too; unlinked players keep the emoji
+     picked on the device.
    - does the same for the roster entry Jan marked as himself („Das bin ich“,
      synced key `wuerfelkarte:self`), so Tim's copies show Jan's account name.
    - uploads every Yatzy, Wizard, Flip 7, Cabo and Darts match with a linked
@@ -237,9 +242,25 @@ server, not in localStorage.
   `version` moved in between. `server.test.ts` runs the flows against an
   in-memory stand-in (`fakeDb.ts`).
 - **Who can be invited**: accounts with an accepted player link, either
-  way. Someone in a lobby or running game is shown as „spielt gerade“ and
+  way, or anyone with the lobby's invite link (below). Someone in a lobby or running game is shown as „spielt gerade“ and
   cannot be invited; accepting an invite or hosting drops one's other
   invites. Starting withdraws unanswered invites and shuffles the seats.
+- **Invite links** (migration `20261115140000_online_invite_links.sql`):
+  the host's „Link teilen“ (action `link`) gives the lobby a random
+  `invite_code`; `/online/beitreten/[code]` (`JoinGame.tsx`) shows the game
+  (action `peek`, the only one that needs no sign-in) and joins it (action
+  `join`). Accounts join under their profile name, an open invite turns into
+  a seat. Someone without an account types a name and is signed in
+  anonymously (Supabase anonymous sign-ins), so tables, RLS and Realtime
+  treat them like anyone else; their row has an empty `tag` and shows as
+  „Gast“. Guests do not sync (`isGuest` in `src/lib/auth.tsx`): their result
+  lands in the device's Yatzy history, and signing in later with an email
+  takes it into the account. A lobby can also be opened with no invitees.
+- **Speed**: the route checks the access token locally (`auth.getClaims`,
+  cached public keys) and a move costs one read and one write of the game
+  row. On the board the roller's dice start shaking on the tap and settle
+  when the server's faces arrive; an entry is shown at once with the same
+  engine call the server makes, and put back if the server refuses it.
 - **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
   tables, a broadcast channel per game for the dice the player on turn is
   holding, plus a reload on focus and a slow poll as a safety net.

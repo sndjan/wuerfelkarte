@@ -141,6 +141,38 @@ describe("accountRenames", () => {
     );
   });
 
+  it("takes the account's emoji for linked players and the user's own entry only", () => {
+    const withEmoji = new Map<string, Profile>([
+      [TIM, { userId: TIM, name: "Tim", tag: "1234", emoji: "🦊" }],
+      [JAN, { userId: JAN, name: "Jan", tag: "1111", emoji: "🐼" }],
+    ]);
+    const { roster } = accountRenames({
+      userId: JAN,
+      roster: [player("r-jan", "Jan"), player("r-tim", "Tim"), player("r-ole", "Ole")],
+      selfPlayerId: "r-jan",
+      links: [link()],
+      profiles: withEmoji,
+    });
+    expect(roster.map((p) => p.emoji)).toEqual(["🐼", "🦊", "🐸"]);
+  });
+
+  it("keeps the local emoji while the account has none, or the invite is pending", () => {
+    const tim = new Map<string, Profile>([[TIM, { userId: TIM, name: "Tim", tag: "1234", emoji: "🦊" }]]);
+    const pending = accountRenames({
+      userId: JAN,
+      roster: [player("r-tim", "Tim")],
+      selfPlayerId: null,
+      links: [link("pending")],
+      profiles: tim,
+    });
+    expect(pending.roster[0].emoji).toBe("🐸");
+    const none = [player("r-tim", "Tim")];
+    expect(
+      accountRenames({ userId: JAN, roster: none, selfPlayerId: null, links: [link()], profiles: profiles([[TIM, "Tim"]]) })
+        .roster,
+    ).toBe(none);
+  });
+
   it("is stable once applied", () => {
     const first = accountRenames({
       userId: JAN,
