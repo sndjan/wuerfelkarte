@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { readJSON, writeJSON } from "@/games/shared/storage";
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 import { isGuest, useAuth } from "@/lib/auth";
 import { getSupabase } from "@/lib/supabase";
 import { callOnline, OnlineError, peekLink } from "../client";
@@ -18,12 +19,15 @@ import type { LinkPreview } from "../types";
 
 /** The name a guest typed last, so the next invite link is one tap. */
 const GUEST_NAME_KEY = "online:guestName";
+/** The emoji a guest picked last; a random one until they pick. */
+const GUEST_EMOJI_KEY = "online:guestEmoji";
+const randomEmoji = () => EMOJI_OPTIONS[Math.floor(Math.random() * EMOJI_OPTIONS.length)];
 
 type Peeked = { state: "loading" } | { state: "gone" } | { state: "error"; message: string } | { state: "ready"; game: LinkPreview };
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-full bg-background">
+    <div className="wk min-h-full bg-background">
       <PageHeader backHref="/" title="Online" />
       <div className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-10">{children}</div>
     </div>
@@ -65,11 +69,13 @@ export function JoinGame({ code }: { code: string }) {
   const ownName = useOwnName(user?.id ?? null, guest);
   const [peeked, setPeeked] = useState<Peeked>({ state: "loading" });
   const [name, setName] = useState("");
+  const [emoji, setEmoji] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setName(readJSON<string>(GUEST_NAME_KEY, ""));
+    setEmoji(readJSON<string | null>(GUEST_EMOJI_KEY, null) ?? randomEmoji());
     peekLink(code)
       .then((game) => setPeeked(game ? { state: "ready", game } : { state: "gone" }))
       .catch((e) => setPeeked({ state: "error", message: e instanceof OnlineError ? e.message : "Hat nicht geklappt." }));
@@ -111,7 +117,10 @@ export function JoinGame({ code }: { code: string }) {
     setJoining(true);
     setError(null);
     try {
-      if (needsName) writeJSON(GUEST_NAME_KEY, name.trim());
+      if (needsName) {
+        writeJSON(GUEST_NAME_KEY, name.trim());
+        if (emoji) writeJSON(GUEST_EMOJI_KEY, emoji);
+      }
       if (!user) {
         const { error: signInError } = await supabase.auth.signInAnonymously();
         if (signInError) {
@@ -125,7 +134,7 @@ export function JoinGame({ code }: { code: string }) {
       const { gameId } = await callOnline<{ gameId: string }>({
         type: "join",
         code,
-        ...(needsName ? { name: name.trim() } : {}),
+        ...(needsName ? { name: name.trim(), ...(emoji ? { emoji } : {}) } : {}),
       });
       router.replace(`/online/${gameId}`);
     } catch (e) {
@@ -162,21 +171,45 @@ export function JoinGame({ code }: { code: string }) {
           }}
         >
           {needsName ? (
-            <Card className="flex flex-col gap-2 p-4">
-              <label htmlFor="guest-name" className="text-sm font-bold">
-                Dein Name
-              </label>
-              <Input
-                id="guest-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                maxLength={24}
-                required
-                autoFocus
-                autoComplete="nickname"
-                placeholder="So sehen dich die anderen"
-                className="h-11 rounded-xl text-base"
-              />
+            <Card className="flex flex-col gap-3 p-4">
+              <div className="flex items-end gap-3">
+                <span className="wkx-avatar size-14 text-3xl" aria-hidden="true">
+                  {emoji}
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <label htmlFor="guest-name" className="text-sm font-bold">
+                    Dein Name
+                  </label>
+                  <Input
+                    id="guest-name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    maxLength={24}
+                    required
+                    autoFocus
+                    autoComplete="nickname"
+                    placeholder="So sehen dich die anderen"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm font-bold">Dein Charakter</p>
+                <div className="wkx-emojis" role="group" aria-label="Charakter wählen">
+                  {EMOJI_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className="wkx-emoji"
+                      aria-pressed={option === emoji}
+                      aria-label={`Charakter ${option}`}
+                      onClick={() => setEmoji(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">Zufällig gewählt, tipp einen anderen an, wenn du magst.</p>
+              </div>
               {!user && (
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   Kein Konto nötig. Mit einem{" "}

@@ -158,6 +158,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
         {players.map((p) => (
           <Card key={p.user_id} className="flex flex-row items-center justify-between gap-2 px-4 py-2">
             <span className="min-w-0 truncate font-semibold">
+              {p.emoji && <span aria-hidden="true">{p.emoji} </span>}
               {p.name}
               <span className="font-normal text-muted-foreground">{p.tag ? `#${p.tag}` : " · Gast"}</span>
             </span>

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 import { FakeDb } from "./fakeDb";
 import { ApiError, handle } from "./server";
 import type { GameRow, OnlineAction, PlayerRow } from "./types";
@@ -330,6 +331,18 @@ describe("invite links", () => {
 
     await act(JAN, { type: "start", gameId });
     expect(game(gameId).state!.seats.map((s) => s.name).sort()).toEqual(["Jan", "Lisa"]);
+  });
+
+  it("gives a guest the emoji they picked, or a random one, and carries it into the seat", async () => {
+    const { gameId, link } = await lobbyWithLink();
+    await act(GUEST, { type: "join", code: link, name: "Lisa", emoji: "🦖" });
+    expect(players(gameId).find((p) => p.name === "Lisa")?.emoji).toBe("🦖");
+    await act(GUEST, { type: "join", code: link, name: "Lisa", emoji: "zu lang ohne emoji" });
+    const random = players(gameId).find((p) => p.name === "Lisa")?.emoji;
+    expect(random && EMOJI_OPTIONS.includes(random)).toBe(true);
+
+    await act(JAN, { type: "start", gameId });
+    expect(game(gameId).state!.seats.find((s) => s.name === "Lisa")?.emoji).toBe(random);
   });
 
   it("joins an account under its own name and turns an open invite into a seat", async () => {

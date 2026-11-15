@@ -30,6 +30,8 @@ export type PlayerRow = {
   name: string;
   /** Empty for a guest without an account. */
   tag: string;
+  /** The account's emoji, or the one a guest picked; missing before the online_player_emoji migration. */
+  emoji?: string | null;
   status: PlayerStatus;
   active: boolean;
   invited_at: string;
@@ -66,8 +68,8 @@ export type OnlineAction =
   | { type: "link"; gameId: string }
   /** What a link leads to; works without signing in. */
   | { type: "peek"; code: string }
-  /** Joins the lobby behind a link; `name` for guests without a profile. */
-  | { type: "join"; code: string; name?: string }
+  /** Joins the lobby behind a link; `name` (and `emoji`) for guests without a profile. */
+  | { type: "join"; code: string; name?: string; emoji?: string }
   | { type: "respond"; gameId: string; accept: boolean }
   | { type: "start"; gameId: string }
   | { type: "roll"; gameId: string; keep: boolean[]; preset?: number[] }

@@ -28,6 +28,8 @@ export type Cell = number | "X";
 export type OnlineSeat = {
   userId: string;
   name: string;
+  /** The player's emoji (account or guest pick); missing in games started before it existed. */
+  emoji?: string;
   points: Record<string, Cell>;
   /** Battle: fields that counted double. */
   doubled: string[];
@@ -486,6 +488,7 @@ export function toMatch(state: OnlineState, id: string): OnlineMatch {
       const twin = names.findIndex((n) => n.toLowerCase() === seat.name.toLowerCase());
       return {
         name: twin === i ? seat.name : `${seat.name} (${i + 1})`,
+        ...(seat.emoji ? { emoji: seat.emoji } : {}),
         score: seatScore(state, seat),
         points: sheetPoints(state, seat),
         ...(seat.doubled.length > 0 ? { doubled: seat.doubled } : {}),

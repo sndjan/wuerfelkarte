@@ -294,6 +294,12 @@ server, not in localStorage.
   Yatzy sheet (without the reset button: an entry ends the turn). An extra
   Wunder is picked on the own Wunder cell (50 → 100) and sent with the next
   entry.
+- **Emojis**: every player row carries an emoji (migration
+  `20261115150000_online_player_emoji.sql`): an account brings its profile's,
+  a guest picks one on the invite page (a random one is preselected and
+  remembered in `online:guestEmoji`). It goes into the seat at the start and
+  into the history entry. Before the migration the server writes rows without
+  it.
 - **Leaving**: a player can leave and the host can take someone out; their
   column stays as it is and the turn skips them. The host role passes on if
   the host leaves. Only the host can correct a cell, and only with real dice.

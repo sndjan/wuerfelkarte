@@ -1,5 +1,6 @@
 import { createClient, type PostgrestError, type SupabaseClient } from "@supabase/supabase-js";
 
+import { EMOJI_OPTIONS } from "@/games/shared/types";
 import { gamemodes } from "@/games/yatzy/gamemodes";
 import { selectMissions } from "@/games/yatzy/gamemodes/chaoswunder";
 import {
@@ -91,13 +92,42 @@ const check = <T>({ data, error }: { data: T; error: PostgrestError | null }): T
 /** Random numbers for the dice from the platform's cryptographic source. */
 const secureRandom = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
 
-type Profile = { user_id: string; name: string; tag: string };
+type Profile = { user_id: string; name: string; tag: string; emoji?: string | null };
+
+/** 42703 / PGRST204: a column a migration adds is not there yet (profile_emoji, online_player_emoji). */
+const isMissingColumn = (error: PostgrestError | null) => error?.code === "42703" || error?.code === "PGRST204";
 
 async function profilesOf(db: SupabaseClient, ids: string[]): Promise<Map<string, Profile>> {
   if (ids.length === 0) return new Map();
-  const rows = check(await db.from("profiles").select("user_id, name, tag").in("user_id", ids)) as Profile[];
+  const withEmoji = await db.from("profiles").select("user_id, name, tag, emoji").in("user_id", ids);
+  const rows = check(
+    isMissingColumn(withEmoji.error) ? await db.from("profiles").select("user_id, name, tag").in("user_id", ids) : withEmoji,
+  ) as Profile[];
   return new Map(rows.map((p) => [p.user_id, p]));
 }
+
+type PlayerWrite = Record<string, unknown> & { emoji?: string | null };
+
+/**
+ * Writes player rows with their emoji; before the online_player_emoji
+ * migration the column is missing, so the rows go in without it.
+ */
+async function writePlayers<R extends PlayerWrite | PlayerWrite[]>(
+  rows: R,
+  write: (rows: R) => PromiseLike<{ data: unknown; error: PostgrestError | null }>,
+) {
+  const first = await write(rows);
+  if (!isMissingColumn(first.error)) return check(first);
+  const strip = (row: PlayerWrite) => Object.fromEntries(Object.entries(row).filter(([key]) => key !== "emoji"));
+  return check(await write((Array.isArray(rows) ? rows.map(strip) : strip(rows)) as R));
+}
+
+/** A guest's emoji: the one picked on the invite page, or a random one. */
+const guestEmoji = (value: unknown): string => {
+  const emoji = typeof value === "string" ? value.trim() : "";
+  if (emoji.length >= 1 && emoji.length <= 8 && !/\s/.test(emoji)) return emoji;
+  return EMOJI_OPTIONS[Math.floor(secureRandom() * EMOJI_OPTIONS.length)];
+};
 
 /** Accounts with an accepted link to this one, in either direction. */
 async function linkedIds(db: SupabaseClient, uid: string): Promise<string[]> {
@@ -180,9 +210,18 @@ async function inviteAll(db: SupabaseClient, uid: string, gameId: string, userId
   const profiles = await profilesOf(db, userIds);
   const rows = userIds.map((id) => {
     const profile = profiles.get(id) ?? deny("not linked");
-    return { game_id: gameId, user_id: id, name: profile.name, tag: profile.tag, status: "invited" };
+    return {
+      game_id: gameId,
+      user_id: id,
+      name: profile.name,
+      tag: profile.tag,
+      emoji: profile.emoji ?? null,
+      status: "invited",
+    };
   });
-  if (rows.length > 0) check(await db.from("online_game_players").upsert(rows, { ignoreDuplicates: true }));
+  if (rows.length > 0) {
+    await writePlayers(rows, (r) => db.from("online_game_players").upsert(r, { ignoreDuplicates: true }));
+  }
 }
 
 const seatOf = (state: OnlineState, uid: string) => {
@@ -329,15 +368,17 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
           .single(),
       ) as GameRow;
       try {
-        check(
-          await db.from("online_game_players").insert({
+        await writePlayers(
+          {
             game_id: game.id,
             user_id: uid,
             name: profile.name,
             tag: profile.tag,
+            emoji: profile.emoji ?? null,
             status: "accepted",
             active: true,
-          }),
+          },
+          (row) => db.from("online_game_players").insert(row),
         );
         await inviteAll(db, uid, game.id, unique);
       } catch (error) {
@@ -382,17 +423,19 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
       if ((await busyIds(db, [uid])).size > 0) deny("busy", 409);
       // An account joins under its name; a guest under the one they typed.
       const profile = (await profilesOf(db, [uid])).get(uid);
-      const row = {
+      // The emoji: the account's own, else the guest's pick, else a random one.
+      const row: PlayerWrite = {
         name: profile?.name ?? guestName(action.name),
         tag: profile?.tag ?? "",
+        emoji: profile?.emoji ?? guestEmoji(action.emoji),
         status: "accepted",
         active: true,
         updated_at: new Date().toISOString(),
       };
       if (me) {
-        check(await db.from("online_game_players").update(row).eq("game_id", game.id).eq("user_id", uid));
+        await writePlayers(row, (r) => db.from("online_game_players").update(r).eq("game_id", game.id).eq("user_id", uid));
       } else {
-        check(await db.from("online_game_players").insert({ game_id: game.id, user_id: uid, ...row }));
+        await writePlayers({ game_id: game.id, user_id: uid, ...row }, (r) => db.from("online_game_players").insert(r));
       }
       await dropInvites(db, uid);
       return { gameId: game.id };
@@ -424,9 +467,14 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
       if (accepted.length < 2) deny("too few");
       const profiles = await profilesOf(db, accepted.map((p) => p.user_id));
       const seats = accepted
-        .map((p) => ({ userId: p.user_id, name: profiles.get(p.user_id)?.name ?? p.name, order: secureRandom() }))
+        .map((p) => ({
+          userId: p.user_id,
+          name: profiles.get(p.user_id)?.name ?? p.name,
+          emoji: profiles.get(p.user_id)?.emoji ?? p.emoji ?? undefined,
+          order: secureRandom(),
+        }))
         .sort((a, b) => a.order - b.order)
-        .map(({ userId, name }) => ({ userId, name }));
+        .map(({ userId, name, emoji }) => ({ userId, name, ...(emoji ? { emoji } : {}) }));
       const interval = before.settings.missionEveryRound ? 1 : 2;
       const game = await mutate(db, before.id, (g) => {
         if (g.status !== "lobby") return deny("not lobby", 409);
