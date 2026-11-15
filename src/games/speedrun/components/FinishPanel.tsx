@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, Share2, Star } from "lucide-react";
+import { Copy, Hash, Repeat, RotateCcw, Share2, Star } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 
@@ -33,7 +33,8 @@ export function shareText(match: StoredSpeedrunMatch): string {
     match.category === "any"
       ? `${formatTime(match.wertungMs)}`
       : `${formatTime(match.wertungMs)} (${formatTime(match.timeMs)} + ${formatSeconds(match.strafeMs)} Strafe)`;
-  return [title, result, "würfelkarte.com/speedrun"].join("\n");
+  const seed = match.seed && !match.seed.includes(":") ? `Seed ${match.seed}` : null;
+  return [title, result, seed, "würfelkarte.com/speedrun"].filter(Boolean).join("\n");
 }
 
 async function share(text: string) {
@@ -75,15 +76,17 @@ type FinishPanelProps = {
   game: SpeedrunGame;
   matches: StoredSpeedrunMatch[];
   onAgain: () => void;
+  /** Same seed, same dice: a fresh attempt at this very run. */
+  onReplaySeed: () => void;
   onLeave: () => void;
 };
 
 /** The finish line: Wertungszeit, splits, and what the solver thought of the run. */
-export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProps) {
+export function FinishPanel({ game, matches, onAgain, onReplaySeed, onLeave }: FinishPanelProps) {
   const match = useMemo(() => buildMatch(game), [game]);
   const oldPb = personalBest(matches, game.category, game.id);
   const gold = goldSegments(matches, game.category, game.id);
-  const newPb = !oldPb || match.wertungMs < oldPb.wertungMs;
+  const newPb = !game.customSeed && (!oldPb || match.wertungMs < oldPb.wertungMs);
   const stats = trainingStats(game);
   const mistakes = biggestMistakes(game, 3);
   const counted = game.category !== "any";
@@ -106,6 +109,7 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
           {CATEGORY_LABELS[game.category]}
           {game.date && ` · ${formatDate(game.date)}`}
           {game.category === "daily" && !game.ranked && " · Übung"}
+          {game.customSeed && " · eigener Seed, zählt nicht für die Bestzeit"}
         </span>
         {newPb && (
           <span className="mt-2 rounded-full bg-gold px-3 py-1 text-xs font-extrabold tracking-wide text-on-gold uppercase">
@@ -156,8 +160,30 @@ export function FinishPanel({ game, matches, onAgain, onLeave }: FinishPanelProp
               Teilen
             </Button>
           </div>
+          <div className="flex items-center gap-2 rounded-2xl bg-muted py-1.5 pr-1.5 pl-3">
+            <Hash className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="text-sm text-muted-foreground">Seed</span>
+            <span className="min-w-0 flex-1 truncate font-mono font-bold">{game.seed}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Seed kopieren"
+              onClick={() =>
+                navigator.clipboard.writeText(game.seed).then(
+                  () => toast.success("Seed kopiert"),
+                  () => toast.error("Kopieren hat nicht geklappt"),
+                )
+              }
+            >
+              <Copy />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onReplaySeed}>
+              <Repeat />
+              Nachspielen
+            </Button>
+          </div>
           <Button variant="ghost" className="-mt-2 self-center text-muted-foreground" onClick={onLeave}>
-            Andere Kategorie
+            Zur Übersicht
           </Button>
         </div>
 

@@ -79,6 +79,15 @@ export const gamemodes: Record<string, GamemodeConfig> = {
   Wunder: {
     name: "Wunder",
     description: "Der Klassiker mit 5 Würfeln und allen bekannten Kategorien.",
+    information: [
+      "Reihum würfelt jeder bis zu dreimal und trägt danach genau ein Feld ein. Nach 13 Runden ist die Karte voll, die höchste Summe gewinnt.",
+      "• Vor dem zweiten und dritten Wurf darfst du beliebig viele Würfel liegen lassen und die anderen neu würfeln.",
+      "• Einser bis Sechser: die Summe aller Würfel dieser Augenzahl. Ab 63 Punkten im oberen Teil gibt es 35 Bonuspunkte.",
+      "• 3er- und 4er-Pasch: mindestens drei bzw. vier gleiche Würfel, gezählt wird die Summe aller Würfel.",
+      "• Full House (25): drei gleiche und zwei gleiche. Kleine Straße (30): vier in Folge. Große Straße (40): fünf in Folge.",
+      "• 5er-Pasch (50): fünf gleiche. Chance: die Summe aller Würfel, ohne Bedingung.",
+      "• Passt nichts, musst du ein freies Feld streichen – es zählt dann 0 Punkte.",
+    ],
     fields: [
       { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
       { key: "Zweier", label: "Zweier", options: [2, 4, 6, 8, 10] },
@@ -147,6 +156,13 @@ export const gamemodes: Record<string, GamemodeConfig> = {
   Chaoswunder: {
     name: "Chaoswunder",
     description: "Ein chaotischer Twist auf den Klassiker mit 5 Würfeln und allen bekannten Kategorien.",
+    information: [
+      "Chaoswunder spielt mit der Karte des Klassikers – aber jede Runde gilt eine Mission für alle:",
+      "• Eine Mission legt fest, wie oft gewürfelt werden darf, und bringt eine Einschränkung mit, zum Beispiel: Einsen dürfen nicht erneut gewürfelt werden.",
+      "• Die Mission wechselt jede Runde oder jede zweite Runde – einstellbar über das Zahnrad im Spiel.",
+      "• Im ausgewogenen Modus gibt es eine feste Mischung aus guten, neutralen und schweren Missionen.",
+      "• Felder, Punkte und Bonus sind wie beim Klassiker.",
+    ],
     fields: [
       { key: "Einser", label: "Einser", options: [1, 2, 3, 4, 5] },
       { key: "Zweier", label: "Zweier", options: [2, 4, 6, 8, 10] },

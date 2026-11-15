@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
+import { RulesLink } from "@/games/shared/components/Rules";
 import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import {
@@ -103,6 +104,7 @@ export function Lobby() {
             <p className="text-sm text-muted-foreground">
               {flip7Gamemodes[selectedGamemode].description}
             </p>
+            <RulesLink game="flip7" mode={selectedGamemode} />
           </LobbySection>
 
           <LobbySection title="Zielpunktzahl">

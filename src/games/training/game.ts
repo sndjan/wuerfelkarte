@@ -1,6 +1,7 @@
 import { CATEGORIES, type Category, type Solver } from "@/games/yatzy/solver";
 import { gradeKeep, gradeScore, rankMoves, stepPoints, toTurnState } from "@/games/quiz/puzzles";
 import type { QuizStep, RollsLeft } from "@/games/quiz/types";
+import { lossBreakdown } from "@/games/shared/soloStats";
 import type { StoredTrainingMatch, TrainingGame, TrainingTurnProgress } from "./types";
 
 /**
@@ -186,5 +187,6 @@ export function buildMatch(game: TrainingGame): StoredTrainingMatch {
     loss: stats.loss,
     decisions: stats.decisions,
     optimal: stats.optimal,
+    breakdown: lossBreakdown(game.turns),
   };
 }

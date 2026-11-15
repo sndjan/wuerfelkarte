@@ -1,6 +1,7 @@
 import type { Category } from "@/games/yatzy/solver";
 import type { QuizCard, QuizStep, RollsLeft } from "@/games/quiz/types";
 import type { MatchPlayer, StoredMatch } from "@/games/shared/types";
+import type { LossBreakdown } from "@/games/shared/soloStats";
 
 /** The turn being played. */
 export type TrainingTurnProgress = {
@@ -40,4 +41,6 @@ export type StoredTrainingMatch = StoredMatch<MatchPlayer> & {
   decisions: number;
   /** Decisions that matched the best move. */
   optimal: number;
+  /** Where the points went; missing on games stored before it existed. */
+  breakdown?: LossBreakdown;
 };

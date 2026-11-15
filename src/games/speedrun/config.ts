@@ -6,7 +6,11 @@ export const SPEEDRUN_NAME = "Speedrun";
 /** Penalty per expected point a decision gives away. */
 export const STRAFE_MS_PER_POINT = 1000;
 
-export const CATEGORIES: SpeedrunCategory[] = ["any", "classic", "daily"];
+/**
+ * The categories a new run can be started in. Any% and the Tagesrun are no
+ * longer offered; their stored runs and a run still on the clock stay valid.
+ */
+export const CATEGORIES: SpeedrunCategory[] = ["classic"];
 
 export const CATEGORY_LABELS: Record<SpeedrunCategory, string> = {
   any: "Any%",

@@ -83,6 +83,14 @@ Setup:
    playing without an account is not set up yet. Consider turning on
    CAPTCHA protection there as well, since anyone can create anonymous users.
 
+### Speedrun-Bestenliste
+
+The Speedrun start screen shows a global leaderboard (Klassisch, random seeds
+only). Run `supabase/migrations/20261116120000_speedrun_leaderboard.sql`
+(after the profile_emoji one). Signed-in accounts with a name send their best
+run; the server keeps one row per account. Until the migration has run, the
+start screen says the leaderboard is not reachable.
+
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it
 by cascade. The games on the device stay.

@@ -10,6 +10,7 @@ import {
   totalScore,
   trainingStats,
 } from "@/games/training/game";
+import { lossBreakdown } from "@/games/shared/soloStats";
 import { STRAFE_MS_PER_POINT } from "./config";
 import type { SpeedrunCategory, SpeedrunGame, StoredSpeedrunMatch, TurnDice } from "./types";
 
@@ -27,6 +28,31 @@ import type { SpeedrunCategory, SpeedrunGame, StoredSpeedrunMatch, TurnDice } fr
 export { TURNS, isFinished, totalScore };
 
 export const dailySeed = (date: string) => `kniffel-speedrun:${date}`;
+
+// No 0/O, 1/I/L: a seed is read off one screen and typed into another.
+const SEED_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const SEED_LENGTH = 6;
+
+/** A fresh seed: six characters, short enough to read out or type in. */
+export function newSeed(random: () => number = Math.random): string {
+  return Array.from(
+    { length: SEED_LENGTH },
+    () => SEED_ALPHABET[Math.floor(random() * SEED_ALPHABET.length)],
+  ).join("");
+}
+
+/**
+ * A typed-in seed as the run will use it: spaces dropped and upper case, so
+ * "k7m 2qx" and "K7M2QX" roll the same dice. Older seeds ("free:…") and the
+ * Tagesrun's are kept as they are. Null when nothing usable is left.
+ */
+export function normalizeSeed(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+  if (/^(free|kniffel-speedrun):/.test(trimmed)) return trimmed;
+  const seed = trimmed.replace(/\s+/g, "").toUpperCase();
+  return seed.length <= 40 ? seed : null;
+}
 
 const fiveDice = (random: () => number) =>
   Array.from({ length: 5 }, () => 1 + Math.floor(random() * 6));
@@ -49,6 +75,8 @@ type NewRunOptions = {
   ranked?: boolean;
   /** Defaults to the day's seed for a Tagesrun and a fresh one otherwise. */
   seed?: string;
+  /** The seed was typed in by the player. */
+  customSeed?: boolean;
 };
 
 export function newRun(category: SpeedrunCategory, options: NewRunOptions = {}): SpeedrunGame {
@@ -56,12 +84,13 @@ export function newRun(category: SpeedrunCategory, options: NewRunOptions = {}):
   const daily = category === "daily" && options.date !== undefined;
   const seed =
     options.seed ??
-    (daily ? dailySeed(options.date!) : `free:${now}:${Math.random().toString(36).slice(2)}`);
+    (daily ? dailySeed(options.date!) : newSeed());
   return {
     ...newTrainingGame(now),
     id: `speedrun-${now}`,
     category,
     seed,
+    ...(options.customSeed ? { customSeed: true } : {}),
     ...(daily ? { date: options.date, ranked: options.ranked ?? true } : {}),
     turnEnds: [],
   };
@@ -153,6 +182,8 @@ export function buildMatch(game: SpeedrunGame): StoredSpeedrunMatch {
     players: [{ name: "Du", score }],
     category: game.category,
     ...(game.date !== undefined ? { date: game.date, ranked: game.ranked } : {}),
+    seed: game.seed,
+    ...(game.customSeed ? { customSeed: true } : {}),
     timeMs,
     strafeMs: strafe,
     wertungMs: timeMs + strafe,
@@ -161,5 +192,6 @@ export function buildMatch(game: SpeedrunGame): StoredSpeedrunMatch {
     loss: stats.loss,
     decisions: stats.decisions,
     optimal: stats.optimal,
+    breakdown: lossBreakdown(game.turns),
   };
 }

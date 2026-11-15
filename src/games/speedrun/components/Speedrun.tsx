@@ -25,7 +25,7 @@ import { StartPanel } from "./StartPanel";
  * themselves cannot make a run better or worse.
  */
 export function Speedrun() {
-  const { status, solver, game, matches, category, setCategory, retry, start, roll, keep, score, leave } =
+  const { status, solver, game, matches, category, retry, start, roll, keep, score, leave } =
     useSpeedrun();
   const [confirmAbort, setConfirmAbort] = useState(false);
   const [showKeys, setShowKeys] = useState(false);
@@ -56,10 +56,10 @@ export function Speedrun() {
         {header}
         <StartPanel
           category={category}
-          onCategory={setCategory}
           matches={matches}
           ready={status === "ready"}
           onStart={() => start()}
+          onStartSeed={(seed) => start(category, seed)}
         />
       </>
     );
@@ -69,7 +69,13 @@ export function Speedrun() {
     return (
       <>
         {header}
-        <FinishPanel game={game} matches={matches} onAgain={() => start(game.category)} onLeave={leave} />
+        <FinishPanel
+          game={game}
+          matches={matches}
+          onAgain={() => start(category)}
+          onReplaySeed={() => start(category, game.seed)}
+          onLeave={leave}
+        />
       </>
     );
   }

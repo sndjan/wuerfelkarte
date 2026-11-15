@@ -1,5 +1,9 @@
 "use client";
 
+import { BookOpen, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+
 import { AccountButton } from "@/components/account/AccountButton";
 import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -14,6 +18,9 @@ import { useRunningGames } from "@/games/shared/hooks/useRunningGames";
 const MODE_KEYS = ["online", "quiz", "training", "speedrun"];
 const byKey = (key: string) => games.find((game) => game.key === key)!;
 
+/** Running games shown before the rest fold away behind "+N weitere". */
+const RESUME_VISIBLE = 2;
+
 /**
  * Home: the Würfelkarte first and large, its four modes below, then the
  * statistics strip and the other games small. On an iPad the modes take the
@@ -21,6 +28,8 @@ const byKey = (key: string) => games.find((game) => game.key === key)!;
  */
 export default function GamesOverview() {
   const { running: runningGames, discard } = useRunningGames(loadRunningGames);
+  const [showAllRunning, setShowAllRunning] = useState(false);
+  const hiddenRunning = showAllRunning ? 0 : Math.max(0, runningGames.length - RESUME_VISIBLE);
   const others = games.filter(
     (game) => !game.locked && game.key !== "yatzy" && !MODE_KEYS.includes(game.key),
   );
@@ -52,9 +61,19 @@ export default function GamesOverview() {
           {runningGames.length > 0 && (
             <section className="wk-section">
               <h2 className="wk-overline">Weiterspielen</h2>
-              {runningGames.map((game) => (
+              {runningGames.slice(0, runningGames.length - hiddenRunning).map((game) => (
                 <ResumeGameCard key={game.gameKey} game={game} showGameName onDiscard={discard} />
               ))}
+              {hiddenRunning > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllRunning(true)}
+                  className="flex items-center justify-center gap-1 self-center rounded-full px-3 py-1.5 text-sm font-bold text-muted-foreground hover:bg-secondary"
+                >
+                  +{hiddenRunning} {hiddenRunning === 1 ? "weiteres" : "weitere"}
+                  <ChevronDown className="size-4" aria-hidden="true" />
+                </button>
+              )}
             </section>
           )}
           <StatsOverviewCard />
@@ -66,6 +85,13 @@ export default function GamesOverview() {
               ))}
             </div>
           </section>
+          <Link
+            href="/regeln"
+            className="flex items-center gap-2 self-center rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+          >
+            <BookOpen className="size-4" aria-hidden="true" />
+            Spielregeln
+          </Link>
         </div>
       </main>
     </div>

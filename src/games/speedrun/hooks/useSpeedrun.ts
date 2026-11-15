@@ -5,6 +5,7 @@ import { loadSolver } from "@/games/yatzy/solverTable";
 import { dateKey } from "@/games/quiz/puzzles";
 import { queueSubmission } from "../distribution";
 import { applyKeep, applyRoll, applyScore, buildMatch, isFinished, newRun } from "../run";
+import { CATEGORIES } from "../config";
 import { dailyAttempted, markDailyAttempted, speedrunStorage } from "../storage";
 import type { SpeedrunCategory, SpeedrunGame, StoredSpeedrunMatch } from "../types";
 
@@ -22,14 +23,15 @@ export function useSpeedrun() {
   const [loaded, setLoaded] = useState(false);
   const [game, setGame] = useState<SpeedrunGame | null>(null);
   const [matches, setMatches] = useState<StoredSpeedrunMatch[]>([]);
-  const [category, setCategoryState] = useState<SpeedrunCategory>("classic");
+  const [category, setCategoryState] = useState<SpeedrunCategory>(CATEGORIES[0]);
 
   useEffect(() => {
     const stored = speedrunStorage.loadGame();
     // A run that never got its first roll has nothing to resume.
     setGame(stored && stored.clockStart !== undefined ? stored : null);
     setMatches(speedrunStorage.loadMatches());
-    setCategoryState(stored?.category ?? speedrunStorage.loadSettings().category);
+    const saved = speedrunStorage.loadSettings().category;
+    setCategoryState(CATEGORIES.includes(saved) ? saved : CATEGORIES[0]);
     setLoaded(true);
   }, []);
 
@@ -64,11 +66,16 @@ export function useSpeedrun() {
     if (next !== game) commit(next);
   };
 
-  /** A new run of the category, rolled at once: the clock starts now. */
-  const start = (which: SpeedrunCategory = category) => {
+  /**
+   * A new run of the category, rolled at once: the clock starts now. With a
+   * seed the dice are the ones of that seed (a replay, or a friend's run).
+   */
+  const start = (which: SpeedrunCategory = category, seed?: string) => {
     if (!solver) return;
     let run: SpeedrunGame;
-    if (which === "daily") {
+    if (seed !== undefined) {
+      run = newRun(which === "daily" ? "classic" : which, { seed, customSeed: true });
+    } else if (which === "daily") {
       const date = dateKey();
       const ranked = !dailyAttempted(date);
       if (ranked) markDailyAttempted(date);

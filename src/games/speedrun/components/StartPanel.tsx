@@ -1,51 +1,36 @@
 "use client";
 
-import { Play } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { BarChart3, BookOpen, Hash, Play, Trophy } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { isGuest, useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { dateKey } from "@/games/quiz/puzzles";
-import {
-  CATEGORIES,
-  CATEGORY_DESCRIPTIONS,
-  CATEGORY_LABELS,
-  formatSeconds,
-  formatTime,
-} from "../config";
-import { goldSegments, personalBest, sumOfBest } from "../records";
-import { dailyAttempted } from "../storage";
+import { formatTime } from "../config";
+import { type LeaderboardRow, fetchLeaderboard, submitBest } from "../leaderboard";
+import { personalBest } from "../records";
+import { normalizeSeed } from "../run";
 import type { SpeedrunCategory, StoredSpeedrunMatch } from "../types";
-
-const shortDate = (iso: string) => {
-  const date = new Date(iso);
-  const today = dateKey();
-  if (dateKey(date) === today) {
-    return `Heute, ${date.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`;
-  }
-  return date.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
-};
 
 type StartPanelProps = {
   category: SpeedrunCategory;
-  onCategory: (category: SpeedrunCategory) => void;
   matches: StoredSpeedrunMatch[];
   ready: boolean;
   onStart: () => void;
+  /** Starts a run on a typed-in seed. */
+  onStartSeed: (seed: string) => void;
 };
 
-/** Category, personal best and recent runs — and the button that starts the clock. */
-export function StartPanel({ category, onCategory, matches, ready, onStart }: StartPanelProps) {
-  const runs = useMemo(() => matches.filter((m) => m.category === category), [matches, category]);
+/** Personal best, the global leaderboard and the button that starts the clock. */
+export function StartPanel({ category, matches, ready, onStart, onStartSeed }: StartPanelProps) {
+  const runs = useMemo(() => matches.filter((m) => m.category === category).length, [matches, category]);
   const pb = personalBest(matches, category);
-  const best = sumOfBest(goldSegments(matches, category));
-  const recent = runs.slice(-5).reverse();
-  const counted = category !== "any";
-
-  const today = dateKey();
-  const todaysRanked = matches.find((m) => m.category === "daily" && m.date === today && m.ranked);
-  const attempted = category === "daily" && dailyAttempted(today);
+  const [seedOpen, setSeedOpen] = useState(false);
+  const [seedInput, setSeedInput] = useState("");
+  const seed = normalizeSeed(seedInput);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -59,108 +44,29 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
   }, [ready, onStart]);
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-md flex-col gap-4 px-4 pb-6">
-      <div role="tablist" aria-label="Kategorie" className="grid grid-cols-3 gap-1 rounded-full bg-muted p-1">
-        {CATEGORIES.map((c) => {
-          const selected = c === category;
-          const open = c === "daily" && !dailyAttempted(today);
-          return (
-            <button
-              key={c}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => onCategory(c)}
-              className={cn(
-                "flex h-10 items-center justify-center gap-1.5 rounded-full text-[15px] font-bold transition-colors",
-                selected ? "bg-card font-extrabold shadow-sm" : "text-foreground/80 hover:bg-card/50",
-              )}
-            >
-              {CATEGORY_LABELS[c]}
-              {open && <span className="size-2 rounded-full bg-brand-badge" aria-label="heute noch offen" />}
-            </button>
-          );
-        })}
+    <div className="mx-auto flex min-h-[calc(100dvh-5rem)] max-w-md flex-col gap-4 px-4">
+      <div className="flex flex-col items-center pt-2">
+        <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Deine Bestzeit</span>
+        {pb ? (
+          <span
+            className="text-6xl leading-tight font-extrabold tabular-nums"
+            style={{ fontFamily: "var(--font-baloo)" }}
+          >
+            {formatTime(pb.wertungMs)}
+          </span>
+        ) : (
+          <span className="py-3 text-xl font-bold">Noch keine</span>
+        )}
+        {runs > 0 && (
+          <span className="text-sm text-muted-foreground">
+            {runs} {runs === 1 ? "Lauf" : "Läufe"}
+          </span>
+        )}
       </div>
 
-      <p className="-mt-1 px-1 text-sm text-muted-foreground">{CATEGORY_DESCRIPTIONS[category]}</p>
+      <Leaderboard pb={pb} />
 
-      {category === "daily" && (
-        <p className="rounded-xl bg-muted px-3 py-2 text-sm">
-          {todaysRanked ? (
-            <>
-              Heute gewertet: <b className="tabular-nums">{formatTime(todaysRanked.wertungMs)}</b>. Weitere
-              Läufe sind Übung – die Würfel kennst du ja schon.
-            </>
-          ) : attempted ? (
-            <>Dein gewerteter Lauf von heute wurde abgebrochen. Weitere Läufe sind Übung.</>
-          ) : (
-            <>Dein erster Lauf heute wird gewertet und anonym mit allen verglichen.</>
-          )}
-        </p>
-      )}
-
-      <Card className="gap-1 p-5">
-        <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Persönliche Bestzeit</span>
-        {pb ? (
-          <>
-            <span
-              className="text-6xl leading-none font-extrabold tabular-nums"
-              style={{ fontFamily: "var(--font-baloo)" }}
-            >
-              {formatTime(pb.wertungMs)}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {counted
-                ? `${formatTime(pb.timeMs)} Zeit + ${formatSeconds(pb.strafeMs)} Strafe`
-                : `${pb.score} Punkte`}{" "}
-              · {shortDate(pb.timestamp)}
-            </span>
-          </>
-        ) : (
-          <span className="text-sm text-muted-foreground">Noch keine – dein erster Lauf setzt sie.</span>
-        )}
-        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-hairline pt-4">
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Summe der Bestsplits</span>
-            <span className="flex items-center gap-1.5 text-xl font-bold tabular-nums">
-              <span className="size-2.5 rounded-sm bg-gold" aria-hidden="true" />
-              {best !== null ? formatTime(best) : "–"}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Läufe</span>
-            <span className="text-xl font-bold tabular-nums">{runs.length}</span>
-          </div>
-        </div>
-      </Card>
-
-      {recent.length > 0 && (
-        <section className="flex flex-col gap-2">
-          <h2 className="px-1 text-lg font-bold">Letzte Läufe</h2>
-          <Card className="gap-0 overflow-hidden p-0">
-            {recent.map((run) => (
-              <div key={run.id} className="flex items-center gap-3 border-b border-hairline px-4 py-3 last:border-0">
-                <span className="flex flex-1 items-center gap-2 text-[15px] font-semibold">
-                  {shortDate(run.timestamp)}
-                  {run.id === pb?.id && (
-                    <span className="rounded-full bg-gold px-2 text-xs font-extrabold text-on-gold">PB</span>
-                  )}
-                  {run.category === "daily" && !run.ranked && (
-                    <span className="rounded-full bg-muted px-2 text-xs font-bold">Übung</span>
-                  )}
-                </span>
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {counted ? `Strafe +${formatSeconds(run.strafeMs)}` : `${run.score} P.`}
-                </span>
-                <span className="w-16 text-right text-lg font-bold tabular-nums">{formatTime(run.wertungMs)}</span>
-              </div>
-            ))}
-          </Card>
-        </section>
-      )}
-
-      <div className="mt-auto flex flex-col gap-2 pt-2">
+      <div className="sticky bottom-0 mt-auto -mx-4 flex flex-col gap-2 bg-background px-4 pt-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <Button
           className="h-16 rounded-full text-xl"
           style={{ fontFamily: "var(--font-baloo)" }}
@@ -170,10 +76,133 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
           <Play className="size-6 fill-current" />
           {ready ? "Würfeln & los" : "Solver lädt …"}
         </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Die Uhr startet mit dem ersten Wurf und hält nicht an · Leertaste am Rechner
-        </p>
+        {seedOpen ? (
+          <form
+            className="flex gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (ready && seed) onStartSeed(seed);
+            }}
+          >
+            <Input
+              aria-label="Seed"
+              value={seedInput}
+              onChange={(event) => setSeedInput(event.target.value)}
+              placeholder="Seed, z. B. K7M2QX"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              autoFocus
+              className="bg-card font-mono text-base uppercase"
+            />
+            <Button type="submit" variant="outline" disabled={!ready || !seed} className="shrink-0">
+              <Play className="fill-current" />
+              Los
+            </Button>
+          </form>
+        ) : (
+          <div className="flex justify-center gap-1">
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setSeedOpen(true)}>
+              <Hash />
+              Seed
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+              <Link href="/statistik?spiel=speedrun">
+                <BarChart3 />
+                Statistik
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+              <Link href="/regeln/speedrun/speedrun">
+                <BookOpen />
+                Regeln
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+const LEADERBOARD_SIZE = 5;
+
+/**
+ * The global top five. A signed-in account sends its best first, so the list
+ * already holds it; signed out, a link to sign in takes the account's place.
+ */
+function Leaderboard({ pb }: { pb: StoredSpeedrunMatch | null }) {
+  const { user, loading, available } = useAuth();
+  const [rows, setRows] = useState<LeaderboardRow[] | null | undefined>(undefined);
+  const account = user && !isGuest(user) ? user : null;
+
+  useEffect(() => {
+    if (loading) return;
+    let cancelled = false;
+    (async () => {
+      if (account && pb) await submitBest(pb, account.id);
+      const next = await fetchLeaderboard(LEADERBOARD_SIZE);
+      if (!cancelled) setRows(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, account, pb]);
+
+  if (!available) return null;
+
+  return (
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="flex items-center gap-2 px-4 pt-3.5 pb-2">
+        <Trophy className="size-4 text-gold" aria-hidden="true" />
+        <h2 className="flex-1 font-bold">Bestenliste</h2>
+      </div>
+      {rows === undefined ? (
+        <p className="px-4 pb-4 text-sm text-muted-foreground">Lädt …</p>
+      ) : rows === null ? (
+        <p className="px-4 pb-4 text-sm text-muted-foreground">Gerade nicht erreichbar.</p>
+      ) : rows.length === 0 ? (
+        <p className="px-4 pb-4 text-sm text-muted-foreground">Noch leer – hol dir Platz 1.</p>
+      ) : (
+        <ol>
+          {rows.map((row, i) => (
+            <li
+              key={`${row.rank}-${row.name}-${i}`}
+              className={cn(
+                "flex h-9 items-center gap-3 border-t border-hairline px-4 tabular-nums",
+                row.isMe && "bg-brand-soft font-bold",
+                // The own row below the top ten, after a gap.
+                i > 0 && row.rank > rows[i - 1].rank + 1 && "border-t-2 border-dashed",
+              )}
+            >
+              <span
+                className={cn(
+                  "w-6 text-right text-sm font-bold",
+                  row.rank === 1 ? "text-gold" : "text-muted-foreground",
+                )}
+              >
+                {row.rank}
+              </span>
+              <span className="w-6 text-center" aria-hidden="true">
+                {row.emoji ?? "🙂"}
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {row.name}
+                {row.isMe && " (du)"}
+              </span>
+              <span className="font-bold">{formatTime(row.wertungMs)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {!loading && !account && (
+        <Link
+          href="/konto"
+          className="block border-t border-hairline px-4 py-2.5 text-sm font-semibold text-brand-accent"
+        >
+          Anmelden und mitmachen
+        </Link>
+      )}
+    </Card>
   );
 }

@@ -11,7 +11,10 @@ import { useMyOnline } from "./online/hooks/useOnline";
 import { POINTS_PERFECT, PUZZLES_PER_DAY, dateKey, puzzlePoints } from "./quiz/puzzles";
 import { quizStorage } from "./quiz/storage";
 import type { GameSummary } from "./registry";
-import { dailyAttempted } from "./speedrun/storage";
+import { formatTime } from "./speedrun/config";
+import { personalBest } from "./speedrun/records";
+import { runningSpeedrunGame } from "./speedrun/resume";
+import { speedrunStorage } from "./speedrun/storage";
 import { runningTrainingGame } from "./training/resume";
 
 /** The one dark tile of the home page: the Würfelkarte score sheet. */
@@ -87,7 +90,10 @@ function useModeStatus(key: string): string {
       const running = runningTrainingGame();
       if (running) setStatus(running.progress);
     } else if (key === "speedrun") {
-      setStatus(dailyAttempted(dateKey()) ? "Tagesrun gespielt" : "Tagesrun offen");
+      const running = runningSpeedrunGame();
+      const pb = personalBest(speedrunStorage.loadMatches(), "classic");
+      if (running) setStatus("Die Uhr läuft");
+      else if (pb) setStatus(`Bestzeit ${formatTime(pb.wertungMs)}`);
     }
   }, [key]);
 

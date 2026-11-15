@@ -296,6 +296,13 @@ export function RunView({
     <span className="rounded-full bg-primary-foreground/15 px-2 text-xs font-bold">Übung</span>
   );
 
+  // Old runs carry long "free:…" seeds; only the short codes are worth showing.
+  const seedBadge = !game.seed.includes(":") && (
+    <span className="rounded-full bg-primary-foreground/15 px-2 font-mono text-xs font-bold" title="Seed">
+      #{game.seed}
+    </span>
+  );
+
   const strafeText = `Strafe +${formatSeconds(strafe)} s`;
 
   return (
@@ -311,6 +318,7 @@ export function RunView({
             {CATEGORY_LABELS[game.category]} · {turnLabel}
           </span>
           {practice}
+          {seedBadge}
           {counted && (
             <span className="ml-auto font-bold tabular-nums text-danger">{strafeText}</span>
           )}
@@ -351,12 +359,13 @@ export function RunView({
           variant="large"
           caption={`${pb ? "zur Bestzeit · " : ""}${turnLabel}`}
         />
-        {(counted || practice) && (
+        {(counted || practice || seedBadge) && (
           <div className="-mt-2 flex items-center gap-2 text-sm">
             {counted && (
               <span className="font-bold tabular-nums text-danger">{strafeText}</span>
             )}
             {practice}
+            {seedBadge}
           </div>
         )}
 

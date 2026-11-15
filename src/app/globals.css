@@ -146,6 +146,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* No pinch or double-tap zoom: iOS Safari ignores user-scalable=no, but
+     honours touch-action. Scrolling in both directions still works. */
+  html {
+    touch-action: pan-x pan-y;
+  }
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
