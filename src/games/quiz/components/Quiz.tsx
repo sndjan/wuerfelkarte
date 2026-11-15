@@ -167,9 +167,9 @@ export function Quiz({ date }: { date?: string }) {
   return (
     <>
       {header}
-      <div className="flex flex-col gap-4 px-4 pb-8">
+      <div className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-8 md:max-w-[1180px] md:px-8">
         {reviewing !== null ? (
-          <>
+          <div className="mx-auto flex w-full max-w-[560px] flex-col gap-4">
             <PuzzleResult
               title={dated(`Aufgabe ${reviewing + 1}`)}
               puzzle={day.puzzles[reviewing]}
@@ -178,9 +178,11 @@ export function Quiz({ date }: { date?: string }) {
             <Button onClick={() => setReviewing(null)}>
               {current === -1 ? "Zum Ergebnis" : "Nächste Aufgabe"}
             </Button>
-          </>
+          </div>
         ) : current === -1 ? (
-          <DaySummary day={day} matches={matches} streak={streak} archive={archive} />
+          <div className="mx-auto w-full max-w-[560px]">
+            <DaySummary day={day} matches={matches} streak={streak} archive={archive} />
+          </div>
         ) : (
           <PuzzleView
             key={`${current}-${day.progress[current].rolled}-${day.progress[current].steps.length}`}

@@ -59,10 +59,11 @@ export function OnlineDice({
   onRoll,
   selected,
   onScore,
-}: OnlineDiceProps) {
+  className,
+}: OnlineDiceProps & { className?: string }) {
   const animating = rolling !== null;
   return (
-    <div className="sticky bottom-2 z-10">
+    <div className={cn("sticky bottom-2 z-10", className)}>
       <Card className="gap-2.5 p-3">
         <div className="flex min-h-6 min-w-0 items-center gap-2 text-sm">{line}</div>
         {preset && (

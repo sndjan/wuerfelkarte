@@ -121,14 +121,15 @@ export function PuzzleView({
   );
 
   return (
-    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5">
-      <div className="flex items-center gap-3 text-sm">
+    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_1fr] md:gap-x-8 md:gap-y-4">
+      <div className="flex items-center gap-3 text-sm md:col-start-2 md:row-start-1">
         <h2 className="shrink-0 font-extrabold">{title}</h2>
         {dayProgress}
       </div>
 
       <Scorecard
         split
+        className="md:col-start-1 md:row-span-3 md:row-start-1 md:self-start"
         card={puzzle.card}
         options={options}
         selected={selected}
@@ -136,6 +137,7 @@ export function PuzzleView({
       />
 
       <DiceDock
+        className="md:col-start-2 md:row-start-3 md:self-end"
         feedback={feedback}
         dice={progress.dice}
         rolled={rolled}

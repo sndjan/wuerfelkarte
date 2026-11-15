@@ -39,13 +39,13 @@ type OnlineSheetProps = {
 const cellText = (value: number | "X" | undefined) => (value === undefined ? "" : value === "X" ? "❌" : String(value));
 
 /** Every player's column side by side, as on the paper sheet. */
-export function OnlineSheet({ state, mySeat, preview, tappable, selected, correctable, hideTotals, onCell, picker }: OnlineSheetProps) {
+export function OnlineSheet({ state, mySeat, preview, tappable, selected, correctable, hideTotals, onCell, picker, className }: OnlineSheetProps & { className?: string }) {
   const config = gamemodes[state.gamemode];
   const lastBonusField = config.bonus?.fields.at(-1);
   const finished = state.finishedAt !== null;
 
   return (
-    <div className="overflow-x-auto rounded-[20px] bg-card p-2">
+    <div className={cn("overflow-x-auto rounded-lg border border-border bg-surface p-2 shadow-raised", className)}>
       <table className="w-full border-separate border-spacing-x-1 border-spacing-y-1 text-sm">
         <thead>
           <tr>

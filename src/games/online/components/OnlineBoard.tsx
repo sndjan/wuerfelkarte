@@ -398,7 +398,7 @@ export function OnlineBoard({
         }
       />
 
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4 md:grid md:max-w-[1180px] md:grid-cols-[minmax(0,1fr)_400px] md:content-start md:gap-x-8 md:gap-y-4 md:px-8 [&>*]:md:col-start-2">
 
         {mission && (
           <Card className="gap-1 p-3 text-center text-sm">
@@ -420,7 +420,7 @@ export function OnlineBoard({
                   <span className="tabular-nums">{p.score}</span>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground">Steht jetzt in deinem Yatzy-Verlauf.</p>
+              <p className="text-xs text-muted-foreground">Steht jetzt in deinem Würfelkarte-Verlauf.</p>
             </Card>
           ) : (
             <Card className="gap-3 p-4 text-center">
@@ -443,6 +443,7 @@ export function OnlineBoard({
           ))}
 
         <OnlineSheet
+          className="md:!col-start-1 md:row-span-6 md:row-start-1"
           state={state}
           mySeat={mySeat}
           preview={preview}
@@ -456,6 +457,7 @@ export function OnlineBoard({
 
         {running && (digital ? (
           <OnlineDice
+            className="md:sticky md:top-24 md:bottom-auto"
             line={line}
             faces={faces}
             kept={shownKeep}
@@ -475,7 +477,7 @@ export function OnlineBoard({
             onScore={score}
           />
         ) : (
-          <Card className="sticky bottom-2 z-10 p-3 text-sm">{line}</Card>
+          <Card className="sticky bottom-2 z-10 p-3 text-sm md:top-24 md:bottom-auto">{line}</Card>
         ))}
       </div>
 

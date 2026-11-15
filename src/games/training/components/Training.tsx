@@ -82,9 +82,11 @@ export function Training() {
   return (
     <>
       {header}
-      <div className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-8">
+      <div className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-8 md:max-w-[1180px] md:px-8">
         {isFinished(game) ? (
-          <TrainingSummary solver={solver} game={game} matches={matches} onRestart={newGame} />
+          <div className="mx-auto w-full max-w-[560px]">
+            <TrainingSummary solver={solver} game={game} matches={matches} onRestart={newGame} />
+          </div>
         ) : (
           <TurnView
             key={`${game.id}-${game.turns.length}-${game.current.rolled}-${steps}`}

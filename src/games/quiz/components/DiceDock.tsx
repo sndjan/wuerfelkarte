@@ -59,12 +59,13 @@ export function DiceDock({
   selected,
   onScore,
   aside,
-}: DiceDockProps) {
+  className,
+}: DiceDockProps & { className?: string }) {
   // Before the first roll the turn still has all three rolls.
   const rolls = rolled ? rollsLeft : rollsLeft + 1;
   return (
-    <div className="sticky bottom-2 z-10 mt-auto">
-      <Card className="gap-2.5 p-3">
+    <div className={cn("sticky bottom-2 z-10 mt-auto", className)}>
+      <Card className="gap-2.5 p-3 shadow-float md:gap-3 md:p-4">
         <div className="flex min-h-6 min-w-0 items-center gap-2 text-sm">{feedback}</div>
         <div className="grid grid-cols-5 justify-items-center gap-2">
           {dice.map((value, i) => (
@@ -81,16 +82,17 @@ export function DiceDock({
           {aside}
           {selected ? (
             <Button
-              className="h-11 flex-1 bg-primary text-base text-on-primary hover:bg-primary/90"
+              variant={selected.points > 0 ? "brand" : "destructive"}
+              className="h-11 flex-1 text-base md:h-14"
               disabled={animating}
               onClick={onScore}
             >
               <Check className="size-5" />
-              {selected.label} {selected.points > 0 ? `+${selected.points}` : "streichen"}
+              {selected.points > 0 ? `${selected.label} eintragen +${selected.points}` : `${selected.label} streichen`}
             </Button>
           ) : (
             <Button
-              className="h-11 flex-1 text-base"
+              className="h-11 flex-1 text-base md:h-14"
               disabled={!canRoll || animating}
               onClick={onRoll}
               aria-label={`Würfeln, noch ${rolls} ${rolls === 1 ? "Wurf" : "Würfe"}`}

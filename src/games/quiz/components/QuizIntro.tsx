@@ -79,7 +79,7 @@ export function QuizIntro({ date, streak, ready, startLabel, onStart }: QuizIntr
             ))}
           </div>
           <p className="text-sm">
-            <b>Beispiel:</b> Noch 2 Würfe. Viererpasch sofort eintragen bringt
+            <b>Beispiel:</b> Noch 2 Würfe. 4er-Pasch sofort eintragen bringt
             25 Punkte – und ist trotzdem ein Fehler. Besser:{" "}
             <b>6 6 6 6 halten</b> und auf den 5er-Pasch würfeln.
             Das bringt im Schnitt rund 17 Punkte mehr.
