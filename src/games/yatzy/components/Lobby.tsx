@@ -1,21 +1,13 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { GamemodePills } from "@/games/shared/components/GamemodePills";
 import { GamemodeStats } from "@/games/shared/components/GamemodeStats";
 import { LobbySection, LobbyShell } from "@/games/shared/components/LobbyShell";
 import { RecentMatches } from "@/games/shared/components/RecentMatches";
+import { RulesDialog } from "@/games/shared/components/RulesDialog";
 import { useMatchHistory } from "@/games/shared/hooks/useMatchHistory";
 import { mostPlayedGamemode } from "@/games/shared/stats";
 import { YATZY_EMOJI, gamemodeSlug } from "../config";
@@ -105,31 +97,10 @@ export function Lobby() {
               {gamemodes[selectedGamemode].description}
             </p>
           )}
-          {gamemodes[selectedGamemode].information && (
-            <Dialog>
-              <DialogTrigger className="flex items-center gap-1.5 self-start text-sm font-semibold text-brand-accent">
-                <Info className="size-3.5" />
-                Regeln anzeigen
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Infos zum Spielmodus</DialogTitle>
-                </DialogHeader>
-                <DialogDescription>
-                  {gamemodes[selectedGamemode].information?.[0]}
-                </DialogDescription>
-                <div className="grid grid-cols-1 gap-4">
-                  {gamemodes[selectedGamemode].information
-                    ?.slice(1)
-                    .map((info, index) => (
-                      <p key={index} className="text-sm">
-                        {info}
-                      </p>
-                    ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+          <RulesDialog
+            title={gamemodes[selectedGamemode].name}
+            lines={gamemodes[selectedGamemode].information ?? []}
+          />
         </LobbySection>
       )}
     </LobbyShell>

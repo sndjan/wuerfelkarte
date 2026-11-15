@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { BookOpen, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { AccountButton } from "@/components/account/AccountButton";
@@ -84,6 +85,13 @@ export default function GamesOverview() {
               ))}
             </div>
           </section>
+          <Link
+            href="/regeln"
+            className="flex items-center gap-2 self-center rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+          >
+            <BookOpen className="size-4" aria-hidden="true" />
+            Spielregeln
+          </Link>
         </div>
       </main>
     </div>
