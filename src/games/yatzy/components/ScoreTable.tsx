@@ -1,7 +1,7 @@
 "use client";
 
 import JSConfetti from "js-confetti";
-import { Lock, RotateCcw, X } from "lucide-react";
+import { AlertTriangle, Lock, RotateCcw, X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
@@ -9,6 +9,7 @@ import { THEME_EMOJIS, type Theme } from "@/components/common/seasonal/useSeason
 import { WunderBurst, wunderStyleFor, type WunderShout } from "@/components/common/seasonal/WunderBurst";
 import { cn } from "@/lib/utils";
 import { PACE_COLOR, PACE_WORD, bonusPace } from "../bonus";
+import { missingEntries } from "../turns";
 import { gamemodes, type PointField } from "../gamemodes";
 import type { BattleFieldStatus } from "../gamemodes/battle";
 import { pointOptions } from "../points";
@@ -101,7 +102,10 @@ export function ScoreTable({
   }, [open]);
 
   const filled = (p: Player) => config.fields.filter((f) => !isEmpty(p.points[f.key as keyof Player["points"]])).length;
-  const minFilled = Math.min(...players.map(filled));
+  const counts = players.map(filled);
+  const missing = missingEntries(counts);
+  const skipped = players.filter((_, i) => missing[i] > 0);
+  const minFilled = Math.min(...counts);
   const complete = players.length > 0 && minFilled >= config.fields.length;
   // Whose turn it is: the first in seating order with the fewest entries.
   const activeIndex = complete ? -1 : players.findIndex((p) => filled(p) === minFilled);
@@ -207,7 +211,7 @@ export function ScoreTable({
         onDone={() => setShout(null)}
       />
 
-      <div className="wk-card gap-1 p-2.5 md:gap-1.5" style={gridStyle}>
+      <div className="wk-card gap-1 p-2.5" style={gridStyle}>
         <div className={cn(row, "pb-1")}>
           <span className="wk-caption md:hidden">Runde {round}/{config.fields.length}</span>
           {players.map((player, index) => (
@@ -216,12 +220,20 @@ export function ScoreTable({
                 player,
                 <button
                   type="button"
-                  className="wkx-headbtn w-full"
                   aria-pressed={index === activeIndex}
-                  aria-label={`${player.name}${index === activeIndex ? ", ist dran" : ""}. Spieler bearbeiten`}
+                  aria-label={`${player.name}${index === activeIndex ? ", ist dran" : ""}${missing[index] > 0 ? `, ${missing[index] === 1 ? "ein Eintrag fehlt" : `${missing[index]} Einträge fehlen`}` : ""}. Spieler bearbeiten`}
+                  className={cn("wkx-headbtn relative w-full", missing[index] > 0 && "ring-2 ring-danger")}
                 >
                   <span aria-hidden="true">{player.emoji ?? "🙂"}</span>
                   <span className="wkx-headbtn-name hidden md:inline">{player.name}</span>
+                  {missing[index] > 0 && (
+                    <span
+                      className="absolute -top-1.5 -right-1 rounded-full bg-danger px-1.5 text-[10px] leading-[16px] font-extrabold text-on-danger"
+                      aria-hidden="true"
+                    >
+                      −{missing[index]}
+                    </span>
+                  )}
                   {index === activeIndex && players.length <= 4 && (
                     <span className="wk-badge wk-badge-brand hidden lg:inline-flex">Am Zug</span>
                   )}
@@ -278,14 +290,31 @@ export function ScoreTable({
         </div>
       </div>
 
-      {active && (
-        <div className="flex flex-col gap-1 text-center">
-          <p className="wk-hint flex items-center justify-center gap-1.5">
+      {skipped.length > 0 ? (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-md border border-danger/40 bg-danger-soft px-4 py-3 text-sm text-ink"
+        >
+          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-danger" aria-hidden="true" />
+          <p>
+            <b>
+              {skipped.map((p) => `${p.emoji ? `${p.emoji} ` : ""}${p.name}`).join(", ")}
+            </b>{" "}
+            {skipped.length === 1 ? "fehlt" : "fehlen"}{" "}
+            {skipped.length === 1 && missing[players.indexOf(skipped[0])] > 1
+              ? `${missing[players.indexOf(skipped[0])]} Einträge`
+              : "ein Eintrag"}{" "}
+            gegenüber den anderen. Übersprungen? Trag das fehlende Feld nach, oder setze ein zu viel
+            eingetragenes zurück.
+          </p>
+        </div>
+      ) : (
+        active && (
+          <p className="wk-hint flex items-center justify-center gap-1.5 text-center">
             <span aria-hidden="true">{active.emoji}</span>
             <b className="text-ink">{active.name}</b> ist dran.{next && next !== active && ` Danach ${next.name}.`}
           </p>
-          <p className="wk-caption">Feld antippen öffnet die Auswahl. Zweimal tippen trägt den üblichen Wert ein.</p>
-        </div>
+        )
       )}
 
       {open && openPlayer && openField && (
