@@ -22,9 +22,17 @@ type LinkRow = {
   status: "pending" | "accepted";
 };
 
-type ProfileRow = { user_id: string; name: string; tag: string };
+type ProfileRow = { user_id: string; name: string; tag: string; emoji?: string | null };
 
-const toProfile = (row: ProfileRow): Profile => ({ userId: row.user_id, name: row.name, tag: row.tag });
+const toProfile = (row: ProfileRow): Profile => ({
+  userId: row.user_id,
+  name: row.name,
+  tag: row.tag,
+  ...(row.emoji ? { emoji: row.emoji } : {}),
+});
+
+/** 42703: undefined column — the profile_emoji migration has not been run yet. */
+const isMissingColumn = (error: PostgrestError) => error.code === "42703";
 
 export type LinkState = {
   links: PlayerLink[];
@@ -34,10 +42,15 @@ export type LinkState = {
 
 /** Links this account made and the ones addressed to it, with the profiles behind them (RLS decides). */
 export async function fetchLinkState(client: SupabaseClient): Promise<LinkState> {
-  const [links, profiles] = await Promise.all([
+  const [links, withEmoji] = await Promise.all([
     client.from("player_links").select("id, owner_id, player_id, player_name, invitee_id, status").order("created_at"),
-    client.from("profiles").select("user_id, name, tag"),
+    client.from("profiles").select("user_id, name, tag, emoji"),
   ]);
+  // Before the profile_emoji migration the column is missing; read the profiles without it.
+  const profiles =
+    withEmoji.error && isMissingColumn(withEmoji.error)
+      ? await client.from("profiles").select("user_id, name, tag")
+      : withEmoji;
   if (links.error) fail(links.error);
   if (profiles.error) fail(profiles.error);
   return {
@@ -64,6 +77,15 @@ export async function setProfileName(
   if (error.message.includes("invalid name")) return { error: "1–24 Zeichen, ohne #." };
   if (error.message.includes("name taken")) return { error: "Name zu beliebt. Nimm einen anderen." };
   return { error: "Hat nicht geklappt." };
+}
+
+/** Sets the user's character; linked accounts show the player with it. Returns a German error or null. */
+export async function setProfileEmoji(client: SupabaseClient, emoji: string): Promise<string | null> {
+  const { error } = await client.rpc("set_profile_emoji", { p_emoji: emoji });
+  if (!error) return null;
+  if (isMissingTable(error)) return "Für Mitspieler noch nicht eingerichtet.";
+  if (error.message.includes("no profile")) return "Erst im Profil einen Namen wählen.";
+  return "Hat nicht geklappt.";
 }
 
 /** German message for a failed invite, or null when it worked. */

@@ -2,7 +2,7 @@ import type { RosterPlayer } from "@/games/shared/types";
 import { handleOf, sameName, type PlayerLink, type Profile } from "./share";
 
 /**
- * Linked players carry their account's name. When a link is accepted, or the
+ * Linked players carry their account's name and character (emoji). When a link is accepted, or the
  * account renames itself, the roster entry takes the new name and every
  * stored match and running game follows, so statistics keep counting one
  * person. The same goes for the roster entry marked as the user themselves.
@@ -108,6 +108,8 @@ export function accountRenames({
     if (player.name !== wanted || (player.formerNames ?? []).join() !== formerNames.join()) {
       rename(playerId, { name: wanted, formerNames: formerNames.length ? formerNames : undefined });
     }
+    // The character follows the account too; an account without one keeps the roster's.
+    if (profile.emoji && player.emoji !== profile.emoji) rename(playerId, { emoji: profile.emoji });
   }
   return { roster: next, names, notices };
 }

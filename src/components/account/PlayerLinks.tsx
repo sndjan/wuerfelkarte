@@ -2,6 +2,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { Check, Link2, Loader2, Share2, UserRound, X } from "lucide-react";
+import NextLink from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,6 @@ import { useSyncRefresh } from "@/lib/sync/useSyncRefresh";
 import { ProfileCard } from "./ProfileCard";
 import { openInvites, usePlayerLinks } from "./usePlayerLinks";
 
-const BALOO = "font-[family-name:var(--font-baloo)]";
-
 function Section({
   title,
   hint,
@@ -40,9 +39,9 @@ function Section({
   children?: React.ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-[20px] bg-card p-5">
+    <section className="wk-card">
       <div>
-        <h3 className={`${BALOO} text-lg font-extrabold`}>{title}</h3>
+        <h3 className="wk-card-title">{title}</h3>
         {hint && (
           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
             {hint}
@@ -382,10 +381,14 @@ export function PlayerLinks({ user }: { user: User }) {
               return (
                 <li key={player.id} className="flex flex-col gap-2 py-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl" aria-hidden="true">
+                    <span className="wkx-avatar" aria-hidden="true">
                       {player.emoji}
                     </span>
-                    <div className="min-w-0 flex-1">
+                    <NextLink
+                      href={`/statistik?spieler=${encodeURIComponent(player.name)}`}
+                      className="min-w-0 flex-1"
+                      aria-label={`Statistik von ${player.name}`}
+                    >
                       <p className="truncate font-bold">{player.name}</p>
                       {(link || isSelf) && (
                         <p className="truncate text-xs text-muted-foreground">
@@ -394,7 +397,7 @@ export function PlayerLinks({ user }: { user: User }) {
                             : status(link!)}
                         </p>
                       )}
-                    </div>
+                    </NextLink>
                     {isSelf ? (
                       <Button
                         type="button"

@@ -188,3 +188,39 @@ describe("renameIn", () => {
     expect(renameIn({ setting: true }, names)).toEqual({ setting: true });
   });
 });
+
+describe("accountRenames, characters", () => {
+  it("gives a linked player the account's character", () => {
+    const { roster } = accountRenames({
+      userId: JAN,
+      roster: [player("r-tim", "Tim", { emoji: "🐸" })],
+      selfPlayerId: null,
+      links: [link()],
+      profiles: new Map([[TIM, { userId: TIM, name: "Tim", tag: "1234", emoji: "🦖" }]]),
+    });
+    expect(roster[0].emoji).toBe("🦖");
+  });
+
+  it("gives the user's own entry their character", () => {
+    const { roster } = accountRenames({
+      userId: JAN,
+      roster: [player("r-jan", "Jan", { emoji: "🐸" })],
+      selfPlayerId: "r-jan",
+      links: [],
+      profiles: new Map([[JAN, { userId: JAN, name: "Jan", tag: "4821", emoji: "🦊" }]]),
+    });
+    expect(roster[0].emoji).toBe("🦊");
+  });
+
+  it("keeps the roster's character while the account has none", () => {
+    const before = [player("r-tim", "Tim", { emoji: "🐸" })];
+    const { roster } = accountRenames({
+      userId: JAN,
+      roster: before,
+      selfPlayerId: null,
+      links: [link()],
+      profiles: profiles([[TIM, "Tim"]]),
+    });
+    expect(roster).toBe(before);
+  });
+});

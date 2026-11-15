@@ -9,7 +9,8 @@ import type { MatchPlayer, RosterPlayer, StoredMatch } from "@/games/shared/type
 export const SHARED_GAMES = ["yatzy", "wizard", "flip7", "cabo", "darts"] as const;
 
 /** An account's public identity: the name it picked plus a tag, "Jan#4821". */
-export type Profile = { userId: string; name: string; tag: string };
+/** An account as others see it. `emoji` is its character; missing until the account picks one (or before the profile_emoji migration). */
+export type Profile = { userId: string; name: string; tag: string; emoji?: string };
 
 export const handleOf = (profile: Pick<Profile, "name" | "tag">) => `${profile.name}#${profile.tag}`;
 

@@ -7,9 +7,12 @@ import {
   CloudOff,
   Loader2,
   LogOut,
+  Pencil,
   RefreshCw,
   Trash2,
 } from "lucide-react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,6 +25,8 @@ import {
 } from "@/lib/sync/client";
 import { cn } from "@/lib/utils";
 import { PlayerLinks } from "./PlayerLinks";
+import { OwnStats } from "./OwnStats";
+import { useSelfPlayer } from "./useSelfPlayer";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
@@ -83,6 +88,7 @@ function SyncLine({ status }: { status: SyncStatus }) {
 
 export function AccountView({ user }: { user: User }) {
   const status = useSyncStatus();
+  const self = useSelfPlayer();
   const [signingOut, setSigningOut] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -115,53 +121,45 @@ export function AccountView({ user }: { user: User }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="flex flex-col items-center gap-2 pt-6 text-center">
-        <span
-          className={cn(
-            BALOO,
-            "flex size-20 items-center justify-center rounded-[24px] bg-brand-soft text-4xl font-extrabold text-ink shadow-sm",
-          )}
-          aria-hidden="true"
-        >
-          {(user.email ?? "?").charAt(0).toUpperCase()}
-        </span>
-        <h2 className={cn(BALOO, "mt-2 text-2xl font-extrabold")}>
-          Angemeldet
-        </h2>
-        <p className="break-all text-sm text-muted-foreground">{user.email}</p>
-      </section>
-
-      <section className="flex flex-col gap-3 rounded-[20px] bg-card p-5">
-        <div className="flex items-start justify-between gap-3">
-          <p
-            className="flex min-h-9 flex-wrap items-center gap-1.5 text-sm"
-            role="status"
-          >
+      <section className="wk-card flex-row items-center gap-4">
+        <Link href="/konto/charakter" className="wkx-avatar wkx-avatar-lg" aria-label="Charakter ändern">
+          {self?.emoji ?? (user.email ?? "?").charAt(0).toUpperCase()}
+          <span className="wkx-avatar-edit" aria-hidden="true">
+            <Pencil className="size-4" />
+          </span>
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h2 className={cn(BALOO, "truncate text-2xl leading-8 font-extrabold tracking-tight")}>
+            {self?.name ?? "Angemeldet"}
+          </h2>
+          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          <p className="flex min-h-5 flex-wrap items-center gap-1 text-xs text-muted-foreground" role="status">
             <SyncLine status={status} />
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="shrink-0 rounded-full"
-            aria-label="Jetzt synchronisieren"
-            disabled={status.state === "syncing"}
-            onClick={() => void syncNow()}
-          >
-            <RefreshCw />
-          </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Spieler, Verlauf und Spiele auf all deinen Geräten.
-        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="size-11 shrink-0"
+          aria-label="Jetzt synchronisieren"
+          disabled={status.state === "syncing"}
+          onClick={() => void syncNow()}
+        >
+          <RefreshCw />
+        </Button>
       </section>
 
+      <OwnStats name={self?.name ?? null} />
+
       <PlayerLinks user={user} />
+
+      <Appearance />
 
       <Button
         type="button"
         variant="outline"
-        className="h-12 rounded-xl text-base font-bold"
+        className="h-12 text-base font-bold"
         disabled={signingOut}
         onClick={() => void signOut()}
       >
@@ -173,7 +171,7 @@ export function AccountView({ user }: { user: User }) {
       </p>
 
       {deleteOpen ? (
-        <section className="mt-6 flex flex-col gap-3 rounded-[20px] border-2 border-destructive/40 bg-card p-5">
+        <section className="mt-6 flex flex-col gap-3 rounded-[20px] border-2 border-danger/40 bg-card p-5">
           <h3 className={cn(BALOO, "text-lg font-extrabold")}>
             Konto löschen?
           </h3>
@@ -221,5 +219,35 @@ export function AccountView({ user }: { user: User }) {
         </Button>
       )}
     </div>
+  );
+}
+
+/** Hell, Dunkel or like the device — moved here from every page header. */
+function Appearance() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const options = [
+    ["light", "Hell"],
+    ["dark", "Dunkel"],
+    ["system", "Wie Gerät"],
+  ] as const;
+  return (
+    <section className="wk-section">
+      <h3 className="wk-overline">Darstellung</h3>
+      <div className="wk-segment" role="tablist" aria-label="Darstellung">
+        {options.map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={mounted && theme === value}
+            onClick={() => setTheme(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

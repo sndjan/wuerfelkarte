@@ -67,6 +67,7 @@
 .wk-card-accent { border: 2px solid var(--brand); }
 .wk-card-title { margin: 0; font-family: var(--wk-font-display); font-size: 20px; line-height: 28px; font-weight: 700; }
 .wk-listrow { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); color: var(--ink); text-decoration: none; }
+.wk-listrow.wk-card-accent { border: 2px solid var(--brand); }
 .wk-listrow-emoji { font-size: 30px; line-height: 1; }
 .wk-listrow-body { flex: 1; min-width: 0; }
 .wk-listrow-title { margin: 0; font-family: var(--wk-font-display); font-size: 16px; line-height: 24px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
