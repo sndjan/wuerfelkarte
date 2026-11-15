@@ -90,6 +90,9 @@ only). Run `supabase/migrations/20261116120000_speedrun_leaderboard.sql`
 (after the profile_emoji one). Signed-in accounts with a name send their best
 run; the server keeps one row per account. Until the migration has run, the
 start screen says the leaderboard is not reachable.
+Then run `supabase/migrations/20261116130000_speedrun_leaderboard_seed.sql`, so
+the list shows each run's seed and a tap on a row plays it. Before that, the
+list works without seeds.
 
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it
