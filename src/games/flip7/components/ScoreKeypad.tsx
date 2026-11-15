@@ -122,7 +122,7 @@ export function ScoreKeypad({
             `${minus ? "−" : ""}${draft}`
           )}
           {busts && (
-            <span className="text-base font-semibold text-red-700 dark:text-red-400">
+            <span className="text-base font-semibold text-danger">
               💥 Verzockt
             </span>
           )}
@@ -147,7 +147,7 @@ export function ScoreKeypad({
             // Border kept in both states so toggling doesn't resize the row.
             "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold",
             flip7Active
-              ? "border-brand-accent bg-brand-accent text-white"
+              ? "border-brand-accent bg-brand-strong text-on-brand"
               : "border-border bg-card text-muted-foreground",
             busts && "opacity-50",
           )}
@@ -172,7 +172,7 @@ export function ScoreKeypad({
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-bold",
                   penaltyOn == null
-                    ? "border-brand-accent bg-brand-accent text-white"
+                    ? "border-brand-accent bg-brand-strong text-on-brand"
                     : "border-border bg-card text-muted-foreground",
                 )}
               >
@@ -187,7 +187,7 @@ export function ScoreKeypad({
                   className={cn(
                     "max-w-full truncate rounded-full border px-3 py-1 text-xs font-bold",
                     penaltyOn === player.id
-                      ? "border-destructive bg-destructive text-white"
+                      ? "border-danger bg-danger text-on-danger"
                       : "border-border bg-card text-muted-foreground",
                   )}
                 >
@@ -255,7 +255,7 @@ export function ScoreKeypad({
               className={cn(
                 "flex items-center gap-1 rounded-full border px-4 py-2 text-sm font-bold",
                 minus
-                  ? "border-destructive bg-destructive text-white"
+                  ? "border-danger bg-danger text-on-danger"
                   : "border-border bg-card text-muted-foreground",
                 busted && "opacity-50",
               )}

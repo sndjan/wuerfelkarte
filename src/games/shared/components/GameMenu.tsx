@@ -5,12 +5,17 @@ import {
   Eye,
   EyeOff,
   Info,
+  Maximize,
+  Minimize,
+  Moon,
   Palette,
   RotateCcw,
   Rows3,
+  Sun,
   Trash2,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +74,25 @@ export function GameMenu({
   seasonalTheme,
 }: GameMenuProps) {
   const [open, setOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  // Hell/Dunkel and Vollbild moved here from the page header (design system: at most two header actions).
+  const [canFullscreen, setCanFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    setCanFullscreen(
+      document.fullscreenEnabled === true &&
+        typeof document.documentElement.requestFullscreen === "function",
+    );
+    const onChange = () => setIsFullscreen(document.fullscreenElement !== null);
+    onChange();
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  };
 
   const row = (icon: ReactNode, label: ReactNode) => (
     <div className="flex w-full items-center gap-2">
@@ -80,7 +104,7 @@ export function GameMenu({
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="rounded-full bg-white">
+        <Button variant="outline" size="icon" className="rounded-full bg-surface" aria-label="Menü">
           <EllipsisVertical />
         </Button>
       </DropdownMenuTrigger>
@@ -165,13 +189,25 @@ export function GameMenu({
             </DropdownMenuItem>
           )}
 
+          <DropdownMenuItem onSelect={() => setTheme(isDark ? "light" : "dark")}>
+            {isDark ? <Sun /> : <Moon />}
+            <span>{isDark ? "Helles Design" : "Dunkles Design"}</span>
+          </DropdownMenuItem>
+
+          {canFullscreen && (
+            <DropdownMenuItem onSelect={toggleFullscreen}>
+              {isFullscreen ? <Minimize /> : <Maximize />}
+              <span>{isFullscreen ? "Vollbild beenden" : "Vollbild"}</span>
+            </DropdownMenuItem>
+          )}
+
           {seasonalTheme && (
             <DropdownMenuItem onSelect={seasonalTheme.onToggle}>
               <Palette />
               <span>
                 {seasonalTheme.active
-                  ? "Design deaktivieren"
-                  : "Design aktivieren"}
+                  ? "Saison-Motive ausblenden"
+                  : "Saison-Motive zeigen"}
               </span>
             </DropdownMenuItem>
           )}

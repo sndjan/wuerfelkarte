@@ -74,7 +74,7 @@ function ShareLink({ game, players }: { game: GameRow; players: PlayerRow[] }) {
       const text = `Spiel ${gameLabel(game)} mit mir auf der Würfelkarte – kein Konto nötig:`;
       if (navigator.share) {
         try {
-          await navigator.share({ title: "Kniffel Online", text, url });
+          await navigator.share({ title: "Würfelkarte Online", text, url });
         } catch {
           // Share sheet closed.
         }
@@ -165,7 +165,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
               {p.user_id === game.host_id ? (
                 <Badge>Gastgeber</Badge>
               ) : p.status === "accepted" ? (
-                <Badge className="bg-green-700">Dabei</Badge>
+                <Badge>Dabei</Badge>
               ) : (
                 <Badge variant="secondary">Eingeladen …</Badge>
               )}

@@ -350,8 +350,8 @@ export function OnlineBoard({
       : void reveal();
 
   const trophyClass = finished
-    ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-    : "rounded-full bg-white";
+    ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+    : "rounded-full bg-surface";
 
   return (
     <>
@@ -380,7 +380,7 @@ export function OnlineBoard({
             ) : (
               <Button
                 variant="outline"
-                className="rounded-full bg-white"
+                className="rounded-full bg-surface"
                 disabled
                 title={`${hostName} startet die Auswertung`}
                 aria-label={`Punkte verdeckt, ${hostName} startet die Auswertung`}
@@ -390,7 +390,7 @@ export function OnlineBoard({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full bg-white" aria-label="Menü">
+                <Button variant="outline" size="icon" className="rounded-full bg-surface" aria-label="Menü">
                   <EllipsisVertical />
                 </Button>
               </DropdownMenuTrigger>
@@ -446,7 +446,7 @@ export function OnlineBoard({
         }
       />
 
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 px-4 pb-4 md:grid md:max-w-[1180px] md:grid-cols-[minmax(0,1fr)_400px] md:content-start md:gap-x-8 md:gap-y-4 md:px-8 [&>*]:md:col-start-2">
 
         {mission && (
           <Card className="gap-1 p-3 text-center text-sm">
@@ -468,7 +468,7 @@ export function OnlineBoard({
                   <span className="tabular-nums">{p.score}</span>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground">Steht jetzt in deinem Yatzy-Verlauf.</p>
+              <p className="text-xs text-muted-foreground">Steht jetzt in deinem Würfelkarte-Verlauf.</p>
             </Card>
           ) : (
             <Card className="gap-3 p-4 text-center">
@@ -477,7 +477,7 @@ export function OnlineBoard({
                 <>
                   <p className="text-sm text-muted-foreground">Starte die Auswertung, dann sehen alle die Punkte.</p>
                   <Button
-                    className="bg-yellow-400 text-black hover:bg-yellow-300"
+                    className="bg-gold text-on-gold hover:bg-gold/90"
                     disabled={busy}
                     onClick={askReveal}
                   >
@@ -491,6 +491,7 @@ export function OnlineBoard({
           ))}
 
         <OnlineSheet
+          className="md:!col-start-1 md:row-span-6 md:row-start-1"
           state={state}
           mySeat={mySeat}
           preview={preview}
@@ -504,6 +505,7 @@ export function OnlineBoard({
 
         {running && (digital ? (
           <OnlineDice
+            className="md:sticky md:top-24 md:bottom-auto"
             line={line}
             faces={faces}
             kept={shownKeep}
@@ -523,7 +525,7 @@ export function OnlineBoard({
             onScore={score}
           />
         ) : (
-          <Card className="sticky bottom-2 z-10 p-3 text-sm">{line}</Card>
+          <Card className="sticky bottom-2 z-10 p-3 text-sm md:top-24 md:bottom-auto">{line}</Card>
         ))}
       </div>
 

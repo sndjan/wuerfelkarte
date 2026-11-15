@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw, UserRoundPlus } from "lucide-react";
+import { Eye, EyeOff, RotateCcw, UserRoundPlus } from "lucide-react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -22,19 +22,20 @@ import { Mission, selectMissions } from "../gamemodes/chaoswunder";
 import { useGame } from "../hooks/useGame";
 import { isMatchComplete } from "../scoring";
 import {
-  hasStoredCompactMode,
   loadChaosSettings,
-  loadCompactMode,
+  loadHideScores,
   saveChaosSetting,
-  saveCompactMode,
+  saveHideScores,
   YatzyGame,
   gameFromMatch,
   yatzyStorage,
 } from "../storage";
-import { Points } from "../types";
+import { Player, Points } from "../types";
+import { useHideScores } from "@/games/shared/hooks/useHideScores";
 import { ChaosMissions } from "./ChaosMissions";
 import { Menu } from "./Menu";
-import PlayerCard from "./PlayerCard";
+import { EditPlayer } from "./EditPlayer";
+import { ScoreTable } from "./ScoreTable";
 import { ResetPointsDialog } from "./ResetPointsDialog";
 
 export function Board() {
@@ -128,20 +129,7 @@ export function Board() {
     () => loadChaosSettings().balancedMode,
   );
   const chaosRoundInterval = missionEveryRound ? 1 : 2;
-  const [compactMode, setCompactMode] = useState(() => loadCompactMode());
-  useEffect(() => {
-    // Compact is the standard on mobile, but only as a soft default: once
-    // the player has explicitly toggled it, that choice always wins.
-    if (hasStoredCompactMode()) return;
-    if (window.innerWidth < 640) setCompactMode(true);
-  }, []);
-  const toggleCompactMode = () => {
-    setCompactMode((prev) => {
-      const next = !prev;
-      saveCompactMode(next);
-      return next;
-    });
-  };
+  const [hideScores, toggleHideScores] = useHideScores(loadHideScores, saveHideScores);
 
   const handleResetAll = () => {
     resetAll();
@@ -159,14 +147,7 @@ export function Board() {
     setMatchId(crypto.randomUUID());
   };
 
-  const playerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const prevMissionIndexRef = useRef<number>(-1);
-
-  useEffect(() => {
-    document
-      .getElementById("player-container")
-      ?.scrollTo({ left: 0, behavior: "auto" });
-  }, []);
 
   // The settings the current missions were drawn under. A restored sheet keeps
   // its missions; only changing a setting draws new ones.
@@ -245,25 +226,7 @@ export function Board() {
         return next;
       });
     }
-    const currentIndex = players.findIndex((player) => player.id === playerId);
     updatePoints(playerId, points);
-
-    // Bring the next player's card into view once the DOM has caught up.
-    setTimeout(() => {
-      const nextIndex = (currentIndex + 1) % players.length;
-      const container = document.getElementById("player-container");
-      const targetElement = playerRefs.current[nextIndex];
-      if (container && targetElement) {
-        container.scrollTo({
-          left:
-            targetElement.offsetLeft -
-            container.offsetLeft -
-            container.clientWidth / 2 +
-            targetElement.offsetWidth / 2,
-          behavior: "smooth",
-        });
-      }
-    }, 100);
   };
 
   const gameFinished = useMemo(
@@ -346,6 +309,7 @@ export function Board() {
               shareConfig={shareConfig(gamemode)}
               elapsedMs={elapsedMs}
               open={scoreDialogOpen}
+              onNewGame={handleResetAllPoints}
               onOpenChange={(open) => {
                 setScoreDialogOpen(open);
                 if (open) saveMatch();
@@ -355,28 +319,38 @@ export function Board() {
                   variant="outline"
                   className={
                     gameFinished
-                      ? "rounded-full bg-yellow-400 hover:bg-gray-500 dark:bg-yellow-400 dark:text-black"
-                      : "rounded-full bg-white"
+                      ? "rounded-full bg-gold text-on-gold hover:bg-gold/90"
+                      : "rounded-full bg-surface"
                   }
                 >
                   🏆
-                  <span className="hidden sm:block">Punkteauswertung</span>
+                  <span className="hidden md:block">Auswertung</span>
                 </Button>
               }
             />
-            <div className="hidden sm:block">
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-11 rounded-full bg-surface"
+              aria-pressed={hideScores}
+              aria-label={hideScores ? "Summen zeigen" : "Summen verdecken"}
+              onClick={toggleHideScores}
+            >
+              {hideScores ? <EyeOff /> : <Eye />}
+            </Button>
+            <div className="hidden lg:block">
               <Button
                 variant="outline"
-                className="rounded-full bg-white"
+                className="rounded-full bg-surface"
                 aria-label="Spieler hinzufügen"
                 onClick={() => setAddPlayerOpen(true)}
               >
                 <UserRoundPlus />
               </Button>
             </div>
-            <div className="hidden sm:block">
+            <div className="hidden lg:block">
               <ResetPointsDialog onConfirm={handleResetAllPoints}>
-                <Button variant="outline" className="rounded-full bg-white">
+                <Button variant="outline" className="rounded-full bg-surface">
                   <RotateCcw />
                 </Button>
               </ResetPointsDialog>
@@ -389,8 +363,6 @@ export function Board() {
               seasonalTheme={theme}
               isThemeActive={isThemeActive}
               onToggleTheme={() => setIsThemeActive?.(!isThemeActive)}
-              compactMode={compactMode}
-              onToggleCompactMode={toggleCompactMode}
             />
           </>
         }
@@ -417,71 +389,44 @@ export function Board() {
         />
       )}
 
-      <div
-        className="no-scrollbar snap-x snap-mandatory overflow-x-auto px-4 pb-24"
-        style={{ scrollbarWidth: "none" }}
-        id="player-container"
-      >
-        <div className="flex flex-row gap-4">
-          {players.map((player, index) => {
-            const battleFieldStatus = isBattle
-              ? (Object.fromEntries(
-                  config.fields.map((f) => [
-                    f.key,
-                    getBattleFieldStatus(players, f.key, player.id),
-                  ]),
-                ) as Record<string, BattleFieldStatus>)
-              : undefined;
-            return (
-              <div
-                // flex-1 with a basis of 0 divides all available row width
-                // evenly among the visible cards, so they always fill the
-                // full width — 2 stretched-out cards on a phone, 6 modestly
-                // sized ones on a desktop. min-w is the floor: once cards
-                // would drop below a comfortable size (more players than
-                // fit at that width), they stop shrinking and the row
-                // overflows into the horizontal scroll/snap instead.
-                className="snap-center flex-1 basis-0 min-w-[150px]"
-                key={player.id}
-                ref={(el) => {
-                  playerRefs.current[index] = el;
-                }}
-              >
-                <PlayerCard
-                  playerName={player.name}
-                  playerEmoji={player.emoji}
-                  playerPoints={player.points}
-                  updatePoints={(points: Partial<Points>) =>
-                    handleUpdatePoints(player.id, points)
-                  }
-                  resetPoints={() => {
-                    resetPoints(player.id);
-                    if (isBattle) clearPlayerDoubled(player.id);
-                  }}
-                  removePlayer={() => {
-                    removePlayer(player.id);
-                    if (isBattle) clearPlayerDoubled(player.id);
-                  }}
-                  changeName={(name, emoji) =>
-                    changeName(player.id, name, emoji)
-                  }
-                  takenNames={players.map((p) => p.name)}
-                  moveToRight={() => moveToRight(player.id)}
-                  moveToLeft={() => moveToLeft(player.id)}
-                  gamemode={gamemode}
-                  theme={theme}
-                  isThemeActive={isThemeActive}
-                  battleFieldStatus={battleFieldStatus}
-                  doubledFields={
-                    isBattle ? playerDoubledSet(player.id) : undefined
-                  }
-                  compact={compactMode}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <main className="mx-auto flex min-h-[calc(100dvh-80px)] w-full max-w-[1180px] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-8">
+        <ScoreTable
+          players={players}
+          gamemode={gamemode}
+          hideScores={hideScores}
+          scoreOf={(player: Player) =>
+            isBattle ? battleTotalScore(player.points, playerDoubledSet(player.id), config) : player.score
+          }
+          doubledOf={isBattle ? playerDoubledSet : undefined}
+          battleStatus={
+            isBattle
+              ? (playerId: number, key: string): BattleFieldStatus => getBattleFieldStatus(players, key, playerId)
+              : undefined
+          }
+          onEnter={(playerId, key, value) => handleUpdatePoints(playerId, { [key]: value } as Partial<Points>)}
+          playerMenu={(player, trigger) => (
+            <EditPlayer
+              playerName={player.name}
+              playerEmoji={player.emoji}
+              takenNames={players.map((p) => p.name)}
+              resetPoints={() => {
+                resetPoints(player.id);
+                if (isBattle) clearPlayerDoubled(player.id);
+              }}
+              removePlayer={() => {
+                removePlayer(player.id);
+                if (isBattle) clearPlayerDoubled(player.id);
+              }}
+              changeName={(name, emoji) => changeName(player.id, name, emoji)}
+              moveToRight={() => moveToRight(player.id)}
+              moveToLeft={() => moveToLeft(player.id)}
+              trigger={trigger}
+            />
+          )}
+          theme={theme}
+          isThemeActive={isThemeActive ?? false}
+        />
+      </main>
 
       <PlayerIdentityDialog
         variant="add"

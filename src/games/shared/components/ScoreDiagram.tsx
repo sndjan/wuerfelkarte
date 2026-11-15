@@ -8,11 +8,11 @@ import { ScoredPlayer } from "../types";
 /** How long the whole reveal takes, whatever the winning score is. */
 const REVEAL_MS = 5000;
 
-/** A bar's colour once it has arrived: gold, silver, bronze, then the field. */
-const RANK_COLORS = ["#FFD700", "#C0C0C0", "#CD7F32"];
-const NEUTRAL_COLOR = "#9CA3AF";
-/** While a bar is still counting up it stays in the app's accent green. */
-const RUNNING_COLOR = "var(--brand-accent)";
+/** A bar's colour once it has arrived: gold, silver, bronze, then the field (design system tokens). */
+const RANK_COLORS = ["var(--gold)", "var(--silver)", "var(--bronze)"];
+const NEUTRAL_COLOR = "var(--border-strong)";
+/** While a bar is still counting up it stays in the brand green. */
+const RUNNING_COLOR = "var(--brand)";
 
 type ScoreDiagramProps = {
   players: ScoredPlayer[];
@@ -108,39 +108,47 @@ export function ScoreDiagram({
   }, [revealing, onRevealingChange]);
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       {rows.map(({ player, shown, arrived }) => {
         const place = places.indexOf(player.score);
-
         return (
-          <div key={player.id} className="space-y-1.5">
-            <div className="flex items-baseline justify-between gap-3">
-              {/* Who the bar belongs to stays secret until it has arrived. */}
-              <span
-                aria-hidden={!arrived}
-                className={cn(
-                  "truncate text-sm font-bold transition-opacity",
-                  arrived ? "opacity-100" : "opacity-0",
+          <div key={player.id} className="wkx-rank">
+            {/* Who the bar belongs to stays secret until it has arrived. */}
+            <span
+              className={cn("wkx-avatar", !arrived && "bg-surface-sunken text-ink-muted")}
+              aria-hidden="true"
+            >
+              {arrived ? (player.emoji ?? "🙂") : "?"}
+            </span>
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-h-5 items-center gap-2">
+                <span className={cn("truncate text-sm font-bold", arrived ? "text-ink" : "text-ink-muted")}>
+                  {arrived ? player.name : "Noch offen"}
+                </span>
+                {arrived && (
+                  <span
+                    className="wk-badge"
+                    style={
+                      place < 3
+                        ? { background: RANK_COLORS[place], color: "var(--on-gold)" }
+                        : undefined
+                    }
+                  >
+                    Platz {place + 1}
+                  </span>
                 )}
-              >
-                {player.emoji ? `${player.emoji} ` : ""}
-                {player.name}
-              </span>
-              <span className="shrink-0 text-sm font-bold tabular-nums">
-                {shown}
-              </span>
+              </div>
+              <div className="wk-progress h-2.5">
+                <i
+                  className="transition-colors"
+                  style={{
+                    width: `${(Math.max(shown, 0) / scale) * 100}%`,
+                    background: arrived ? (RANK_COLORS[place] ?? NEUTRAL_COLOR) : RUNNING_COLOR,
+                  }}
+                />
+              </div>
             </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full transition-colors"
-                style={{
-                  width: `${(Math.max(shown, 0) / scale) * 100}%`,
-                  backgroundColor: arrived
-                    ? (RANK_COLORS[place] ?? NEUTRAL_COLOR)
-                    : RUNNING_COLOR,
-                }}
-              />
-            </div>
+            <span className="wkx-rank-score">{shown}</span>
           </div>
         );
       })}

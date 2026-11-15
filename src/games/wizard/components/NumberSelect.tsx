@@ -212,8 +212,8 @@ function NumberSelect({
                       options.length === 1 ? "w-full" : "w-10",
                       "text-sm",
                       selected
-                        ? "bg-green-800 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
-                        : "bg-green-50 text-green-900 hover:bg-green-100 dark:bg-green-950/40 dark:text-green-300 dark:hover:bg-green-950/60",
+                        ? "bg-brand-strong text-on-brand hover:bg-brand-strong/90"
+                        : "bg-brand-soft text-ink hover:bg-brand-soft/80",
                     )}
                   >
                     {opt}

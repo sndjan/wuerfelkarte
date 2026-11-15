@@ -14,10 +14,10 @@ export type StepFeedback = {
 
 /**
  * How the quiz names a field. The solver's key for five of a kind is "Wunder",
- * the name from the Yatzy modes; the Kniffel-Quiz calls it Kniffel.
+ * the name from the Yatzy modes; on every card it is shown as „5er-Pasch“.
  */
 export const categoryLabel = (category: Category) =>
-  category === "Wunder" ? "Kniffel" : category;
+  category === "Wunder" ? "5er-Pasch" : category;
 
 const SHORT_LABELS: Partial<Record<Category, string>> = {
   Dreierpasch: "3er-Pasch",

@@ -90,7 +90,7 @@ export function RoundCard({
             <div
               key={player.id}
               className={cn(
-                "flex flex-col gap-2 rounded-xl bg-white px-3 py-2 dark:bg-[#212121]",
+                "flex flex-col gap-2 rounded-xl bg-surface px-3 py-2",
                 absent && "opacity-50",
               )}
             >
@@ -136,7 +136,7 @@ export function RoundCard({
                       // shrink the chip by 2px and shift the row on every tap.
                       "rounded-full border px-3 py-1 text-xs font-bold",
                       busted
-                        ? "border-destructive bg-destructive text-white"
+                        ? "border-danger bg-danger text-on-danger"
                         : "border-border bg-card text-muted-foreground",
                     )}
                   >
@@ -146,7 +146,7 @@ export function RoundCard({
                     className={cn(
                       "text-sm font-bold tabular-nums",
                       busted || (score != null && score < 0)
-                        ? "text-red-700 dark:text-red-400"
+                        ? "text-danger"
                         : "text-muted-foreground",
                     )}
                   >

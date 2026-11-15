@@ -59,10 +59,11 @@ export function OnlineDice({
   onRoll,
   selected,
   onScore,
-}: OnlineDiceProps) {
+  className,
+}: OnlineDiceProps & { className?: string }) {
   const animating = rolling !== null;
   return (
-    <div className="sticky bottom-2 z-10">
+    <div className={cn("sticky bottom-2 z-10", className)}>
       <Card className="gap-2.5 p-3">
         <div className="flex min-h-6 min-w-0 items-center gap-2 text-sm">{line}</div>
         {preset && (
@@ -77,7 +78,7 @@ export function OnlineDice({
                     onClick={() => onPreset(slot, face === f ? null : f)}
                     className={cn(
                       "size-7 rounded-md border font-bold",
-                      face === f ? "border-brand-accent bg-brand-accent text-white" : "border-border",
+                      face === f ? "border-brand-accent bg-brand-strong text-on-brand" : "border-border",
                     )}
                   >
                     {f}
@@ -102,7 +103,7 @@ export function OnlineDice({
           <div className="flex gap-2">
             {selected && (
               <Button
-                className="h-11 flex-1 bg-brand-accent text-base text-white hover:bg-brand-accent/90"
+                className="h-11 flex-1 bg-primary text-base text-on-primary hover:bg-primary/90"
                 disabled={animating || busy}
                 onClick={onScore}
               >

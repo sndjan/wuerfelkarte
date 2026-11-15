@@ -48,7 +48,7 @@ export function Lobby() {
 
   return (
     <LobbyShell
-      title="Yatzy"
+      title="Würfelkarte"
       emoji={YATZY_EMOJI}
       minPlayers={MIN_PLAYERS}
       maxPlayers={MAX_PLAYERS}

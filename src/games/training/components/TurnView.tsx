@@ -42,7 +42,7 @@ function GameStats({ game }: { game: TrainingGame }) {
   const stats = trainingStats(game);
   const played = game.turns.length;
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-muted px-3 pt-1 pb-2">
+    <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface px-3 pt-2 pb-3 md:col-start-2 md:row-start-2">
       <div className="grid grid-cols-3 gap-2">
         <StatTile label="Beste Züge">
           {stats.optimal}
@@ -141,8 +141,8 @@ export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: Tur
   );
 
   return (
-    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5">
-      <div className="flex items-center justify-between text-sm">
+    <div className="flex min-h-[calc(100dvh-7rem)] flex-col gap-2.5 md:grid md:grid-cols-[minmax(0,1fr)_400px] md:grid-rows-[auto_auto_1fr] md:gap-x-8 md:gap-y-4">
+      <div className="flex items-center justify-between text-sm md:col-start-2 md:row-start-1">
         <h2 className="font-extrabold">
           Zug {game.turns.length + 1}
           <span className="font-normal text-muted-foreground">/{TURNS}</span>
@@ -154,6 +154,7 @@ export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: Tur
 
       <Scorecard
         split
+        className="md:col-start-1 md:row-span-3 md:row-start-1 md:self-start"
         card={game.card}
         options={options}
         selected={selected}
@@ -163,6 +164,7 @@ export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: Tur
       <GameStats game={game} />
 
       <DiceDock
+        className="md:col-start-2 md:row-start-3 md:self-end"
         feedback={feedback}
         dice={current.dice}
         rolled={rolled}

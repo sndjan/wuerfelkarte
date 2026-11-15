@@ -39,7 +39,7 @@ export function FullscreenToggle() {
       size="icon"
       aria-label={isFullscreen ? "Vollbild beenden" : "Vollbild aktivieren"}
       onClick={toggle}
-      className="rounded-full bg-white"
+      className="rounded-full bg-surface"
     >
       {isFullscreen ? <Minimize /> : <Maximize />}
     </Button>

@@ -24,7 +24,7 @@ type Peeked = { state: "loading" } | { state: "gone" } | { state: "error"; messa
 function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-full bg-background">
-      <PageHeader backHref="/" title="Kniffel Online" />
+      <PageHeader backHref="/" title="Online" />
       <div className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-10">{children}</div>
     </div>
   );

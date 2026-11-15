@@ -51,8 +51,10 @@ type YatzySettings = {
   missionEveryRound: boolean;
   /** Chaoswunder: draw a fixed difficulty mix instead of a free draw. */
   balancedMode: boolean;
-  /** Denser player cards so a full sheet fits on screen without scrolling. */
+  /** Kept for stored settings; the score table has no separate compact layout any more. */
   compactMode: boolean;
+  /** Covers every total („•••“) until the scoreboard; the bonus stays visible. */
+  hideScores: boolean;
 };
 
 export const yatzyStorage = createGameStorage<
@@ -64,6 +66,7 @@ export const yatzyStorage = createGameStorage<
     missionEveryRound: false,
     balancedMode: false,
     compactMode: false,
+    hideScores: false,
   },
   reviveGame: (game) => {
     if (!Array.isArray(game.players) || !(game.gamemode in gamemodes)) return null;
@@ -102,21 +105,7 @@ export const saveChaosSetting = (
   value: boolean,
 ): void => yatzyStorage.saveSettings({ [key]: value });
 
-export const loadCompactMode = (): boolean =>
-  yatzyStorage.loadSettings().compactMode;
+export const loadHideScores = (): boolean => yatzyStorage.loadSettings().hideScores;
 
-export const saveCompactMode = (value: boolean): void =>
-  yatzyStorage.saveSettings({ compactMode: value });
+export const saveHideScores = (value: boolean): void => yatzyStorage.saveSettings({ hideScores: value });
 
-/** Whether the player has ever explicitly set compact mode, vs. just seeing the default. */
-export const hasStoredCompactMode = (): boolean => {
-  if (typeof window === "undefined") return false;
-  try {
-    const raw = localStorage.getItem(yatzyStorage.settingsKey);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw) as Partial<YatzySettings>;
-    return typeof parsed.compactMode === "boolean";
-  } catch {
-    return false;
-  }
-};

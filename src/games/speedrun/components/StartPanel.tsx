@@ -144,7 +144,7 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
                 <span className="flex flex-1 items-center gap-2 text-[15px] font-semibold">
                   {shortDate(run.timestamp)}
                   {run.id === pb?.id && (
-                    <span className="rounded-full bg-gold px-2 text-xs font-extrabold text-black">PB</span>
+                    <span className="rounded-full bg-gold px-2 text-xs font-extrabold text-on-gold">PB</span>
                   )}
                   {run.category === "daily" && !run.ranked && (
                     <span className="rounded-full bg-muted px-2 text-xs font-bold">Übung</span>
@@ -162,7 +162,7 @@ export function StartPanel({ category, onCategory, matches, ready, onStart }: St
 
       <div className="mt-auto flex flex-col gap-2 pt-2">
         <Button
-          className="h-16 rounded-full bg-brand-accent text-xl text-white shadow-lg hover:bg-brand-accent/90"
+          className="h-16 rounded-full text-xl"
           style={{ fontFamily: "var(--font-baloo)" }}
           disabled={!ready}
           onClick={onStart}

@@ -297,8 +297,8 @@ function GridSelect({
                         ? "text-xs"
                         : "text-sm",
                       selected
-                        ? "bg-green-800 text-white hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
-                        : "bg-green-50 text-green-900 hover:bg-green-100 dark:bg-green-950 dark:text-green-200 dark:hover:bg-green-900",
+                        ? "bg-brand-strong text-on-brand hover:bg-brand-strong/90"
+                        : "bg-brand-soft text-ink hover:bg-brand-soft/80",
                     )}
                   >
                     {opt}

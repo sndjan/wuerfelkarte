@@ -14,8 +14,8 @@ export function OnlineBanner() {
   if (!user || online.state !== "ready") return null;
   if (online.active) {
     return (
-      <div className="mb-6 flex flex-col gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Online</h2>
+      <div className="wk-section">
+        <h2 className="wk-overline">Online</h2>
         <ActiveGameCard game={online.active} userId={user.id} />
       </div>
     );
@@ -25,13 +25,18 @@ export function OnlineBanner() {
   return (
     <Link
       href="/online"
-      className="mb-6 flex items-center justify-between gap-3 rounded-[20px] border-2 border-brand-accent bg-brand-accent/10 p-4"
+      className="wk-listrow wk-card-accent"
     >
-      <span className="font-bold">
-        🌐 {hostName(first)} lädt dich zu Kniffel Online ein
-        {online.invites.length > 1 && ` (+${online.invites.length - 1})`}
+      <span className="wk-listrow-emoji" aria-hidden="true">
+        🌐
       </span>
-      <span className="shrink-0 text-sm font-semibold">Ansehen →</span>
+      <div className="wk-listrow-body">
+        <p className="wk-listrow-title">Einladung von {hostName(first)}</p>
+        <p className="wk-listrow-sub">
+          Online-Würfelkarte{online.invites.length > 1 && ` · ${online.invites.length - 1} weitere`}
+        </p>
+      </div>
+      <span className="wk-btn wk-btn-sm wk-btn-primary">Ansehen</span>
     </Link>
   );
 }

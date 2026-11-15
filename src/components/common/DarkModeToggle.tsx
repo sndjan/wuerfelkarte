@@ -16,7 +16,7 @@ export function DarkModeToggle() {
       size="icon"
       aria-label={isDark ? "Zu hellem Modus wechseln" : "Zu dunklem Modus wechseln"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="rounded-full bg-white"
+      className="rounded-full bg-surface"
     >
       {isDark ? <Sun /> : <Moon />}
     </Button>

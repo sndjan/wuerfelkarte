@@ -1,7 +1,7 @@
 import type { SpeedrunCategory } from "./types";
 
 export const SPEEDRUN_EMOJI = "⏱️";
-export const SPEEDRUN_NAME = "Kniffel-Speedrun";
+export const SPEEDRUN_NAME = "Speedrun";
 
 /** Penalty per expected point a decision gives away. */
 export const STRAFE_MS_PER_POINT = 1000;

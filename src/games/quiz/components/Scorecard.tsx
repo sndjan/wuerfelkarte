@@ -1,5 +1,6 @@
+import { X } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES, tournamentRules, type Category } from "@/games/yatzy/solver";
 import { cn } from "@/lib/utils";
@@ -23,16 +24,17 @@ type ScorecardProps = {
    * card fits on a phone screen next to the dice.
    */
   split?: boolean;
+  className?: string;
 };
 
 const UPPER = CATEGORIES.slice(0, 6);
 
-// The same pill states as the Yatzy player card's fields. Exported for the
-// intro's preview of the card.
-export const pill = "flex w-full items-center justify-between gap-2 rounded-full border border-input px-4 py-1.5 text-base shadow-xs transition-colors";
-export const filledPill = "bg-gray-100 dark:bg-[#2f2f2f]";
-export const crossedPill = "bg-red-100 dark:bg-[#950606]";
-export const openPill = "bg-white hover:bg-gray-50 dark:bg-[#212121] dark:hover:bg-[#2a2a2a]";
+// The ScoreField states of the design system (wk-field, wk.css). Exported for
+// the intro's preview of the card and the speedrun.
+export const pill = "flex w-full items-center justify-between gap-2 rounded-full border border-border-strong px-4 py-1.5 text-base transition-colors";
+export const filledPill = "bg-surface-sunken";
+export const crossedPill = "bg-danger-soft";
+export const openPill = "bg-surface hover:bg-surface-sunken/40";
 
 /** The puzzle's scorecard, styled like a player's Wunder sheet. */
 export function Scorecard({
@@ -43,46 +45,39 @@ export function Scorecard({
   bare = false,
   title = `${QUIZ_EMOJI} Deine Karte`,
   split = false,
+  className,
 }: ScorecardProps) {
   const label = split ? shortCategoryLabel : categoryLabel;
-  const fieldPill = split ? cn(pill, "px-3.5 py-1 text-[15px]") : pill;
   const { upperBonusThreshold, upperBonus } = tournamentRules;
   const upperSum = UPPER.reduce((sum, c) => sum + (card[c] ?? 0), 0);
   const bonusReached = upperSum >= upperBonusThreshold;
 
+  // One field: the name always left, the number right (design system: ScoreField).
+  const sizing = split ? "md:min-h-12 md:px-5 md:text-lg" : "";
   const field = (category: Category) => {
     const filled = card[category];
     if (filled !== undefined) {
       return (
-        <div key={category} className={cn(fieldPill, filled === 0 ? crossedPill : filledPill)}>
-          <span>{filled === 0 ? "❌" : filled}</span>
-          <span className="truncate text-xs text-muted-foreground">{label(category)}</span>
+        <div key={category} className={cn("wk-field", filled === 0 ? "is-crossed" : "is-filled", sizing)}>
+          <span className="wk-field-label">{label(category)}</span>
+          <span className="wk-field-value">
+            {filled === 0 ? <X className="size-4" aria-label="gestrichen" /> : filled}
+          </span>
         </div>
       );
     }
     const points = options.get(category);
-    const pointsLabel = points !== undefined && (
-      <span
-        className={cn(
-          "shrink-0 font-bold tabular-nums",
-          points > 0 ? "text-brand-accent" : "text-muted-foreground",
-        )}
-      >
-        {points > 0 ? `+${points}` : "❌"}
+    const value = points !== undefined && (
+      <span className="wk-field-value">
+        {points > 0 ? `+${points}` : <X className="size-4" aria-label="würde streichen" />}
       </span>
     );
+    const state = points === undefined ? "" : points > 0 ? "is-option" : "is-zero";
     if (!onSelect) {
       return (
-        <div
-          key={category}
-          className={cn(
-            fieldPill,
-            "bg-white dark:bg-[#212121]",
-            selected === category && "border-brand-accent ring-2 ring-brand-accent",
-          )}
-        >
-          <span className="truncate text-muted-foreground">{label(category)}</span>
-          {pointsLabel}
+        <div key={category} className={cn("wk-field", state, sizing)} aria-current={selected === category}>
+          <span className="wk-field-label">{label(category)}</span>
+          {value}
         </div>
       );
     }
@@ -91,51 +86,51 @@ export function Scorecard({
       <button
         key={category}
         type="button"
-        disabled={!allowed}
+        disabled={!allowed && Boolean(onSelect) && options.size > 0}
+        aria-pressed={selected === category}
         onClick={() => allowed && onSelect(category)}
-        className={cn(
-          fieldPill,
-          openPill,
-          "text-left disabled:cursor-not-allowed disabled:opacity-50",
-          selected === category && "border-brand-accent ring-2 ring-brand-accent",
-        )}
+        className={cn("wk-field", state, sizing)}
       >
-        <span className="truncate text-muted-foreground">{label(category)}</span>
-        {pointsLabel}
+        <span className="wk-field-label">{label(category)}</span>
+        {value}
       </button>
     );
   };
 
   const bonus = (
-    <div className={cn("w-full rounded-md bg-white dark:bg-card", split ? "px-1 pt-0.5" : "my-1 px-3 py-2")}>
-      <div className="flex items-center justify-center gap-2 font-bold">
-        <span>
-          {upperSum}
-          {!bonusReached && (
-            <span className="text-xs font-normal text-muted-foreground">/{upperBonusThreshold}</span>
-          )}
-        </span>
-        {bonusReached && <Badge className="bg-green-800 font-bold">+{upperBonus}</Badge>}
+    <div className="wk-bonus md:pt-2">
+      <div className="wk-bonus-row">
+        <span>Bonus</span>
+        {bonusReached ? (
+          <Badge>+{upperBonus}</Badge>
+        ) : (
+          <span className="wk-num">
+            {upperSum}
+            <small>/{upperBonusThreshold}</small>
+          </span>
+        )}
       </div>
-      <Progress
-        value={(upperSum / upperBonusThreshold) * 100}
-        className="mt-2"
-        indicatorClassName={
-          bonusReached ? "bg-green-800 dark:bg-green-700" : "bg-green-700 dark:bg-green-400"
-        }
-      />
+      <div
+        className="wk-progress"
+        role="progressbar"
+        aria-valuenow={upperSum}
+        aria-valuemax={upperBonusThreshold}
+        aria-label="Bonus"
+      >
+        <i style={{ width: `${Math.min(100, (upperSum / upperBonusThreshold) * 100)}%` }} />
+      </div>
     </div>
   );
 
   if (split) {
     return (
-      <Card className="grid grid-cols-2 gap-2 p-2.5">
-        <div className="flex min-w-0 flex-col gap-1.5">
+      <div className={cn("wk-scorecard md:gap-4 md:p-4", className)}>
+        <div className="wk-scorecard-col md:gap-2.5">
           {UPPER.map(field)}
           {bonus}
         </div>
-        <div className="flex min-w-0 flex-col gap-1.5">{CATEGORIES.slice(6).map(field)}</div>
-      </Card>
+        <div className="wk-scorecard-col md:gap-2.5">{CATEGORIES.slice(6).map(field)}</div>
+      </div>
     );
   }
 
@@ -147,12 +142,10 @@ export function Scorecard({
     </>
   );
 
-  if (bare) return <div className="flex flex-col gap-2">{fields}</div>;
+  if (bare) return <div className="flex flex-col gap-1.5">{fields}</div>;
   return (
-    <Card className="flex flex-col gap-2 p-4">
-      <div className="mb-1 flex w-full items-center rounded-md bg-white px-3 py-1.5 font-bold dark:bg-card">
-        {title}
-      </div>
+    <Card className="flex flex-col gap-1.5 p-4">
+      <h3 className="wk-card-title mb-1">{title}</h3>
       {fields}
     </Card>
   );

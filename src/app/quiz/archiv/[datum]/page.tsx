@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Quiz } from "@/games/quiz/components/Quiz";
 
-export const metadata: Metadata = { title: "Kniffel-Quiz – Archiv" };
+export const metadata: Metadata = { title: "Tagesquiz – Archiv" };
 
 export default async function QuizArchiveDayPage({
   params,

@@ -76,7 +76,7 @@ export function RoundCard({
             <div
               key={player.id}
               className={cn(
-                "flex flex-col gap-2 rounded-xl bg-white px-3 py-2 dark:bg-[#212121]",
+                "flex flex-col gap-2 rounded-xl bg-surface px-3 py-2",
                 absent && "opacity-50",
               )}
             >
@@ -119,7 +119,7 @@ export function RoundCard({
                       className={cn(
                         "rounded-full border px-3 py-1 text-xs font-bold",
                         calledCabo
-                          ? "border-brand-accent bg-brand-accent text-white"
+                          ? "border-brand-accent bg-brand-strong text-on-brand"
                           : "border-border bg-card text-muted-foreground",
                       )}
                     >
@@ -132,7 +132,7 @@ export function RoundCard({
                       className={cn(
                         "rounded-full border px-3 py-1 text-xs font-bold",
                         specialHand
-                          ? "border-destructive bg-destructive text-white"
+                          ? "border-danger bg-danger text-on-danger"
                           : "border-border bg-card text-muted-foreground",
                       )}
                     >
@@ -143,7 +143,7 @@ export function RoundCard({
                     className={cn(
                       "shrink-0 text-sm font-bold tabular-nums",
                       score === 0
-                        ? "text-green-700 dark:text-green-400"
+                        ? "text-brand-strong"
                         : "text-muted-foreground",
                     )}
                   >

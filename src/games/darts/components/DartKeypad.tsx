@@ -54,7 +54,7 @@ export function DartKeypad({
               // The border stays in both states so switching never resizes the row.
               "rounded-xl border py-3 text-sm font-bold disabled:opacity-50",
               multiplier === option.value
-                ? "border-brand-accent bg-brand-accent text-white"
+                ? "border-brand-accent bg-brand-strong text-on-brand"
                 : "border-border bg-card text-muted-foreground",
             )}
           >

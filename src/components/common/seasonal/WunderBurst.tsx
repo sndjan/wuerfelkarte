@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { Theme } from "./useSeasonalTheme";
+import { isHoliday, type Holiday, type Theme } from "./useSeasonalTheme";
 
 /** How long the overlay stays up before it fades out on its own. */
 const SHOW_MS = 3200;
@@ -13,17 +13,17 @@ const BURST_AT = 1.15;
 /** The dice need longer: all five have to land before they burst. */
 const DICE_BURST_AT = 1.75;
 
-/** The seasonal containers, plus the dice for the rest of the year. */
-export type WunderStyle = Exclude<Theme, "none"> | "Dice";
+/** The holiday containers, plus the dice for the rest of the year. */
+export type WunderStyle = Holiday | "Dice";
 
 /**
- * Which Wunder animation to play: the season's own while its theme is on,
- * the dice when no seasonal theme is active.
+ * Which Wunder animation to play: the holiday's own while its theme is on,
+ * the dice otherwise (the four seasons have no container of their own).
  */
 export const wunderStyleFor = (
   theme: Theme,
   isThemeActive: boolean,
-): WunderStyle => (!isThemeActive || theme === "none" ? "Dice" : theme);
+): WunderStyle => (isThemeActive && isHoliday(theme) ? theme : "Dice");
 
 const LOOKS: Record<
   WunderStyle,

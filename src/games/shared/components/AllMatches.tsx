@@ -64,7 +64,7 @@ export function AllMatches() {
       return {
         id: `yatzy:${match.id}`,
         gameEmoji: YATZY_EMOJI,
-        gameName: "Yatzy",
+        gameName: "Würfelkarte",
         gamemodeName: yatzyGamemodes[match.gamemode]?.name ?? match.gamemode,
         timestamp: match.timestamp,
         sharedBy: sharedByOf(match),
@@ -126,13 +126,14 @@ export function AllMatches() {
   );
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="wk min-h-full bg-background">
       <PageHeader backHref="/" title="Alle Spiele" />
-      <div className="mx-auto  px-4 pb-6">
+      <div className="mx-auto max-w-md px-4 pb-6 md:max-w-[720px] md:px-8">
         {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Noch keine Spiele gespeichert.
-          </p>
+          <div className="wk-empty">
+            <strong>Noch keine Spiele</strong>
+            Beendete Partien stehen hier, neueste zuerst.
+          </div>
         ) : (
           <div className="flex flex-col gap-2">
             {rows.map((row) => {
@@ -140,46 +141,36 @@ export function AllMatches() {
                 row.lowerIsBetter ? a.score - b.score : b.score - a.score,
               )[0];
               return (
-                <div
-                  key={row.id}
-                  className="flex items-center justify-between gap-2 rounded-2xl bg-card p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="font-bold">
-                      {row.gameEmoji} {row.gameName}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {row.gamemodeName}
-                    </p>
-                     <p className="text-sm text-muted-foreground">
-                      {formatDate(row.timestamp)}
-                    </p>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {row.players.map((p) => p.name).join(", ")}
-                    </p>
+                <div key={row.id} className="wk-listrow items-start">
+                  <span className="wk-listrow-emoji" aria-hidden="true">
+                    {row.gameEmoji}
+                  </span>
+                  <div className="wk-listrow-body flex flex-col gap-0.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="wk-listrow-title">
+                        {row.gameName} · {row.gamemodeName}
+                      </p>
+                      <span className="wk-caption shrink-0">{formatDate(row.timestamp)}</span>
+                    </div>
+                    <p className="wk-listrow-sub">{row.players.map((p) => p.name).join(", ")}</p>
                     {row.sharedBy !== undefined && (
-                      <p className="truncate text-xs text-muted-foreground">
-                        Geteilt{row.sharedBy && ` von ${row.sharedBy}`}
-                      </p>
+                      <p className="wk-caption truncate">Geteilt{row.sharedBy && ` von ${row.sharedBy}`}</p>
                     )}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    {row.action && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full"
-                        onClick={row.action.onClick}
-                      >
-                        <row.action.icon className="size-4" />
-                        {row.action.label}
-                      </Button>
-                    )}
-                    {winner && (
-                      <p className="font-bold text-brand-accent">
-                        🏆 {winner.name} · {winner.score}
-                      </p>
-                    )}
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      {winner ? (
+                        <p className="wk-listrow-meta truncate">
+                          {winner.name} gewinnt · <span className="wk-num">{winner.score}</span>
+                        </p>
+                      ) : (
+                        <span />
+                      )}
+                      {row.action && (
+                        <Button variant="outline" size="sm" className="shrink-0" onClick={row.action.onClick}>
+                          <row.action.icon className="size-4" />
+                          {row.action.label}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

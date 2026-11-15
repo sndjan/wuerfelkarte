@@ -35,7 +35,7 @@ export function StartScorePicker({
             className={cn(
               "rounded-full border px-4 py-2 font-semibold tabular-nums",
               value === preset
-                ? "border-brand-accent bg-brand-accent text-white"
+                ? "border-brand-accent bg-brand-strong text-on-brand"
                 : "border-border bg-card text-foreground",
             )}
           >

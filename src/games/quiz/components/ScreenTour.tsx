@@ -112,7 +112,7 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
         {last ? (
           <Button
             size="sm"
-            className="bg-brand-accent text-white hover:bg-brand-accent/90"
+            className="bg-brand-strong text-on-brand hover:bg-brand-accent/90"
             disabled={!ready}
             onClick={onStart}
           >
@@ -184,7 +184,7 @@ export function ScreenTour({ ready, startLabel, onStart }: ScreenTourProps) {
           </div>
           <div className={cn(pill, crossedPill, "text-sm")}>
             <span>❌</span>
-            <span className="text-xs text-muted-foreground">Kniffel</span>
+            <span className="text-xs text-muted-foreground">Würfelkarte</span>
           </div>
         </div>,
       )}

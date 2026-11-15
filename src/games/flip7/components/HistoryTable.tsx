@@ -65,14 +65,14 @@ export function HistoryTable({
                       ) : score == null ? (
                         <span className="text-muted-foreground">·</span>
                       ) : entry?.busted ? (
-                        <span className="font-semibold text-red-700 dark:text-red-400">
+                        <span className="font-semibold text-danger">
                           💥 {score}
                         </span>
                       ) : (
                         <span
                           className={cn(
                             "font-semibold",
-                            score < 0 && "text-red-700 dark:text-red-400",
+                            score < 0 && "text-danger",
                           )}
                         >
                           {entry?.flip7 && "7️⃣ "}

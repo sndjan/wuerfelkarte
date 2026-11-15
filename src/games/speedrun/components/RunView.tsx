@@ -29,15 +29,15 @@ const FIELD_HINTS: Record<Category, string> = Object.fromEntries(
 const MARK_COLORS: Record<SplitMark, string> = {
   gold: "bg-gold",
   ahead: "bg-brand-accent",
-  behind: "bg-orange-500",
+  behind: "bg-danger",
   none: "bg-primary-foreground/70",
 };
 
 /** The same marks as text on the dark band (which turns light in dark mode). */
 const MARK_TEXT: Record<SplitMark, string> = {
-  gold: "text-gold dark:text-yellow-700",
-  ahead: "text-[#6FD39C] dark:text-brand-accent",
-  behind: "text-orange-300 dark:text-orange-700",
+  gold: "text-gold",
+  ahead: "text-brand",
+  behind: "text-danger",
   none: "text-primary-foreground/70",
 };
 
@@ -90,8 +90,8 @@ function LiveClock({ game, strafe, pbSplits, variant, caption }: ClockProps) {
         {delta !== null && (
           <span
             className={cn(
-              "ml-auto self-start rounded-full px-2.5 py-0.5 text-lg font-extrabold tabular-nums text-white",
-              delta < 0 ? "bg-brand-accent" : "bg-orange-500",
+              "ml-auto self-start rounded-full px-2.5 py-0.5 text-lg font-extrabold tabular-nums",
+              delta < 0 ? "bg-brand-strong text-on-brand" : "bg-danger text-on-danger",
             )}
             style={{ fontFamily: "var(--font-baloo)" }}
             title="Abstand zur Bestzeit, inklusive Strafe"
@@ -125,7 +125,7 @@ function Key({ children, className }: { children: React.ReactNode; className?: s
   return (
     <kbd
       className={cn(
-        "items-center justify-center rounded-md border border-b-2 border-input bg-white px-1.5 font-sans text-[11px] font-extrabold text-muted-foreground dark:bg-card",
+        "items-center justify-center rounded-md border border-b-2 border-border-strong bg-surface px-1.5 font-sans text-[11px] font-extrabold text-muted-foreground",
         className,
       )}
     >
@@ -312,7 +312,7 @@ export function RunView({
           </span>
           {practice}
           {counted && (
-            <span className="ml-auto font-bold tabular-nums text-orange-300 dark:text-orange-700">{strafeText}</span>
+            <span className="ml-auto font-bold tabular-nums text-danger">{strafeText}</span>
           )}
         </div>
         <div className="grid grid-cols-13 gap-[3px]" aria-hidden="true">
@@ -354,7 +354,7 @@ export function RunView({
         {(counted || practice) && (
           <div className="-mt-2 flex items-center gap-2 text-sm">
             {counted && (
-              <span className="font-bold tabular-nums text-orange-300 dark:text-orange-700">{strafeText}</span>
+              <span className="font-bold tabular-nums text-danger">{strafeText}</span>
             )}
             {practice}
           </div>

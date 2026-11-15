@@ -1,7 +1,7 @@
 import { POINTS_PERFECT, PUZZLES_PER_DAY, pointsTier, type PointsTier } from "./puzzles";
 
 export const QUIZ_EMOJI = "🧠";
-export const QUIZ_NAME = "Kniffel-Quiz";
+export const QUIZ_NAME = "Tagesquiz";
 
 const TIER_EMOJI: Record<PointsTier, string> = {
   perfect: "🟩",
