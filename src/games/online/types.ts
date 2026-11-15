@@ -13,6 +13,8 @@ export type GameRow = {
   gamemode: string;
   dice_mode: DiceMode;
   settings: { missionEveryRound?: boolean; balancedMode?: boolean };
+  /** For the invite link (/online/beitreten/<code>); null until the host shares one. */
+  invite_code?: string | null;
   state: OnlineState | null;
   version: number;
   created_at: string;
@@ -26,11 +28,23 @@ export type PlayerRow = {
   game_id: string;
   user_id: string;
   name: string;
+  /** Empty for a guest without an account. */
   tag: string;
   status: PlayerStatus;
   active: boolean;
   invited_at: string;
   updated_at: string;
+};
+
+/** What an invite link shows before joining. */
+export type LinkPreview = {
+  gameId: string;
+  host: string;
+  gamemode: string;
+  diceMode: DiceMode;
+  players: string[];
+  /** Whether the lobby still takes players. */
+  open: boolean;
 };
 
 /** A linked account that can be invited. */
@@ -48,6 +62,12 @@ export type OnlineAction =
       balancedMode?: boolean;
     }
   | { type: "invite"; gameId: string; userIds: string[] }
+  /** The host's invite link code, made on first ask. */
+  | { type: "link"; gameId: string }
+  /** What a link leads to; works without signing in. */
+  | { type: "peek"; code: string }
+  /** Joins the lobby behind a link; `name` for guests without a profile. */
+  | { type: "join"; code: string; name?: string }
   | { type: "respond"; gameId: string; accept: boolean }
   | { type: "start"; gameId: string }
   | { type: "roll"; gameId: string; keep: boolean[]; preset?: number[] }

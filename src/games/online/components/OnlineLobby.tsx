@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2, Play, X } from "lucide-react";
+import { Check, Link2, Loader2, Play, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LobbySection } from "@/games/shared/components/LobbyShell";
 import { gamemodes } from "@/games/yatzy/gamemodes";
-import { callOnline, OnlineError } from "../client";
+import { callOnline, inviteUrl, OnlineError } from "../client";
 import { diceModeLabel, gameLabel } from "../config";
 import { MAX_PLAYERS, type GameRow, type PlayerRow } from "../types";
 import { ConfirmButton } from "./ConfirmButton";
@@ -59,6 +59,39 @@ function InviteMore({ game, players }: { game: GameRow; players: PlayerRow[] }) 
         Einladen
       </Button>
     </Card>
+  );
+}
+
+/** Shares the lobby's invite link, so people without an account (or not linked) can join. */
+function ShareLink({ game, players }: { game: GameRow; players: PlayerRow[] }) {
+  const [busy, setBusy] = useState(false);
+  if (players.length >= MAX_PLAYERS) return null;
+  const share = async () => {
+    setBusy(true);
+    try {
+      const { code } = await callOnline<{ code: string }>({ type: "link", gameId: game.id });
+      const url = inviteUrl(code);
+      const text = `Spiel ${gameLabel(game)} mit mir auf der Würfelkarte – kein Konto nötig:`;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Kniffel Online", text, url });
+        } catch {
+          // Share sheet closed.
+        }
+      } else {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        toast.success("Link kopiert");
+      }
+    } catch (error) {
+      toast.error(errorText(error));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Button variant="outline" disabled={busy} onClick={() => void share()}>
+      {busy ? <Loader2 className="animate-spin" /> : <Link2 />} Link teilen
+    </Button>
   );
 }
 
@@ -126,7 +159,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
           <Card key={p.user_id} className="flex flex-row items-center justify-between gap-2 px-4 py-2">
             <span className="min-w-0 truncate font-semibold">
               {p.name}
-              <span className="font-normal text-muted-foreground">#{p.tag}</span>
+              <span className="font-normal text-muted-foreground">{p.tag ? `#${p.tag}` : " · Gast"}</span>
             </span>
             <span className="flex shrink-0 items-center gap-2">
               {p.user_id === game.host_id ? (
@@ -151,6 +184,7 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
           </Card>
         ))}
         {isHost && <InviteMore game={game} players={players} />}
+        {isHost && <ShareLink game={game} players={players} />}
       </LobbySection>
 
       {isHost ? (
@@ -163,7 +197,9 @@ export function OnlineLobby({ game, players, userId }: { game: GameRow; players:
             {busy ? <Loader2 className="animate-spin" /> : <Play />} Spiel starten
           </Button>
           {accepted.length < 2 && (
-            <p className="text-center text-xs text-muted-foreground">Sobald jemand zusagt, kannst du starten.</p>
+            <p className="text-center text-xs text-muted-foreground">
+              Sobald jemand zusagt oder über den Link dazukommt, kannst du starten.
+            </p>
           )}
           {accepted.length >= 2 && accepted.length < players.length && (
             <p className="text-center text-xs text-muted-foreground">Offene Einladungen verfallen beim Start.</p>

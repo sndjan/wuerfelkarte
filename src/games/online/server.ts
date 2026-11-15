@@ -15,7 +15,7 @@ import {
   type Cell,
   type OnlineState,
 } from "./engine";
-import { MAX_PLAYERS, type GameRow, type OnlineAction, type PlayerRow } from "./types";
+import { MAX_PLAYERS, type GameRow, type LinkPreview, type OnlineAction, type PlayerRow } from "./types";
 
 /**
  * The server half of Kniffel online, run by /api/online. It is the only
@@ -216,6 +216,43 @@ function leaveRunning(game: GameRow, userId: string): Partial<GameRow> {
   return { ...patch, host_id: hostId };
 }
 
+/** Invite link codes: 18 random bytes, base64url. */
+const CODE = /^[A-Za-z0-9_-]{16,40}$/;
+const newCode = () =>
+  btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(18))))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+/** A guest's name: like an account name, 1–24 characters without #. */
+const guestName = (value: unknown): string => {
+  const name = typeof value === "string" ? value.trim() : "";
+  return name.length >= 1 && name.length <= 24 && !name.includes("#") ? name : deny("bad name");
+};
+
+const gameByCode = async (db: SupabaseClient, code: string) => {
+  const game = check(
+    await db.from("online_games").select("*").eq("invite_code", code).maybeSingle(),
+  ) as GameRow | null;
+  return game ?? deny("gone", 404);
+};
+
+/** What an invite link leads to, for the page before joining. No account needed. */
+export async function peek(db: SupabaseClient, code: unknown): Promise<LinkPreview> {
+  if (typeof code !== "string" || !CODE.test(code)) deny("gone", 404);
+  const game = await gameByCode(db, code as string);
+  const { players } = await loadGame(db, game.id);
+  const inGame = players.filter((p) => p.status === "accepted");
+  return {
+    gameId: game.id,
+    host: players.find((p) => p.user_id === game.host_id)?.name ?? "Jemand",
+    gamemode: game.gamemode,
+    diceMode: game.dice_mode,
+    players: inGame.map((p) => p.name),
+    open: game.status === "lobby" && players.length < MAX_PLAYERS,
+  };
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Bounds for the lists and names in a request; real ones are far below. */
@@ -233,6 +270,7 @@ function validate(action: OnlineAction) {
   ];
   if (ids.some((id) => id !== undefined && (typeof id !== "string" || !UUID.test(id)))) deny("bad request");
   if (ids.length > MAX_IDS) deny("bad request");
+  if ("code" in action && (typeof action.code !== "string" || !CODE.test(action.code))) deny("gone", 404);
   if ("field" in action && (typeof action.field !== "string" || action.field.length > MAX_FIELD)) deny("bad request");
   if (action.type === "roll") {
     if (!Array.isArray(action.keep) || action.keep.length > MAX_DICE) deny("bad request");
@@ -264,7 +302,8 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
       if (typeof gamemode !== "string" || !Object.hasOwn(gamemodes, gamemode)) deny("bad gamemode");
       if (diceMode !== "digital" && diceMode !== "physical") deny("bad dice mode");
       const unique = [...new Set(invitees)];
-      if (unique.length < 1 || unique.length > MAX_PLAYERS - 1 || unique.includes(uid)) deny("bad invitees");
+      // None is fine: the host can share an invite link instead.
+      if (unique.length > MAX_PLAYERS - 1 || unique.includes(uid)) deny("bad invitees");
       const profile = await ownProfile(db, uid);
       if ((await busyIds(db, [uid])).size > 0) deny("busy", 409);
 
@@ -311,6 +350,46 @@ export async function handle(db: SupabaseClient, uid: string, action: OnlineActi
       if (players.length + fresh.length > MAX_PLAYERS) deny("too many");
       await inviteAll(db, uid, game.id, fresh);
       return {};
+    }
+
+    case "link": {
+      const { game } = await loadGame(db, action.gameId);
+      if (game.host_id !== uid) deny("not host", 403);
+      if (game.status !== "lobby") deny("not lobby", 409);
+      if (game.invite_code) return { code: game.invite_code };
+      const updated = await mutate(db, game.id, (g) =>
+        g.invite_code ? null : g.status === "lobby" ? { invite_code: newCode() } : deny("not lobby", 409),
+      );
+      return { code: updated.invite_code };
+    }
+
+    case "peek":
+      return peek(db, action.code);
+
+    case "join": {
+      const linked = await gameByCode(db, action.code);
+      const { game, players } = await loadGame(db, linked.id);
+      const me = players.find((p) => p.user_id === uid);
+      if (me?.status === "accepted") return { gameId: game.id };
+      if (game.status !== "lobby") deny("not lobby", 409);
+      if (!me && players.length >= MAX_PLAYERS) deny("too many");
+      if ((await busyIds(db, [uid])).size > 0) deny("busy", 409);
+      // An account joins under its name; a guest under the one they typed.
+      const profile = (await profilesOf(db, [uid])).get(uid);
+      const row = {
+        name: profile?.name ?? guestName(action.name),
+        tag: profile?.tag ?? "",
+        status: "accepted",
+        active: true,
+        updated_at: new Date().toISOString(),
+      };
+      if (me) {
+        check(await db.from("online_game_players").update(row).eq("game_id", game.id).eq("user_id", uid));
+      } else {
+        check(await db.from("online_game_players").insert({ game_id: game.id, user_id: uid, ...row }));
+      }
+      await dropInvites(db, uid);
+      return { gameId: game.id };
     }
 
     case "respond": {

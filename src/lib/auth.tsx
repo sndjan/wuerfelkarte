@@ -18,7 +18,9 @@ const AuthContext = createContext<AuthState>({ user: null, loading: true, availa
 
 /**
  * The optional account. Signing in only adds the sync: the app keeps working
- * from localStorage either way.
+ * from localStorage either way. A guest who joined an online game by link is
+ * signed in anonymously: a user for the online tables, but without an account
+ * to sync to (see `isGuest`).
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ user: null, loading: true, available: true });
@@ -38,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Supabase calls this while holding its auth lock; anything that queries
       // the API from inside it waits for itself, so the sync starts afterwards.
       setTimeout(() => {
-        if (user) startSync(user.id);
+        if (user && !isGuest(user)) startSync(user.id);
         else stopSync({ forget: event === "SIGNED_OUT" });
       }, 0);
     });
@@ -50,3 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
+/** Signed in anonymously through an online invite link, without an account. */
+export const isGuest = (user: User | null): boolean => Boolean(user?.is_anonymous);

@@ -242,9 +242,20 @@ server, not in localStorage.
   `version` moved in between. `server.test.ts` runs the flows against an
   in-memory stand-in (`fakeDb.ts`).
 - **Who can be invited**: accounts with an accepted player link, either
-  way. Someone in a lobby or running game is shown as „spielt gerade“ and
+  way, or anyone with the lobby's invite link (below). Someone in a lobby or running game is shown as „spielt gerade“ and
   cannot be invited; accepting an invite or hosting drops one's other
   invites. Starting withdraws unanswered invites and shuffles the seats.
+- **Invite links** (migration `20261115140000_online_invite_links.sql`):
+  the host's „Link teilen“ (action `link`) gives the lobby a random
+  `invite_code`; `/online/beitreten/[code]` (`JoinGame.tsx`) shows the game
+  (action `peek`, the only one that needs no sign-in) and joins it (action
+  `join`). Accounts join under their profile name, an open invite turns into
+  a seat. Someone without an account types a name and is signed in
+  anonymously (Supabase anonymous sign-ins), so tables, RLS and Realtime
+  treat them like anyone else; their row has an empty `tag` and shows as
+  „Gast“. Guests do not sync (`isGuest` in `src/lib/auth.tsx`): their result
+  lands in the device's Yatzy history, and signing in later with an email
+  takes it into the account. A lobby can also be opened with no invitees.
 - **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
   tables, a broadcast channel per game for the dice the player on turn is
   holding, plus a reload on focus and a slow poll as a safety net.

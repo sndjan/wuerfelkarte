@@ -75,6 +75,13 @@ Setup:
    It is only read on the server by `/api/online`, never sent to the browser.
    A publishable or anon key there is refused (the server log says so).
    Without it the page says online games are not set up yet.
+3. For players without an account: run
+   `supabase/migrations/20261115140000_online_invite_links.sql` and turn on
+   **Authentication → Sign In / Providers → Allow anonymous sign-ins**. The
+   host shares a link from the lobby („Link teilen“); whoever opens it types
+   a name and joins as a guest. Without the switch, the link page says
+   playing without an account is not set up yet. Consider turning on
+   CAPTCHA protection there as well, since anyone can create anonymous users.
 
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it
@@ -105,7 +112,7 @@ by cascade. The games on the device stay.
   measures how well you decide, not how lucky the dice were. Any%, Klassisch
   and a daily Tagesrun on dice everyone shares.
 - **Kniffel Online** — Yatzy in every mode with linked accounts on their own
-  phones: invite up to five, play live or one move at a time, with dice the
+  phones, or with anyone via an invite link (no account needed): invite up to five, play live or one move at a time, with dice the
   server rolls (the app scores every field, Battle and Chaoswunder missions
   included) or real dice entered by hand. Totals stay hidden until the host
   starts the scoreboard. Results land in everyone's Yatzy history.
