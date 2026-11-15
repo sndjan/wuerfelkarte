@@ -60,6 +60,7 @@ export function OnlineSheet({ state, mySeat, preview, tappable, selected, correc
                 )}
                 title={seat.name}
               >
+                {seat.emoji && <span aria-hidden="true">{seat.emoji} </span>}
                 {i === mySeat ? "Du" : seat.name}
               </th>
             ))}
