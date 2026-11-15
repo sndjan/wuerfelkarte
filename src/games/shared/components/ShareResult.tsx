@@ -316,7 +316,7 @@ export function ShareResult({
   };
 
   return (
-    <Button onClick={onShare} disabled={sharing} variant="secondary" size="sm">
+    <Button onClick={onShare} disabled={sharing} variant="outline" className="flex-1">
       <Share2 /> {sharing ? "Teilen…" : "Teilen"}
     </Button>
   );

@@ -309,6 +309,7 @@ export function Board() {
               shareConfig={shareConfig(gamemode)}
               elapsedMs={elapsedMs}
               open={scoreDialogOpen}
+              onNewGame={handleResetAllPoints}
               onOpenChange={(open) => {
                 setScoreDialogOpen(open);
                 if (open) saveMatch();
