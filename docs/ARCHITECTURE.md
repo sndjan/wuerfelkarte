@@ -256,6 +256,11 @@ server, not in localStorage.
   „Gast“. Guests do not sync (`isGuest` in `src/lib/auth.tsx`): their result
   lands in the device's Yatzy history, and signing in later with an email
   takes it into the account. A lobby can also be opened with no invitees.
+- **Speed**: the route checks the access token locally (`auth.getClaims`,
+  cached public keys) and a move costs one read and one write of the game
+  row. On the board the roller's dice start shaking on the tap and settle
+  when the server's faces arrive; an entry is shown at once with the same
+  engine call the server makes, and put back if the server refuses it.
 - **Live** (`hooks/useOnline.ts`): Realtime `postgres_changes` on both
   tables, a broadcast channel per game for the dice the player on turn is
   holding, plus a reload on focus and a slow poll as a safety net.

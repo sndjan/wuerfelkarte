@@ -119,13 +119,18 @@ async function busyIds(db: SupabaseClient, ids: string[]): Promise<Set<string>> 
   return new Set(rows.map((r) => r.user_id));
 }
 
-async function loadGame(db: SupabaseClient, gameId: string): Promise<{ game: GameRow; players: PlayerRow[] }> {
+async function loadRow(db: SupabaseClient, gameId: string): Promise<GameRow> {
   const game = check(await db.from("online_games").select("*").eq("id", gameId).maybeSingle()) as GameRow | null;
-  if (!game) return deny("gone", 404);
-  const players = check(
-    await db.from("online_game_players").select("*").eq("game_id", gameId).order("invited_at"),
-  ) as PlayerRow[];
-  return { game, players };
+  return game ?? deny("gone", 404);
+}
+
+/** The game and its players, read side by side. */
+async function loadGame(db: SupabaseClient, gameId: string): Promise<{ game: GameRow; players: PlayerRow[] }> {
+  const [game, players] = await Promise.all([
+    loadRow(db, gameId),
+    db.from("online_game_players").select("*").eq("game_id", gameId).order("invited_at"),
+  ]);
+  return { game, players: check(players) as PlayerRow[] };
 }
 
 /**
@@ -135,11 +140,12 @@ async function loadGame(db: SupabaseClient, gameId: string): Promise<{ game: Gam
 async function mutate(
   db: SupabaseClient,
   gameId: string,
-  change: (game: GameRow, players: PlayerRow[]) => Partial<GameRow> | null,
+  change: (game: GameRow) => Partial<GameRow> | null,
 ): Promise<GameRow> {
+  // One read and one write per move: a roll or an entry needs only the game row.
   for (let attempt = 0; attempt < 4; attempt++) {
-    const { game, players } = await loadGame(db, gameId);
-    const patch = change(game, players);
+    const game = await loadRow(db, gameId);
+    const patch = change(game);
     if (!patch) return game;
     const updated = check(
       await db

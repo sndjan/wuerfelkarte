@@ -39,8 +39,12 @@ export async function POST(request: Request) {
 
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token || token.length > MAX_TOKEN) return NextResponse.json({ error: "not signed in" }, { status: 401 });
-  const { data, error } = await db.auth.getUser(token);
-  if (error || !data.user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
+  // Checks the token's signature here with the project's cached public keys
+  // instead of asking the auth server on every move (getClaims falls back to
+  // that for projects still on the legacy shared secret).
+  const { data, error } = await db.auth.getClaims(token);
+  const uid = data?.claims.sub;
+  if (error || typeof uid !== "string" || !uid) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
-  return respond(() => handle(db, data.user.id, action));
+  return respond(() => handle(db, uid, action));
 }
