@@ -14,13 +14,6 @@ import { syncNow } from "@/lib/sync/client";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
-/** Smaller type for longer handles, so most names fit next to the buttons. */
-function handleSize(handle: string): string {
-  if (handle.length <= 10) return "text-2xl";
-  if (handle.length <= 14) return "text-xl";
-  return "text-lg";
-}
-
 /**
  * The account's name and ID ("Jan#4821"), which others use to link a player
  * to it, and its emoji, which everyone linked to it sees.
@@ -39,6 +32,7 @@ export function ProfileCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   // The character is picked on /konto/charakter (profile and own roster entry together).
   const emoji = profile?.emoji ?? null;
 
@@ -137,16 +131,34 @@ export function ProfileCard({
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Konto-ID
           </p>
-          {/* Only the name is cut off; the #tag always stays visible. */}
-          <p
-            className={`${BALOO} flex min-w-0 font-extrabold ${handleSize(handleOf(profile!))}`}
+          {/* Collapsed, only the name is cut off and the #tag stays visible;
+              a tap shows the whole ID, which needs name and tag to match. */}
+          <button
+            type="button"
+            className={`${BALOO} block w-full text-left text-2xl font-extrabold`}
             title={handleOf(profile!)}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
           >
-            <span className="truncate">{profile!.name}</span>
-            <span className="shrink-0 text-muted-foreground">
-              #{profile!.tag}
-            </span>
-          </p>
+            {expanded ? (
+              <span className="block [overflow-wrap:anywhere]">
+                {profile!.name}
+                <span className="text-muted-foreground">#{profile!.tag}</span>
+              </span>
+            ) : (
+              <span className="flex min-w-0">
+                <span className="truncate">{profile!.name}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  #{profile!.tag}
+                </span>
+              </span>
+            )}
+          </button>
+          {expanded && (
+            <p className="text-xs text-muted-foreground">
+              Antippen zum Einklappen
+            </p>
+          )}
         </div>
         <Button
           type="button"
