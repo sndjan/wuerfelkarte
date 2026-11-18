@@ -16,6 +16,15 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "kniffel-tipps",
+    title: "10 einfache Tipps für mehr Punkte beim Kniffel",
+    description:
+      "Ohne Rechnen, ohne Tabellen: zehn Gewohnheiten, mit denen du beim nächsten Kniffel-Abend mehr Punkte holst.",
+    kicker: "Tipps · Für Einsteiger",
+    published: "2026-11-18",
+    readingMinutes: 4,
+  },
+  {
     slug: "kniffel-strategie",
     title: "So spielst du Kniffel wie der Solver",
     description:

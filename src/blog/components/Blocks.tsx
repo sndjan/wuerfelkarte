@@ -86,12 +86,21 @@ export type Example = {
 };
 
 /** Rolls with the best keep marked, the gain on the right. */
-export function Examples({ items, gainLabel = "Gewinn" }: { items: Example[]; gainLabel?: string }) {
+export function Examples({
+  items,
+  title = "Wurf und bester Halt",
+  gainLabel = "Gewinn",
+}: {
+  items: Example[];
+  title?: string;
+  /** Null for examples without numbers. */
+  gainLabel?: string | null;
+}) {
   return (
     <div className="wk-section">
       <div className="flex items-baseline justify-between">
-        <span className="wk-overline">Wurf und bester Halt</span>
-        <span className="wk-caption">{gainLabel}</span>
+        <span className="wk-overline">{title}</span>
+        {gainLabel && <span className="wk-caption">{gainLabel}</span>}
       </div>
       <div className="wkx-examples">
         {items.map((e) => (
