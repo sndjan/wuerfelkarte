@@ -14,6 +14,13 @@ import { syncNow } from "@/lib/sync/client";
 
 const BALOO = "font-[family-name:var(--font-baloo)]";
 
+/** Smaller type for longer handles, so most names fit next to the buttons. */
+function handleSize(handle: string): string {
+  if (handle.length <= 10) return "text-2xl";
+  if (handle.length <= 14) return "text-xl";
+  return "text-lg";
+}
+
 /**
  * The account's name and ID ("Jan#4821"), which others use to link a player
  * to it, and its emoji, which everyone linked to it sees.
@@ -130,9 +137,15 @@ export function ProfileCard({
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Konto-ID
           </p>
-          <p className={`${BALOO} truncate text-2xl font-extrabold`}>
-            {profile!.name}
-            <span className="text-muted-foreground">#{profile!.tag}</span>
+          {/* Only the name is cut off; the #tag always stays visible. */}
+          <p
+            className={`${BALOO} flex min-w-0 font-extrabold ${handleSize(handleOf(profile!))}`}
+            title={handleOf(profile!)}
+          >
+            <span className="truncate">{profile!.name}</span>
+            <span className="shrink-0 text-muted-foreground">
+              #{profile!.tag}
+            </span>
           </p>
         </div>
         <Button
