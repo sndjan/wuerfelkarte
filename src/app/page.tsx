@@ -4,6 +4,7 @@ import { BookOpen, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { TipOfTheDay } from "@/blog/components/TipOfTheDay";
 import { AccountButton } from "@/components/account/AccountButton";
 import { InstallPwaBanner } from "@/components/common/InstallPwaBanner";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -76,6 +77,7 @@ export default function GamesOverview() {
               )}
             </section>
           )}
+          <TipOfTheDay />
           <StatsOverviewCard />
           <section className="wk-section">
             <h2 className="wk-overline">Weitere Spiele</h2>
@@ -92,6 +94,12 @@ export default function GamesOverview() {
             >
               <BookOpen className="size-4" aria-hidden="true" />
               Spielregeln
+            </Link>
+            <Link
+              href="/blog"
+              className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              Blog
             </Link>
             <Link
               href="/lizenzen"

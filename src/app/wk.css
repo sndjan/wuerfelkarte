@@ -278,3 +278,104 @@ button.wk-listrow { width: 100%; text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) { .wk-countdown { animation: none; } }
 }
+
+@layer components {
+/* Blog und Kniffel-Guide (Canvas „Kniffel-Guide“), Klassen wkx-*. */
+/* Mini-Würfel in Beispielen; gehaltene grün */
+.wkx-gdice { display: inline-flex; gap: 4px; }
+.wkx-gdie { display: inline-flex; width: 28px; height: 28px; padding: 2px; border: 1.5px solid var(--border-strong); border-radius: 7px; background: var(--surface); color: var(--ink); }
+.wkx-gdie svg { width: 100%; height: 100%; }
+.wkx-gdie.is-held { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
+
+/* Artikel */
+.wkx-article { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.wkx-kicker { margin: 0; font-size: 10px; line-height: 14px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--brand-strong); }
+.wkx-h1 { margin: 0; font-family: var(--wk-font-display); font-size: 32px; line-height: 36px; font-weight: 800; letter-spacing: -.025em; color: var(--ink); }
+.wkx-h2 { margin: var(--space-4) 0 0; font-family: var(--wk-font-display); font-size: 24px; line-height: 32px; font-weight: 800; letter-spacing: -.025em; color: var(--ink); }
+.wkx-h3 { margin: var(--space-2) 0 0; font-family: var(--wk-font-display); font-size: 18px; line-height: 26px; font-weight: 700; color: var(--ink); }
+.wkx-lede { margin: 0; font-size: 18px; line-height: 28px; color: var(--ink); }
+.wkx-p { margin: 0; font-size: 16px; line-height: 26px; color: var(--ink); }
+.wkx-p b, .wkx-list b { font-weight: 800; }
+.wkx-p a, .wkx-list a { color: var(--brand-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.wkx-list { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding-left: 1.25em; font-size: 16px; line-height: 26px; }
+.wkx-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.wkx-meta span { display: inline-flex; align-items: center; gap: var(--space-1); }
+@media (min-width: 768px) {
+  .wkx-h1 { font-size: 44px; line-height: 48px; }
+}
+
+/* Inhaltsverzeichnis */
+.wkx-toc { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); overflow: hidden; }
+.wkx-toc a { display: flex; align-items: center; gap: var(--space-3); min-height: 48px; padding: var(--space-2) var(--space-4); border-bottom: 1px solid var(--hairline); color: var(--ink); text-decoration: none; font-size: 16px; line-height: 22px; font-weight: 700; }
+.wkx-toc a:last-child { border-bottom: 0; }
+.wkx-toc a > span:nth-child(2) { flex: 1; min-width: 0; }
+.wkx-toc a[aria-current="page"] { background: var(--brand-soft); }
+.wkx-toc-num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: var(--wk-r-full); background: var(--surface-sunken); font-family: var(--wk-font-display); font-size: 14px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.wkx-toc a[aria-current="page"] .wkx-toc-num { background: var(--brand-strong); color: var(--on-brand); }
+.wkx-toc-sm a { min-height: 44px; font-size: 14px; line-height: 20px; }
+.wkx-toc-sm .wkx-toc-num { width: 24px; height: 24px; font-size: 12px; }
+
+/* Nummerierte Grundregeln */
+.wkx-rules { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.wkx-rule { display: flex; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); }
+.wkx-rule-num { flex: none; width: 24px; font-family: var(--wk-font-display); font-size: 28px; line-height: 28px; font-weight: 800; color: var(--brand-strong); }
+.wkx-rule h3 { margin: 0 0 2px; font-family: var(--wk-font-display); font-size: 16px; line-height: 24px; font-weight: 700; }
+.wkx-rule p { margin: 0; font-size: 14px; line-height: 21px; color: var(--ink-muted); }
+
+/* Merksatz-Band und Tipp des Tages */
+.wkx-callout, .wkx-tip { display: flex; gap: var(--space-3); padding: var(--space-4); border-radius: var(--wk-r-md); background: var(--brand-soft); color: var(--ink); }
+.wkx-callout > svg, .wkx-tip > svg { flex: none; margin-top: 2px; color: var(--brand-strong); }
+.wkx-callout p { margin: 0; font-size: 15px; line-height: 23px; }
+.wkx-callout b { font-weight: 800; }
+.wkx-tip { border-radius: var(--wk-r-lg); }
+.wkx-tip-body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.wkx-tip-body p { margin: 0; font-size: 16px; line-height: 24px; font-weight: 700; }
+.wkx-tip-body a { align-self: flex-start; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--brand-strong); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Beispiel-Zeilen: Würfel, bester Halt, Gewinn */
+.wkx-examples { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); overflow: hidden; }
+.wkx-ex { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--hairline); }
+.wkx-ex:last-child { border-bottom: 0; }
+.wkx-ex-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.wkx-ex-gain { font-family: var(--wk-font-display); font-size: 18px; line-height: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--brand-strong); white-space: nowrap; }
+.wkx-ex-gain.is-neg { color: var(--ink-muted); }
+.wkx-ex-title { margin: 0; font-size: 15px; line-height: 21px; font-weight: 700; }
+.wkx-ex-alt { margin: 0; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+
+/* Datentabelle */
+.wkx-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); }
+.wkx-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
+.wkx-table th { padding: 10px var(--space-4); text-align: left; font-size: 12px; line-height: 16px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-muted); border-bottom: 1px solid var(--hairline); white-space: nowrap; }
+.wkx-table td { padding: 10px var(--space-4); border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+.wkx-table tr:last-child td { border-bottom: 0; }
+.wkx-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wkx-table .best { font-weight: 800; color: var(--brand-strong); }
+
+/* Balken (Erwartungswert) */
+.wkx-bars { display: flex; flex-direction: column; gap: 10px; padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); }
+.wkx-bar { display: grid; grid-template-columns: 72px minmax(0, 1fr) 52px 44px; align-items: center; gap: var(--space-3); font-size: 14px; line-height: 20px; }
+.wkx-bar-track { height: 14px; border-radius: var(--wk-r-full); background: var(--surface-sunken); overflow: hidden; }
+.wkx-bar-track i { display: block; height: 100%; border-radius: var(--wk-r-full); background: var(--border-strong); }
+.wkx-bar.is-key .wkx-bar-track i { background: var(--brand); }
+.wkx-bar b { font-family: var(--wk-font-display); font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.wkx-bar small { font-size: 12px; font-weight: 700; color: var(--ink-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.wkx-bar.is-key small { color: var(--brand-strong); }
+
+/* Perzentil-Leiste */
+.wkx-pct { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wkx-pct div { display: flex; flex-direction: column; align-items: center; padding: var(--space-2) 0; border-radius: var(--wk-r-sm); background: var(--surface-sunken); }
+.wkx-pct div.is-mid { background: var(--brand-strong); color: var(--on-brand); }
+.wkx-pct b { font-family: var(--wk-font-display); font-size: 16px; line-height: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.wkx-pct span { font-size: 10px; line-height: 14px; font-weight: 800; letter-spacing: .05em; }
+
+/* Kapitel-Navigation */
+.wkx-chapnav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); margin-top: var(--space-4); }
+.wkx-chapnav a { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--wk-r-lg); background: var(--surface); color: var(--ink); text-decoration: none; }
+.wkx-chapnav a small { font-size: 12px; line-height: 16px; font-weight: 700; color: var(--ink-muted); }
+.wkx-chapnav a span { font-family: var(--wk-font-display); font-size: 15px; line-height: 21px; font-weight: 700; }
+.wkx-chapnav a.is-next { grid-column: 2; text-align: right; }
+
+/* Lesefortschritt unter dem Kopf */
+.wkx-readbar { height: 4px; background: var(--surface-sunken); }
+.wkx-readbar i { display: block; height: 100%; background: var(--brand); }
+}
