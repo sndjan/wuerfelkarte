@@ -23,6 +23,7 @@ src/
     ui/                   shadcn primitives
     common/               PageHeader, DarkModeToggle, seasonal/
   components/account/     sign-in, account page, header button
+  blog/                   /blog: posts.ts, the Kniffel guide (kniffel-strategie/), tips.ts
   lib/                    utils, Supabase client, auth, sync/
 ```
 
@@ -361,3 +362,16 @@ There are no component tests — the boards are verified by playing them.
 
 Vitest is pinned to the 2.x line because Vitest 4 requires Node 20 and this
 project still builds on Node 18.
+
+## Blog
+
+`/blog` lists the articles in `src/blog/posts.ts`. The Kniffel strategy guide
+lives in `src/blog/kniffel-strategie/`: `chapters.ts` (order, slugs, meta
+descriptions), `content.tsx` (the text of each chapter, built from the blocks
+in `blog/components/Blocks.tsx`) and the pages for `/blog/kniffel-strategie`
+and `/blog/kniffel-strategie/<kapitel>`, all statically rendered. Its numbers
+come from the solver (`games/yatzy/solver.ts`). The home page's „Tipp des
+Tages“ (`blog/tips.ts`) shows one of 20 lines from the guide per local date,
+in order, each linking its chapter; `/regeln` links the guide at the top.
+Styles: the `wkx-*` blog classes at the end of `src/app/wk.css` (Canvas
+„Kniffel-Guide“).
