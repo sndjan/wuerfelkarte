@@ -32,6 +32,7 @@ export function ProfileCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   // The character is picked on /konto/charakter (profile and own roster entry together).
   const emoji = profile?.emoji ?? null;
 
@@ -130,10 +131,34 @@ export function ProfileCard({
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
             Konto-ID
           </p>
-          <p className={`${BALOO} truncate text-2xl font-extrabold`}>
-            {profile!.name}
-            <span className="text-muted-foreground">#{profile!.tag}</span>
-          </p>
+          {/* Collapsed, only the name is cut off and the #tag stays visible;
+              a tap shows the whole ID, which needs name and tag to match. */}
+          <button
+            type="button"
+            className={`${BALOO} block w-full text-left text-2xl font-extrabold`}
+            title={handleOf(profile!)}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            {expanded ? (
+              <span className="block [overflow-wrap:anywhere]">
+                {profile!.name}
+                <span className="text-muted-foreground">#{profile!.tag}</span>
+              </span>
+            ) : (
+              <span className="flex min-w-0">
+                <span className="truncate">{profile!.name}</span>
+                <span className="shrink-0 text-muted-foreground">
+                  #{profile!.tag}
+                </span>
+              </span>
+            )}
+          </button>
+          {expanded && (
+            <p className="text-xs text-muted-foreground">
+              Antippen zum Einklappen
+            </p>
+          )}
         </div>
         <Button
           type="button"
