@@ -9,6 +9,7 @@ import {
   newGame as newTrainingGame,
   totalScore,
   trainingStats,
+  wunderBonus,
 } from "@/games/training/game";
 import { lossBreakdown } from "@/games/shared/soloStats";
 import { STRAFE_MS_PER_POINT } from "./config";
@@ -25,7 +26,7 @@ import type { SpeedrunCategory, SpeedrunGame, StoredSpeedrunMatch, TurnDice } fr
  * same dice — the result can only differ by how they decided.
  */
 
-export { TURNS, isFinished, totalScore };
+export { TURNS, isFinished, totalScore, wunderBonus };
 
 export const dailySeed = (date: string) => `kniffel-speedrun:${date}`;
 

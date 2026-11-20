@@ -9,12 +9,12 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, tournamentRules, type Category, type Solver } from "@/games/yatzy/solver";
 import { shortCategoryLabel } from "@/games/quiz/feedback";
-import { toTurnState } from "@/games/quiz/puzzles";
+import { extraWunderBonus, toTurnState } from "@/games/quiz/puzzles";
 import { Die } from "@/games/quiz/components/Die";
 import { crossedPill, filledPill, openPill, pill } from "@/games/quiz/components/Scorecard";
 import { CATEGORY_LABELS, SPEEDRUN_NAME, formatDelta, formatSeconds, formatTime } from "../config";
 import { goldSegments, personalBest, splitMark, sumOfBest, type SplitMark } from "../records";
-import { TURNS, elapsedMs, splits, strafeMs, totalScore } from "../run";
+import { TURNS, elapsedMs, splits, strafeMs, totalScore, wunderBonus } from "../run";
 import type { SpeedrunGame, StoredSpeedrunMatch } from "../types";
 
 /** Physical keys (KeyboardEvent.code) per field — QWERTZ row, then ASDF row. */
@@ -230,6 +230,9 @@ export function RunView({
   const rolls = current.rolled ? current.rollsLeft : current.rollsLeft + 1;
   const noRolls = current.rolled && current.rollsLeft === 0;
   const best = sumOfBest(gold);
+  // The extra-Wunder bonus shows in the 5er-Pasch field: earned, and what these dice would add.
+  const wunderEarned = wunderBonus(game);
+  const wunderPending = current.rolled ? extraWunderBonus(game.card, current.dice) : 0;
 
   const field = (category: Category) => {
     const filled = game.card[category];
@@ -246,7 +249,18 @@ export function RunView({
           <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground lg:text-sm">
             {shortCategoryLabel(category)}
           </span>
-          <span className="font-bold tabular-nums">{filled === 0 ? <Emoji e="❌" label="gestrichen" /> : filled}</span>
+          <span className="font-bold tabular-nums">
+            {filled === 0 ? (
+              <Emoji e="❌" label="gestrichen" />
+            ) : category === "Wunder" ? (
+              filled + wunderEarned
+            ) : (
+              filled
+            )}
+            {category === "Wunder" && wunderPending > 0 && (
+              <span className="ml-1.5 text-brand-accent">+{wunderPending}</span>
+            )}
+          </span>
         </div>
       );
     }

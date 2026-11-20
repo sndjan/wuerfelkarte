@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Category, Solver } from "@/games/yatzy/solver";
 import { describeStep, formatLoss, moveText, shortCategoryLabel } from "@/games/quiz/feedback";
-import { toTurnState } from "@/games/quiz/puzzles";
+import { extraWunderBonus, toTurnState } from "@/games/quiz/puzzles";
 import { ROLL_MS } from "@/games/quiz/components/Die";
 import { DiceDock } from "@/games/quiz/components/DiceDock";
 import { Scorecard } from "@/games/quiz/components/Scorecard";
-import { TURNS, bestMove, lastStep, totalScore, trainingStats } from "../game";
+import { TURNS, bestMove, lastStep, totalScore, trainingStats, wunderBonus } from "../game";
 import type { TrainingGame } from "../types";
 import { VerdictBadge, verdictColor } from "./MoveFeedback";
 
@@ -157,6 +157,8 @@ export function TurnView({ solver, game, rolling, onRoll, onKeep, onScore }: Tur
         className="md:col-start-1 md:row-span-3 md:row-start-1 md:self-start"
         card={game.card}
         options={options}
+        wunderBonus={wunderBonus(game)}
+        wunderPending={rolled ? extraWunderBonus(game.card, current.dice) : 0}
         selected={selected}
         onSelect={(category) => setSelected((prev) => (prev === category ? null : category))}
       />

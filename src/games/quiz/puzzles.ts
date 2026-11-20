@@ -4,6 +4,7 @@ import {
   type Solver,
   type TurnOption,
   type TurnState,
+  tournamentRules,
 } from "@/games/yatzy/solver";
 import type {
   PuzzleProgress,
@@ -65,6 +66,17 @@ const rollDice = (random: () => number, count = 5) =>
   Array.from({ length: count }, () => 1 + Math.floor(random() * 6));
 
 const sorted = (dice: readonly number[]) => [...dice].sort((a, b) => a - b);
+
+/**
+ * The extra-Wunder bonus these dice earn on this card: five of a kind while
+ * the 5er-Pasch already holds its 50, wherever the dice are entered. The
+ * cards show it in the 5er-Pasch field, where it belongs, not in the field
+ * the dice go into.
+ */
+export const extraWunderBonus = (card: QuizCard, dice: readonly number[]) =>
+  (card.Wunder ?? 0) > 0 && dice.length === 5 && dice.every((d) => d === dice[0])
+    ? tournamentRules.extraWunderBonus
+    : 0;
 
 export function toTurnState(card: QuizCard): TurnState {
   const filled = CATEGORIES.filter((c) => card[c] !== undefined);

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { describeStep, formatLoss, moveText, pointsLabel } from "../feedback";
-import { pointsTier, puzzlePoints, type PointsTier } from "../puzzles";
+import { extraWunderBonus, pointsTier, puzzlePoints, type PointsTier } from "../puzzles";
 import type { PuzzleProgress, QuizMove, QuizPuzzle } from "../types";
 import { SmallDie } from "./Die";
 import { Scorecard } from "./Scorecard";
@@ -101,6 +101,7 @@ export function PuzzleResult({
           card={puzzle.card}
           options={entry?.kind === "score" ? new Map([[entry.category, entry.points]]) : new Map()}
           selected={entry?.kind === "score" ? entry.category : null}
+          wunderPending={entry?.kind === "score" ? extraWunderBonus(puzzle.card, entry.dice) : 0}
         />
       </Fold>
       <ol className="flex flex-col gap-3">

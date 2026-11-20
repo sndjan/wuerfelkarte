@@ -1,6 +1,13 @@
 import { CATEGORIES, type Category, type Solver } from "@/games/yatzy/solver";
-import { gradeKeep, gradeScore, rankMoves, stepPoints, toTurnState } from "@/games/quiz/puzzles";
-import type { QuizStep, RollsLeft } from "@/games/quiz/types";
+import {
+  extraWunderBonus,
+  gradeKeep,
+  gradeScore,
+  rankMoves,
+  stepPoints,
+  toTurnState,
+} from "@/games/quiz/puzzles";
+import type { QuizCard, QuizStep, RollsLeft } from "@/games/quiz/types";
 import { lossBreakdown } from "@/games/shared/soloStats";
 import type { StoredTrainingMatch, TrainingGame, TrainingTurnProgress } from "./types";
 
@@ -110,6 +117,22 @@ export function bestMove(solver: Solver, game: TrainingGame) {
 
 export function totalScore(game: TrainingGame): number {
   return game.turns.reduce((sum, turn) => sum + turn.points + turn.bonus, 0);
+}
+
+/**
+ * The extra-Wunder bonus earned so far, replayed from the turns: the card
+ * adds it to the 5er-Pasch field. Part of each turn's `bonus`, which also
+ * holds the upper-section bonus.
+ */
+export function wunderBonus(game: TrainingGame): number {
+  let card: QuizCard = {};
+  let total = 0;
+  for (const turn of game.turns) {
+    const entry = turn.steps.at(-1);
+    if (entry?.kind === "score") total += extraWunderBonus(card, entry.dice);
+    card = { ...card, [turn.category]: turn.points };
+  }
+  return total;
 }
 
 /** Every graded decision so far, finished turns first. */

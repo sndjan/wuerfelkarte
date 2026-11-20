@@ -7,6 +7,7 @@ import {
   applyRoll,
   applyScore,
   currentStreak,
+  extraWunderBonus,
   dailyStreak,
   dateKey,
   isArchiveDate,
@@ -37,6 +38,15 @@ describe("toTurnState", () => {
       wunderScored: true,
     });
     expect(toTurnState({ Wunder: 0 }).wunderScored).toBe(false);
+  });
+});
+
+describe("extraWunderBonus", () => {
+  it("is 50 only for five of a kind while the 5er-Pasch holds 50", () => {
+    expect(extraWunderBonus({ Wunder: 50 }, [3, 3, 3, 3, 3])).toBe(50);
+    expect(extraWunderBonus({ Wunder: 50 }, [3, 3, 3, 3, 1])).toBe(0);
+    expect(extraWunderBonus({ Wunder: 0 }, [3, 3, 3, 3, 3])).toBe(0);
+    expect(extraWunderBonus({ Dreier: 15 }, [3, 3, 3, 3, 3])).toBe(0);
   });
 });
 

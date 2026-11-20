@@ -25,6 +25,10 @@ type ScorecardProps = {
    * card fits on a phone screen next to the dice.
    */
   split?: boolean;
+  /** Extra-Wunder bonus already earned; the 5er-Pasch field shows it on top of its 50. */
+  wunderBonus?: number;
+  /** Extra-Wunder bonus the current dice would earn, previewed in the 5er-Pasch field. */
+  wunderPending?: number;
   className?: string;
 };
 
@@ -46,6 +50,8 @@ export function Scorecard({
   bare = false,
   title = `${QUIZ_EMOJI} Deine Karte`,
   split = false,
+  wunderBonus = 0,
+  wunderPending = 0,
   className,
 }: ScorecardProps) {
   const label = split ? shortCategoryLabel : categoryLabel;
@@ -58,11 +64,16 @@ export function Scorecard({
   const field = (category: Category) => {
     const filled = card[category];
     if (filled !== undefined) {
+      const wunder = category === "Wunder";
+      const shown = wunder && filled > 0 ? filled + wunderBonus : filled;
       return (
         <div key={category} className={cn("wk-field", filled === 0 ? "is-crossed" : "is-filled", sizing)}>
           <span className="wk-field-label">{label(category)}</span>
           <span className="wk-field-value">
-            {filled === 0 ? <X className="size-4" aria-label="gestrichen" /> : filled}
+            {shown === 0 ? <X className="size-4" aria-label="gestrichen" /> : shown}
+            {wunder && wunderPending > 0 && (
+              <span className="ml-1.5 text-brand-accent">+{wunderPending}</span>
+            )}
           </span>
         </div>
       );

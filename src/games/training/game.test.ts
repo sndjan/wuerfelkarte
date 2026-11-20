@@ -17,6 +17,7 @@ import {
   totalScore,
   trainingStats,
   verdict,
+  wunderBonus,
 } from "./game";
 import { runningTrainingGame } from "./resume";
 import { trainingStorage } from "./storage";
@@ -113,6 +114,26 @@ describe("training game", () => {
     const next = applyScore(solver, game, "Sechser");
     expect(next.turns.at(-1)).toMatchObject({ points: 24, bonus: 35 });
     expect(totalScore(next)).toBe(25 + 16 + 24 + 35);
+  });
+
+  it("shows the extra-Wunder bonus in the 5er-Pasch field, not in the upper bonus", () => {
+    let game = applyScore(solver, withDice([2, 2, 2, 2, 2]), "Wunder");
+    expect(wunderBonus(game)).toBe(0);
+    // Two more Wunders, each entered elsewhere: +50 each, on top of the field's 50.
+    game = applyScore(solver, { ...game, current: { ...game.current, rolled: true, dice: [6, 6, 6, 6, 6] } }, "Sechser");
+    expect(game.turns.at(-1)).toMatchObject({ points: 30, bonus: 50 });
+    game = applyScore(solver, { ...game, current: { ...game.current, rolled: true, dice: [3, 3, 3, 3, 3] } }, "Chance");
+    expect(wunderBonus(game)).toBe(100);
+    expect(totalScore(game)).toBe(50 + 30 + 15 + 100);
+  });
+
+  it("gives no extra-Wunder bonus while the 5er-Pasch is open or crossed out", () => {
+    // Five of a kind entered elsewhere leaves the 5er-Pasch open: no bonus yet.
+    let game = applyScore(solver, withDice([4, 4, 4, 4, 4]), "Vierer");
+    game = applyScore(solver, { ...game, current: { ...game.current, rolled: true, dice: [1, 2, 3, 4, 6] } }, "Wunder");
+    expect(game.card.Wunder).toBe(0);
+    game = applyScore(solver, { ...game, current: { ...game.current, rolled: true, dice: [5, 5, 5, 5, 5] } }, "Fünfer");
+    expect(wunderBonus(game)).toBe(0);
   });
 
   it("plays a full optimal game without a single loss", () => {

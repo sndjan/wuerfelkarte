@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import type { Solver } from "@/games/yatzy/solver";
 import { categoryLabel, formatLoss } from "@/games/quiz/feedback";
 import { Scorecard } from "@/games/quiz/components/Scorecard";
-import { biggestMistakes, totalScore, trainingStats } from "../game";
+import { biggestMistakes, totalScore, trainingStats, wunderBonus } from "../game";
 import type { StoredTrainingMatch, TrainingGame } from "../types";
 import { StepRow, verdictColor } from "./MoveFeedback";
 
@@ -124,7 +124,7 @@ export function TrainingSummary({
 
       <Card className="flex flex-col gap-2 p-4">
         <h2 className="font-bold">Deine Karte</h2>
-        <Scorecard bare card={game.card} options={new Map()} selected={null} />
+        <Scorecard bare card={game.card} options={new Map()} selected={null} wunderBonus={wunderBonus(game)} />
       </Card>
     </div>
   );

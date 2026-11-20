@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Category, Solver } from "@/games/yatzy/solver";
 import { describeStep, formatLoss, shortCategoryLabel } from "../feedback";
-import { toTurnState } from "../puzzles";
+import { extraWunderBonus, toTurnState } from "../puzzles";
 import type { PuzzleProgress, QuizPuzzle } from "../types";
 import { DiceDock } from "./DiceDock";
 import { ROLL_MS } from "./Die";
@@ -132,6 +132,7 @@ export function PuzzleView({
         className="md:col-start-1 md:row-span-3 md:row-start-1 md:self-start"
         card={puzzle.card}
         options={options}
+        wunderPending={rolled ? extraWunderBonus(puzzle.card, progress.dice) : 0}
         selected={selected}
         onSelect={(category) => setSelected((prev) => (prev === category ? null : category))}
       />
