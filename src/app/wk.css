@@ -214,7 +214,7 @@ button.wk-listrow { width: 100%; text-align: left; }
 .wkx-seat { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 6px 0; border: 1px solid transparent; border-radius: var(--wk-r-md); background: transparent; font-size: 12px; line-height: 16px; font-weight: 700; }
 .wkx-seat[aria-pressed="true"] { background: var(--surface); border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand); }
 .wkx-seat b { font-family: var(--wk-font-display); font-size: 16px; line-height: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.wkx-cell { display: flex; align-items: center; justify-content: center; height: 32px; min-width: 0; padding: 0; border: 1px solid var(--border-strong); border-radius: var(--wk-r-sm); background: var(--surface); font-size: 14px; line-height: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.wkx-cell { display: flex; align-items: center; justify-content: center; height: 32px; min-width: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--wk-r-sm); background: var(--surface); font-size: 14px; line-height: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .wkx-cell.is-filled { background: var(--surface-sunken); border-color: transparent; }
 .wkx-cell.is-crossed { background: var(--danger-soft); border-color: transparent; }
 .wkx-cell.is-active { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
@@ -237,7 +237,7 @@ button.wk-listrow { width: 100%; text-align: left; }
 .wkx-headbtn-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--wk-font-display); font-size: 16px; line-height: 24px; font-weight: 700; }
 /* Feld mit Kategorie im Feld (iPad) */
 .wkx-cell-wide { justify-content: space-between; gap: var(--space-2); padding: 0 var(--space-3); }
-.wkx-cell-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink); }
+.wkx-cell-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--ink-muted); }
 .wkx-cell.is-filled .wkx-cell-label, .wkx-cell.is-crossed .wkx-cell-label { color: var(--ink-muted); }
 .wkx-cell-val { display: inline-flex; align-items: center; }
 .wkx-cell-wide.is-filled, .wkx-cell-wide.is-crossed { justify-content: center; }
