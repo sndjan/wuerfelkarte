@@ -2,7 +2,7 @@
 
 import { Emoji, EmojiText } from "@/components/emoji/Emoji";
 import JSConfetti from "js-confetti";
-import { AlertTriangle, Lock, RotateCcw, X } from "lucide-react";
+import { AlertTriangle, Check, Lock, RotateCcw, X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 
 import ThemeManager from "@/components/common/seasonal/ThemeManager";
@@ -152,7 +152,10 @@ export function ScoreTable({
 
   const bonusAfter = config.bonus?.fields[config.bonus.fields.length - 1];
   const gridStyle = { "--n": players.length } as React.CSSProperties;
-  const row = "grid grid-cols-[74px_repeat(var(--n),minmax(0,1fr))] items-center gap-1 md:grid-cols-[repeat(var(--n),minmax(0,1fr))] md:gap-3";
+  const cols = "grid grid-cols-[74px_repeat(var(--n),minmax(0,1fr))] gap-1 md:grid-cols-[repeat(var(--n),minmax(0,1fr))] md:gap-3";
+  const row = cn(cols, "items-center");
+  // Field rows share the card's free height, so the card fills the screen; 32px (36px on iPad) at the least.
+  const fieldRow = cn(cols, "min-h-8 flex-1 items-stretch md:min-h-9");
 
   const cell = (player: Player, field: PointField) => {
     const value = player.points[field.key as keyof Player["points"]] as Value | undefined;
@@ -169,8 +172,8 @@ export function ScoreTable({
         aria-label={`${field.label}, ${player.name}: ${value === "X" ? "gestrichen" : empty ? "offen" : value}${status === "forced" ? ", Pflichtfeld" : status === "blocked" ? ", blockiert" : ""}`}
         onClick={(event) => tapCell(player, field, event.currentTarget)}
         className={cn(
-          "wkx-cell relative h-8 w-full md:h-9",
-          value === "X" ? "is-crossed" : !empty && "is-filled",
+          "wkx-cell relative h-full min-h-8 w-full md:min-h-9",
+          value === "X" ? "is-crossed" : !empty && "is-filled text-base leading-6 md:text-lg",
           empty && "md:justify-between md:px-3",
           isOpen && "is-active",
           usual !== undefined && "is-suggest",
@@ -212,7 +215,7 @@ export function ScoreTable({
         onDone={() => setShout(null)}
       />
 
-      <div className="wk-card gap-1 p-2.5" style={gridStyle}>
+      <div className="wk-card flex-1 gap-1 p-2.5" style={gridStyle}>
         <div className={cn(row, "pb-1")}>
           <span className="wk-caption md:hidden">Runde {round}/{config.fields.length}</span>
           {players.map((player, index) => (
@@ -246,28 +249,42 @@ export function ScoreTable({
 
         {config.fields.map((field) => (
           <Fragment key={field.key}>
-            <div className={row}>
-              <span className="truncate text-[13px] leading-4 font-bold md:hidden">{short(field)}</span>
+            <div className={fieldRow}>
+              <span className="self-center truncate text-[13px] leading-4 font-bold md:hidden">{short(field)}</span>
               {players.map((player) => cell(player, field))}
             </div>
             {config.bonus && field.key === bonusAfter && (
-              <div className={cn(row, "py-1.5")}>
-                <span className="text-xs leading-4 font-bold text-ink-muted md:hidden">Bonus /{config.bonus.minSum}</span>
+              <div className={cn(row, "my-1 border-y border-hairline py-2")}>
+                <span className="text-[13px] leading-4 font-bold md:hidden">
+                  Bonus <span className="text-xs font-normal text-ink-muted">/{config.bonus.minSum}</span>
+                </span>
                 {players.map((player) => {
                   const { sum, pace } = bonusPace(player.points, config.bonus!, maxPerFace, doubledOf?.(player.id));
                   const share = `${Math.min(100, Math.round((sum / config.bonus!.minSum) * 100))}%`;
+                  const reached = pace === "reached";
                   return (
-                    <div key={player.id} className="flex flex-col gap-0.5 px-0.5 md:flex-row md:items-center md:gap-2.5 md:px-3">
-                      <span className="hidden text-xs font-bold text-ink-muted md:inline">Bonus</span>
-                      <span className="wk-caption wk-num text-center font-bold text-ink md:order-last">
-                        {sum}
-                        <span className="hidden font-normal text-ink-muted md:inline">/{config.bonus!.minSum}</span>
-                      </span>
-                      <div
-                        className="wk-progress h-1.5 md:h-2 md:flex-1"
-                        role="img"
-                        aria-label={`Bonus ${player.name}: ${sum} von ${config.bonus!.minSum}, ${PACE_WORD[pace]}`}
+                    <div
+                      key={player.id}
+                      role="img"
+                      aria-label={`Bonus ${player.name}: ${sum} von ${config.bonus!.minSum}, ${PACE_WORD[pace]}${reached ? `, +${config.bonus!.bonus}` : ""}`}
+                      className="flex flex-col gap-1 px-0.5 md:h-7 md:flex-row md:items-center md:gap-2.5 md:px-3"
+                    >
+                      <span className="hidden text-[13px] font-bold text-ink-muted md:inline">Bonus</span>
+                      <span
+                        className={cn(
+                          "wk-num h-5 text-center text-[15px] leading-5 font-extrabold md:order-3 md:h-auto md:text-base",
+                          reached && "hidden md:inline",
+                        )}
                       >
+                        {sum}
+                        <span className="hidden text-[13px] font-normal text-ink-muted md:inline">/{config.bonus!.minSum}</span>
+                      </span>
+                      {reached && (
+                        <span className="inline-flex h-5 items-center gap-0.5 self-center rounded-full bg-brand-strong px-1.5 text-xs font-extrabold whitespace-nowrap text-on-brand md:order-4 md:h-[22px] md:px-2">
+                          <Check className="size-3" strokeWidth={3} aria-hidden="true" />+{config.bonus!.bonus}
+                        </span>
+                      )}
+                      <div className="wk-progress h-2 md:order-2 md:h-2.5 md:flex-1">
                         <i style={{ width: share, background: PACE_COLOR[pace] }} />
                       </div>
                     </div>
