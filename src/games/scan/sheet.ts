@@ -64,12 +64,15 @@ export function cellsToCheck(player: SheetPlayer, unclear: string[]): string[] {
 
 /**
  * Turns the text of one cell into a value. A tick on a fixed field means its
- * points; a dash, slash or 0 means struck.
+ * points; any lone stroke, an X or a 0 means struck.
  */
 export function parseCell(field: SheetField, raw: string): CellValue {
   const text = raw.trim().replace(/\s+/g, "");
   if (text === "") return null;
-  if (/^(x|-|–|—|\/|0|o)$/i.test(text)) return "X";
+  // Any lone stroke, whichever way it slants, is a struck field.
+  if (/^(x|×|✕|✗|-|–|—|_|~|\/|\\|\||l|i|0|o)$/i.test(text)) return "X";
+  // A stroke the reader took for a 1: only the Einser can hold a 1.
+  if (text === "1" && field.cell !== "einser") return "X";
   if ("fixed" in field && TICK.test(text)) return field.fixed;
   const digits = text.replace(/[^0-9]/g, "");
   if (digits === "" || digits.length > 3) return Number.NaN;

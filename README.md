@@ -109,12 +109,7 @@ away before the scoreboard: the column screen shows no points, and the board
 covers the totals until „Auswertung“ has counted them up. The block
 is `public/kniffelblock.pdf`: four A6 cards on one A4 page, one game for up to
 four players; `npm run kniffelblock` rebuilds it from
-`scripts/kniffelblock/build.mjs` (needs Playwright). Before anything is sent,
-the browser finds the four corner marks by plain image processing and
-straightens the card with a homography (`src/games/scan/corners.ts`, no AI);
-the page animates that and runs a scan line until the answer is back, and the
-reader gets the flat, upright card. Without the marks the photo goes as it
-is. The reader only
+`scripts/kniffelblock/build.mjs` (needs Playwright). While it is read, a scan line runs over the photo. The reader only
 transcribes; totals, the bonus and the plausibility checks are in
 `src/games/scan/sheet.ts`.
 

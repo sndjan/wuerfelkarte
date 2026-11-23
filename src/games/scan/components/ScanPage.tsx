@@ -9,10 +9,9 @@ import { Emoji } from "@/components/emoji/Emoji";
 import { createRosterPlayer, loadRoster, saveRoster } from "@/games/shared/roster";
 import { EMOJI_OPTIONS, type RosterPlayer } from "@/games/shared/types";
 import { savePlayers, yatzyStorage } from "@/games/yatzy/storage";
-import { cardTarget, CARD_MM, findCorners, homography, toGray, warp, type Quad } from "../corners";
 import { saveScanCheck } from "../handoff";
 import { matchNames, normalizeName, seatRoster } from "../players";
-import { ScanStage, stageMinMs } from "./ScanStage";
+import { ScanStage, SWEEP_MS } from "./ScanStage";
 import { cellsToCheck, playersFromRead, toPoints, type ReadSheet, type SheetPlayer } from "../sheet";
 
 const MESSAGES: Record<string, string> = {
@@ -28,11 +27,6 @@ const MESSAGES: Record<string, string> = {
 /** Long side of the photo sent to the reader: enough for handwriting, small to upload. */
 const MAX_SIDE = 1600;
 
-/** Long side of the copy the corner marks are searched in: plenty for 5 mm squares, quick to scan. */
-const DETECT_SIDE = 480;
-/** The straightened card sent to the reader, in px per mm (1050 × 1485). */
-const CARD_PX_PER_MM = 10;
-
 function canvasOf(source: CanvasImageSource, width: number, height: number, maxSide: number): HTMLCanvasElement {
   const scale = Math.min(1, maxSide / Math.max(width, height));
   const canvas = document.createElement("canvas");
@@ -40,28 +34,6 @@ function canvasOf(source: CanvasImageSource, width: number, height: number, maxS
   canvas.height = Math.round(height * scale);
   canvas.getContext("2d")!.drawImage(source, 0, 0, canvas.width, canvas.height);
   return canvas;
-}
-
-/** The corner marks in the photo, found by plain image processing (corners.ts), or null. */
-function detect(photo: HTMLCanvasElement): Quad | null {
-  const small = canvasOf(photo, photo.width, photo.height, DETECT_SIDE);
-  const { data } = small.getContext("2d")!.getImageData(0, 0, small.width, small.height);
-  const quad = findCorners(toGray(data, small.width, small.height), small.width, small.height);
-  const k = photo.width / small.width;
-  return quad && (quad.map((p) => ({ x: p.x * k, y: p.y * k })) as Quad);
-}
-
-/** The card alone, flat and upright: what the reader gets when the marks were found. */
-function straighten(photo: HTMLCanvasElement, quad: Quad): HTMLCanvasElement {
-  const out = document.createElement("canvas");
-  out.width = Math.round(CARD_MM.w * CARD_PX_PER_MM);
-  out.height = Math.round(CARD_MM.h * CARD_PX_PER_MM);
-  const src = photo.getContext("2d")!.getImageData(0, 0, photo.width, photo.height);
-  const ctx = out.getContext("2d")!;
-  const dst = ctx.createImageData(out.width, out.height);
-  warp(src, homography(cardTarget(out.width, out.height), quad), dst, [255, 255, 255]);
-  ctx.putImageData(dst, 0, 0);
-  return out;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -86,7 +58,7 @@ export function ScanPage() {
   const [roster, setRoster] = useState<RosterPlayer[]>([]);
   const [left, setLeft] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [stage, setStage] = useState<{ photo: HTMLCanvasElement; quad: Quad | null } | null>(null);
+  const [stage, setStage] = useState<string | null>(null);
 
   async function read(file: File) {
     setError(null);
@@ -95,9 +67,8 @@ export function ScanPage() {
       const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
       const photo = canvasOf(bitmap, bitmap.width, bitmap.height, MAX_SIDE);
       bitmap.close();
-      const quad = detect(photo);
-      setStage({ photo, quad });
-      const image = (quad ? straighten(photo, quad) : photo).toDataURL("image/jpeg", 0.85);
+      const image = photo.toDataURL("image/jpeg", 0.85);
+      setStage(image);
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const [response] = await Promise.all([
         fetch("/api/scan", {
@@ -105,8 +76,8 @@ export function ScanPage() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ image }),
         }),
-        // Let the straightening and at least one sweep play out, however quick the answer.
-        reduced ? null : sleep(stageMinMs(quad !== null)),
+        // At least one sweep of the scan line, however quick the answer.
+        reduced ? null : sleep(SWEEP_MS),
       ]);
       const body = (await response.json().catch(() => ({}))) as { error?: string; sheet?: ReadSheet; left?: number };
       if (!response.ok || !body.sheet) throw new Error(MESSAGES[body.error ?? ""] ?? "Hat nicht geklappt.");
@@ -200,12 +171,9 @@ export function ScanPage() {
 
         {phase === "reading" && stage && (
           <section className="flex flex-col items-center gap-4">
-            <ScanStage photo={stage.photo} quad={stage.quad} />
+            <ScanStage photo={stage} />
             <div className="text-center" aria-live="polite">
               <p className="m-0 text-base font-bold">Das Blatt wird gelesen …</p>
-              <p className="wk-caption">
-                {stage.quad ? "Ecken gefunden, Blatt gerade gerückt." : "Ecken nicht gefunden, das Foto wird so gelesen."}
-              </p>
             </div>
           </section>
         )}

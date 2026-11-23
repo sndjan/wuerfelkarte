@@ -17,7 +17,8 @@ Rows from top to bottom:
 For every cell, copy what is handwritten there:
 - an empty cell: ""
 - a number: its digits, exactly as written ("9", "24", "100"). Do not add, correct or compute anything.
-- struck out (an X, a dash, a slash, a line through the box, or a written 0): "X"
+- struck out: "X". That is an X, a written 0, a scribble, and ANY single line: horizontal, slanted either way or vertical, short or across the whole box. A lone stroke is never unclear: it is "X".
+  The one exception: in the einser row a short vertical stroke is the digit "1".
 - a tick or check mark: "✓"
 - if a number was crossed out and another written next to it, the new one
 - the printed labels and values (25, 30, 40, 50) are not handwriting; never copy them

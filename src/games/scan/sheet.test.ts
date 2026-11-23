@@ -31,6 +31,10 @@ describe("parseCell", () => {
     expect(parseCell(field("dreier"), "X")).toBe("X");
     expect(parseCell(field("dreier"), "—")).toBe("X");
     expect(parseCell(field("dreier"), "0")).toBe("X");
+    for (const stroke of ["/", "\\", "|", "-", "_", "l", "I"]) expect(parseCell(field("chance"), stroke)).toBe("X");
+    // A stroke read as 1 is struck everywhere but the Einser.
+    expect(parseCell(field("viererpasch"), "1")).toBe("X");
+    expect(parseCell(field("einser"), "1")).toBe(1);
     expect(parseCell(field("fullhouse"), "✓")).toBe(25);
     expect(parseCell(field("kniffel"), "✓")).toBe(50);
     expect(Number.isNaN(parseCell(field("chance"), "✓") as number)).toBe(true);
