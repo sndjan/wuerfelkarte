@@ -25,6 +25,8 @@ export type ScoreTableProps = {
   /** The total per player (Battle counts doubled fields twice). */
   scoreOf: (player: Player) => number;
   doubledOf?: (playerId: number) => Set<string>;
+  /** Fields to look at again, e.g. after a scan of the paper block: marked until entered. */
+  flaggedOf?: (playerId: number) => Set<string>;
   battleStatus?: (playerId: number, key: string) => BattleFieldStatus;
   /** A number, "X" for crossed out, or 0 to empty the field again. */
   onEnter: (playerId: number, key: string, value: number | "X" | 0) => void;
@@ -65,6 +67,7 @@ export function ScoreTable({
   hideScores,
   scoreOf,
   doubledOf,
+  flaggedOf,
   battleStatus,
   onEnter,
   playerMenu,
@@ -164,12 +167,13 @@ export function ScoreTable({
     const isOpen = open?.playerId === player.id && open.key === field.key;
     const usual = isOpen && empty ? usualFor(field) : undefined;
     const doubled = doubledOf?.(player.id).has(field.key) ?? false;
+    const flagged = flaggedOf?.(player.id).has(field.key) ?? false;
     return (
       <button
         key={player.id}
         type="button"
         aria-pressed={isOpen}
-        aria-label={`${field.label}, ${player.name}: ${value === "X" ? "gestrichen" : empty ? "offen" : value}${status === "forced" ? ", Pflichtfeld" : status === "blocked" ? ", blockiert" : ""}`}
+        aria-label={`${field.label}, ${player.name}: ${value === "X" ? "gestrichen" : empty ? "offen" : value}${status === "forced" ? ", Pflichtfeld" : status === "blocked" ? ", blockiert" : ""}${flagged ? ", bitte prüfen" : ""}`}
         onClick={(event) => tapCell(player, field, event.currentTarget)}
         className={cn(
           "wkx-cell relative h-full min-h-8 w-full md:min-h-9",
@@ -179,6 +183,7 @@ export function ScoreTable({
           usual !== undefined && "is-suggest",
           empty && status === "blocked" && "opacity-50",
           empty && status === "forced" && "ring-2 ring-gold",
+          flagged && "ring-2 ring-gold",
         )}
       >
         {empty && (
@@ -190,6 +195,11 @@ export function ScoreTable({
           {value === "X" ? <X className="size-4" /> : empty ? (usual ?? "") : value}
           {empty && status === "blocked" && <Lock className="size-3.5 text-ink-muted" />}
         </span>
+        {flagged && (
+          <span className="absolute -top-1.5 -right-1 flex size-[14px] items-center justify-center rounded-full bg-gold text-[10px] leading-none font-extrabold text-on-gold">
+            ?
+          </span>
+        )}
         {doubled && (
           <span className="absolute -top-1.5 -right-1 rounded-full bg-brand-strong px-1 text-[10px] leading-[14px] font-extrabold text-on-brand">
             ×2

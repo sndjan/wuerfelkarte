@@ -54,6 +54,14 @@ export type CellValue = number | "X" | null;
 
 const TICK = /^[✓✔☑√vV✗]$/;
 
+/** The sheet keys (Points) of the cells to check in one column: impossible ones and the reader's unsure ones. */
+export function cellsToCheck(player: SheetPlayer, unclear: string[]): string[] {
+  const unsure = new Set(unclear);
+  return SHEET_FIELDS.filter(
+    (f) => !isValidCell(f, player.values[f.cell]) || unsure.has(`${player.column}:${f.cell}`),
+  ).map((f) => f.key);
+}
+
 /**
  * Turns the text of one cell into a value. A tick on a fixed field means its
  * points; a dash, slash or 0 means struck.
@@ -81,8 +89,10 @@ export function isValidCell(field: SheetField, value: CellValue): boolean {
   return value >= 5 && value <= 30;
 }
 
-/** A column as the review screen edits it. */
+/** A column that holds anything. */
 export type SheetPlayer = {
+  /** The column on paper, 1–4. */
+  column: number;
   name: string;
   values: Record<CellName, CellValue>;
   /** The sum written on paper, if any — only to point out a difference. */
@@ -99,44 +109,26 @@ export function playersFromRead(read: ReadSheet): SheetPlayer[] {
     const empty = Object.values(values).every((v) => v === null);
     if (empty && !name) return [];
     const sum = Number((column.cells?.summe ?? "").replace(/[^0-9]/g, ""));
-    return [{ name: name || `Spieler ${i + 1}`, values, writtenSum: sum > 0 ? sum : null }];
+    return [{ column: i + 1, name, values, writtenSum: sum > 0 ? sum : null }];
   });
 }
 
-/** The column as a Yatzy sheet in the app's own shape: 0 is an open field, "X" a struck one. */
+/**
+ * The column as a Yatzy sheet in the app's own shape: 0 is an open field, "X"
+ * a struck one. A value that cannot be right arrives open, to be entered again.
+ */
 export function toPoints(player: SheetPlayer): Points {
   return Object.fromEntries(
     SHEET_FIELDS.map((f) => {
       const v = player.values[f.cell];
-      return [f.key, v === null || Number.isNaN(v) ? 0 : v];
+      return [f.key, v === null || !isValidCell(f, v) ? 0 : v];
     }),
   ) as Points;
 }
 
 export const sheetScore = (player: SheetPlayer): number => calculateScore(toPoints(player), "Wunder");
 
-/** The upper section's sum and whether it reached the 35 bonus. */
-export function upperSum(player: SheetPlayer): { sum: number; bonus: boolean } {
-  const sum = SHEET_FIELDS.filter((f) => "face" in f).reduce((acc, f) => {
-    const v = player.values[f.cell];
-    return acc + (typeof v === "number" && !Number.isNaN(v) ? v : 0);
-  }, 0);
-  return { sum, bonus: sum >= 63 };
-}
-
-/** Every cell that blocks saving: not readable or not possible in its field. */
+/** Every cell that cannot be right: not readable or not possible in its field. */
 export function invalidCells(player: SheetPlayer): CellName[] {
   return SHEET_FIELDS.filter((f) => !isValidCell(f, player.values[f.cell])).map((f) => f.cell);
 }
-
-/** Players with their totals, best first; ties share a place. */
-export function ranking(players: SheetPlayer[]): { player: SheetPlayer; index: number; score: number; place: number }[] {
-  const scored = players
-    .map((player, index) => ({ player, index, score: sheetScore(player) }))
-    .sort((a, b) => b.score - a.score);
-  return scored.map((entry) => ({ ...entry, place: scored.findIndex((e) => e.score === entry.score) + 1 }));
-}
-
-/** How a value shows in the review's input. */
-export const formatCell = (value: CellValue): string =>
-  value === null ? "" : value === "X" ? "X" : Number.isNaN(value) ? "?" : String(value);

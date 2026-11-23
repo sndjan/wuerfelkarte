@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cellsToCheck,
   invalidCells,
   isValidCell,
   parseCell,
   playersFromRead,
-  ranking,
   SHEET_FIELDS,
   sheetScore,
   toPoints,
@@ -65,8 +65,8 @@ describe("a read sheet", () => {
   };
   const players = playersFromRead(read);
 
-  it("drops empty columns and names unnamed ones", () => {
-    expect(players.map((p) => p.name)).toEqual(["Anna", "Spieler 3", "Ben"]);
+  it("drops empty columns and keeps the column number", () => {
+    expect(players.map((p) => [p.column, p.name])).toEqual([[1, "Anna"], [3, ""], [4, "Ben"]]);
   });
 
   it("scores with the bonus at 63", () => {
@@ -82,16 +82,14 @@ describe("a read sheet", () => {
     expect(toPoints(players[2]).Wunder).toBe(50);
   });
 
-  it("flags impossible cells", () => {
+  it("flags impossible cells and leaves them open", () => {
     expect(invalidCells(players[1])).toEqual(["chance"]);
     expect(invalidCells(players[0])).toEqual([]);
+    expect(toPoints(players[1]).Chance).toBe(0);
   });
 
-  it("ranks best first", () => {
-    expect(ranking(players).map((r) => [r.player.name, r.place])).toEqual([
-      ["Anna", 1],
-      ["Ben", 2],
-      ["Spieler 3", 3],
-    ]);
+  it("lists the fields to check by the column on paper", () => {
+    expect(cellsToCheck(players[1], ["3:einser", "1:chance"])).toEqual(["Einser", "Chance"]);
+    expect(cellsToCheck(players[0], ["3:einser"])).toEqual([]);
   });
 });

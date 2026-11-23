@@ -132,6 +132,7 @@ configuration language, not less code.
 | `wuerfelkarte:sharing` | Linked players: matches already sent, newest received |
 | `wuerfelkarte:self` | The roster entry that is the signed-in user (synced) |
 | `online:saved` | Online games already written into the Yatzy history on this device |
+| `scan:check` | Fields of a sheet taken over from the paper block (`/scan`) still to check; not synced |
 
 `migrations.ts` brings the old keys (`kniffel:roster`, `lastMatches`,
 `chaoswunderSettings`, `wizard:lastMatches`, …) onto these. It writes a new key

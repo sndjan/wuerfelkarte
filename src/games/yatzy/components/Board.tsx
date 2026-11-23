@@ -33,6 +33,7 @@ import {
 } from "../storage";
 import { Player, Points } from "../types";
 import { useHideScores } from "@/games/shared/hooks/useHideScores";
+import { loadScanCheck, updateScanCheck } from "@/games/scan/handoff";
 import { ChaosMissions } from "./ChaosMissions";
 import { Menu } from "./Menu";
 import { EditPlayer } from "./EditPlayer";
@@ -138,6 +139,7 @@ export function Board() {
     setGameStartTime(null);
     setGameEndTime(null);
     setMatchId(crypto.randomUUID());
+    setScanCheck({});
   };
 
   const handleResetAllPoints = () => {
@@ -146,6 +148,7 @@ export function Board() {
     setGameStartTime(null);
     setGameEndTime(null);
     setMatchId(crypto.randomUUID());
+    setScanCheck({});
   };
 
   const prevMissionIndexRef = useRef<number>(-1);
@@ -208,7 +211,21 @@ export function Board() {
     chaosRoundInterval,
   ]);
 
+  // A sheet taken over from the paper block marks the fields to check, by player name.
+  const [scanCheck, setScanCheck] = useState(() => loadScanCheck(seed?.id));
+  const flaggedOf = (playerId: number) =>
+    new Set(scanCheck[players.find((p) => p.id === playerId)?.name ?? ""] ?? []);
+  const unflag = (playerId: number, keys: string[]) => {
+    const name = players.find((p) => p.id === playerId)?.name;
+    if (!name || !scanCheck[name]?.some((k) => keys.includes(k))) return;
+    const next = { ...scanCheck, [name]: scanCheck[name].filter((k) => !keys.includes(k)) };
+    setScanCheck(next);
+    updateScanCheck(matchId, next);
+  };
+  const toCheck = Object.values(scanCheck).reduce((n, keys) => n + keys.length, 0);
+
   const handleUpdatePoints = (playerId: number, points: Partial<Points>) => {
+    unflag(playerId, Object.keys(points));
     setGameStartTime((prev) => prev ?? Date.now());
     if (isBattle) {
       setDoubled((prev) => {
@@ -391,6 +408,24 @@ export function Board() {
       )}
 
       <main className="mx-auto flex min-h-[calc(100dvh-80px)] w-full max-w-[1180px] flex-col px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-8">
+        {toCheck > 0 && (
+          <div role="status" className="mb-3 flex items-center gap-3 rounded-md border border-gold bg-surface px-4 py-2 text-sm">
+            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-gold text-xs font-extrabold text-on-gold">?</span>
+            <p className="flex-1">
+              Vom Papierblock übernommen: {toCheck === 1 ? "ein Feld" : `${toCheck} Felder`} bitte prüfen.
+            </p>
+            <button
+              type="button"
+              className="shrink-0 rounded-full px-2 py-1 font-bold text-ink-muted hover:bg-secondary"
+              onClick={() => {
+                setScanCheck({});
+                updateScanCheck(matchId, {});
+              }}
+            >
+              Passt
+            </button>
+          </div>
+        )}
         <ScoreTable
           players={players}
           gamemode={gamemode}
@@ -399,6 +434,7 @@ export function Board() {
             isBattle ? battleTotalScore(player.points, playerDoubledSet(player.id), config) : player.score
           }
           doubledOf={isBattle ? playerDoubledSet : undefined}
+          flaggedOf={toCheck > 0 ? flaggedOf : undefined}
           battleStatus={
             isBattle
               ? (playerId: number, key: string): BattleFieldStatus => getBattleFieldStatus(players, key, playerId)
