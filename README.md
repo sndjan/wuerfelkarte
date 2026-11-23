@@ -104,7 +104,9 @@ a roster player first: names are matched loosely against the roster
 hand or added as a new player, so the game counts in everyone's statistics.
 On the board, values the reader was unsure of and ones that cannot be right
 (those arrive empty) carry a „?“ until they are entered again
-(`src/games/scan/handoff.ts`, this device only). The block
+(`src/games/scan/handoff.ts`, this device only). Nothing gives the winner
+away before the scoreboard: the column screen shows no points, and the board
+covers the totals until „Auswertung“ has counted them up. The block
 is `public/kniffelblock.pdf`: four A6 cards on one A4 page, one game for up to
 four players; `npm run kniffelblock` rebuilds it from
 `scripts/kniffelblock/build.mjs` (needs Playwright). The reader only

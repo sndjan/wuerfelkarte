@@ -11,7 +11,7 @@ import { EMOJI_OPTIONS, type RosterPlayer } from "@/games/shared/types";
 import { savePlayers, yatzyStorage } from "@/games/yatzy/storage";
 import { saveScanCheck } from "../handoff";
 import { matchNames, normalizeName, seatRoster } from "../players";
-import { cellsToCheck, playersFromRead, sheetScore, toPoints, type ReadSheet, type SheetPlayer } from "../sheet";
+import { cellsToCheck, playersFromRead, toPoints, type ReadSheet, type SheetPlayer } from "../sheet";
 
 const MESSAGES: Record<string, string> = {
   "not set up": "Das Auslesen ist noch nicht eingerichtet.",
@@ -130,7 +130,12 @@ export function ScanPage() {
       startedAt: null,
       finishedAt: null,
     });
-    saveScanCheck({ id, cells: Object.fromEntries(seated.map((p, i) => [p.name, cellsToCheck(players[i], unclear)])) });
+    saveScanCheck({
+      id,
+      cells: Object.fromEntries(seated.map((p, i) => [p.name, cellsToCheck(players[i], unclear)])),
+      // Nobody sees a total before the scoreboard counts them up.
+      reveal: true,
+    });
     router.push("/yatzy/wunder");
   }
 
@@ -194,7 +199,8 @@ export function ScanPage() {
             <section className="wk-section">
               <h2 className="wk-overline">Wer ist wer?</h2>
               <p className="wk-hint">
-                Die Namen sind mit deinen Spielern abgeglichen. So zählt das Spiel in ihrer Statistik.
+                Die Namen sind mit deinen Spielern abgeglichen. So zählt das Spiel in ihrer Statistik. Wer
+                gewonnen hat, zeigt danach die Auswertung.
                 {left !== null && ` Heute noch ${left} Scans.`}
               </p>
             </section>
@@ -256,7 +262,7 @@ function ColumnCard({
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="m-0 font-display text-base font-bold">Spalte {player.column}</h3>
         <p className="wk-caption truncate">
-          {player.name ? `gelesen: „${player.name}“` : "kein Name"} · {sheetScore(player)} Punkte
+          {player.name ? `gelesen: „${player.name}“` : "kein Name auf dem Blatt"}
         </p>
       </div>
       <div className="wk-row">
