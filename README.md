@@ -94,6 +94,29 @@ Then run `supabase/migrations/20261116130000_speedrun_leaderboard_seed.sql`, so
 the list shows each run's seed and a tap on a row plays it. Before that, the
 list works without seeds.
 
+### Papierblock (Scan)
+
+`/scan` (linked only at the bottom of the home page, and from the QR code on
+the paper) reads a photo of the printed Kniffelblock with Claude and turns it
+into a checked sheet, the ranking and a match in the Yatzy history. The block
+is `public/kniffelblock.pdf`: four A6 cards on one A4 page, one game for up to
+four players; `npm run kniffelblock` rebuilds it from
+`scripts/kniffelblock/build.mjs` (needs Playwright). The reader only
+transcribes; totals, the bonus and the plausibility checks are in
+`src/games/scan/sheet.ts`, and nothing is saved before the players have looked
+at every red field.
+
+1. Set `ANTHROPIC_API_KEY` in the hosting environment. Without it the page
+   says reading is not set up yet. The model is `claude-haiku-5-5`
+   (`SCAN_MODEL` overrides it); one scan costs roughly 0.06 cents.
+2. Run `supabase/migrations/20261123120000_scan_usage.sql`. It counts scans
+   per visitor (a salted hash of the IP, `SCAN_SALT`) and for the whole site
+   per day: `SCAN_LIMIT_PER_DAY` (default 20) and `SCAN_LIMIT_GLOBAL`
+   (default 2000). Without the migration each server instance counts in
+   memory only.
+3. Set a monthly spend limit for the API key's workspace in the Claude
+   Console as the hard ceiling.
+
 Deleting the account (`/konto` → „Konto löschen“) calls
 `delete_own_account()`, which removes the auth user; `user_storage` goes with it
 by cascade. The games on the device stay.
