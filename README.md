@@ -98,13 +98,20 @@ list works without seeds.
 
 `/scan` (linked only at the bottom of the home page, and from the QR code on
 the paper) reads a photo of the printed Kniffelblock with Claude and turns it
-into a checked sheet, the ranking and a match in the Yatzy history. The block
+into a running game on the Würfelkarte (mode Wunder). Each column is given to
+a roster player first: names are matched loosely against the roster
+(`src/games/scan/players.ts`), and a column without a fitting name is picked by
+hand or added as a new player, so the game counts in everyone's statistics.
+On the board, values the reader was unsure of and ones that cannot be right
+(those arrive empty) carry a „?“ until they are entered again
+(`src/games/scan/handoff.ts`, this device only). Nothing gives the winner
+away before the scoreboard: the column screen shows no points, and the board
+covers the totals until „Auswertung“ has counted them up. The block
 is `public/kniffelblock.pdf`: four A6 cards on one A4 page, one game for up to
 four players; `npm run kniffelblock` rebuilds it from
 `scripts/kniffelblock/build.mjs` (needs Playwright). The reader only
 transcribes; totals, the bonus and the plausibility checks are in
-`src/games/scan/sheet.ts`, and nothing is saved before the players have looked
-at every red field.
+`src/games/scan/sheet.ts`.
 
 1. Set `ANTHROPIC_API_KEY` in the hosting environment. Without it the page
    says reading is not set up yet. The model is `claude-haiku-5-5`
