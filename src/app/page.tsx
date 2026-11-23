@@ -102,6 +102,12 @@ export default function GamesOverview() {
               Blog
             </Link>
             <Link
+              href="/scan"
+              className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              Papierblock
+            </Link>
+            <Link
               href="/lizenzen"
               className="rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground hover:bg-secondary"
             >
