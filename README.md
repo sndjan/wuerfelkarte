@@ -102,6 +102,8 @@ into a running game on the Würfelkarte (mode Wunder). Each column is given to
 a roster player first: names are matched loosely against the roster
 (`src/games/scan/players.ts`), and a column without a fitting name is picked by
 hand or added as a new player, so the game counts in everyone's statistics.
+Names on paper are optional: unnamed columns take the players selected in the
+lobby, in seating order, and otherwise start as „Spieler <n>“.
 On the board, values the reader was unsure of and ones that cannot be right
 (those arrive empty) carry a „?“ until they are entered again
 (`src/games/scan/handoff.ts`, this device only). Nothing gives the winner

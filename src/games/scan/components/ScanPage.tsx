@@ -11,7 +11,7 @@ import { EMOJI_OPTIONS, type RosterPlayer } from "@/games/shared/types";
 import { savePlayers, yatzyStorage } from "@/games/yatzy/storage";
 import { cardTarget, CARD_MM, findCorners, homography, toGray, warp, type Quad } from "../corners";
 import { saveScanCheck } from "../handoff";
-import { matchNames, normalizeName, seatRoster } from "../players";
+import { normalizeName, seatColumns, seatRoster, type Seat } from "../players";
 import { ScanStage, stageMinMs } from "./ScanStage";
 import { cellsToCheck, playersFromRead, toPoints, type ReadSheet, type SheetPlayer } from "../sheet";
 
@@ -66,9 +66,6 @@ function straighten(photo: HTMLCanvasElement, quad: Quad): HTMLCanvasElement {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Who a column goes to: a roster player, a new one by name, or not decided yet. */
-type Seat = { kind: "roster"; id: string } | { kind: "new"; name: string } | null;
-
 type Phase = "start" | "reading" | "assign";
 
 /**
@@ -113,11 +110,10 @@ export function ScanPage() {
       const read = playersFromRead(body.sheet);
       if (read.length === 0) throw new Error("Auf dem Blatt stehen noch keine Punkte.");
       const list = loadRoster();
-      const matched = matchNames(read.map((p) => p.name), list);
       setRoster(list);
       setPlayers(read);
       setUnclear(body.sheet.unclear ?? []);
-      setSeats(read.map((p, i): Seat => (matched[i] ? { kind: "roster", id: matched[i] } : p.name ? { kind: "new", name: p.name } : null)));
+      setSeats(seatColumns(read, list));
       setLeft(body.left ?? null);
       setPhase("assign");
     } catch (err) {
@@ -243,6 +239,7 @@ export function ScanPage() {
                 <li>Gestrichen: X ins Feld.</li>
                 <li>Full House, Straßen, Kniffel: Zahl oder Haken.</li>
                 <li>Summen sind freiwillig, die App rechnet selbst.</li>
+                <li>Namen auch: ohne Namen gehen die Spalten an die Spieler aus der Lobby.</li>
               </ul>
             </section>
           </>
@@ -253,8 +250,8 @@ export function ScanPage() {
             <section className="wk-section">
               <h2 className="wk-overline">Wer ist wer?</h2>
               <p className="wk-hint">
-                Die Namen sind mit deinen Spielern abgeglichen. So zählt das Spiel in ihrer Statistik. Wer
-                gewonnen hat, zeigt danach die Auswertung.
+                Die Namen sind mit deinen Spielern abgeglichen, Spalten ohne Namen haben die Spieler aus der Lobby
+                bekommen. So zählt das Spiel in ihrer Statistik. Wer gewonnen hat, zeigt danach die Auswertung.
                 {left !== null && ` Heute noch ${left} Scans.`}
               </p>
             </section>
@@ -308,7 +305,7 @@ function ColumnCard({
   problem: string | null;
   onSeat: (seat: Seat) => void;
 }) {
-  const [draft, setDraft] = useState(player.name);
+  const [draft, setDraft] = useState(seat?.kind === "new" ? seat.name : player.name);
   // The roster's active players first, as the lobby shows them.
   const ordered = [...roster].sort((a, b) => Number(b.active) - Number(a.active));
   return (
