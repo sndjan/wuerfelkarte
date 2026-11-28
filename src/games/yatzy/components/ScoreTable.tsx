@@ -154,6 +154,12 @@ export function ScoreTable({
   };
 
   const bonusAfter = config.bonus?.fields[config.bonus.fields.length - 1];
+  // The lower section: the total without the upper fields and their bonus (Battle doubles both alike).
+  const lowerOf = (player: Player) => {
+    if (!config.bonus) return scoreOf(player);
+    const { sum, pace } = bonusPace(player.points, config.bonus, maxPerFace, doubledOf?.(player.id));
+    return scoreOf(player) - sum - (pace === "reached" ? config.bonus.bonus : 0);
+  };
   const gridStyle = { "--n": players.length } as React.CSSProperties;
   const cols = "grid grid-cols-[74px_repeat(var(--n),minmax(0,1fr))] gap-1 md:grid-cols-[repeat(var(--n),minmax(0,1fr))] md:gap-3";
   const row = cn(cols, "items-center");
@@ -266,7 +272,7 @@ export function ScoreTable({
             {config.bonus && field.key === bonusAfter && (
               <div className={cn(row, "my-1 border-y border-hairline py-2")}>
                 <span className="text-[13px] leading-4 font-bold md:hidden">
-                  Bonus <span className="text-xs font-normal text-ink-muted">/{config.bonus.minSum}</span>
+                  Oben <span className="text-xs font-normal text-ink-muted">/{config.bonus.minSum}</span>
                 </span>
                 {players.map((player) => {
                   const { sum, pace } = bonusPace(player.points, config.bonus!, maxPerFace, doubledOf?.(player.id));
@@ -279,13 +285,8 @@ export function ScoreTable({
                       aria-label={`Bonus ${player.name}: ${sum} von ${config.bonus!.minSum}, ${PACE_WORD[pace]}${reached ? `, +${config.bonus!.bonus}` : ""}`}
                       className="flex flex-col gap-1 px-0.5 md:h-7 md:flex-row md:items-center md:gap-2.5 md:px-3"
                     >
-                      <span className="hidden text-[13px] font-bold text-ink-muted md:inline">Bonus</span>
-                      <span
-                        className={cn(
-                          "wk-num h-5 text-center text-[15px] leading-5 font-extrabold md:order-3 md:h-auto md:text-base",
-                          reached && "hidden md:inline",
-                        )}
-                      >
+                      <span className="hidden text-[13px] font-bold text-ink-muted md:inline">Oben</span>
+                      <span className="wk-num h-5 text-center text-[15px] leading-5 font-extrabold md:order-3 md:h-auto md:text-base">
                         {sum}
                         <span className="hidden text-[13px] font-normal text-ink-muted md:inline">/{config.bonus!.minSum}</span>
                       </span>
@@ -305,11 +306,25 @@ export function ScoreTable({
           </Fragment>
         ))}
 
+        {config.bonus && (
+          <div className={cn(row, "border-t border-hairline pt-2")}>
+            <span className="text-[13px] font-bold md:hidden">Unten</span>
+            {players.map((player) => (
+              <div key={player.id} className="flex items-baseline justify-center md:justify-between md:px-3">
+                <span className="hidden text-sm font-bold text-ink-muted md:inline">Unten</span>
+                <span className="wk-num text-[15px] leading-6 font-extrabold md:text-base">
+                  {hideScores ? "•••" : lowerOf(player)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className={cn(row, "pt-1")}>
-          <span className="text-[13px] font-bold md:hidden">Summe</span>
+          <span className="text-[13px] font-bold md:hidden">Gesamt</span>
           {players.map((player) => (
             <div key={player.id} className="flex items-baseline justify-center md:justify-between md:px-3">
-              <span className="hidden text-sm font-bold md:inline">Summe</span>
+              <span className="hidden text-sm font-bold md:inline">Gesamt</span>
               <span className="wk-num font-display text-[15px] leading-6 font-extrabold md:text-2xl md:leading-8">
                 {hideScores ? "•••" : scoreOf(player)}
               </span>
