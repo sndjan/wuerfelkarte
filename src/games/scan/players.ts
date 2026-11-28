@@ -92,8 +92,18 @@ export function seatRoster(roster: RosterPlayer[], names: string[]): RosterPlaye
   });
 }
 
-/** Who a column goes to: a roster player, a new one by name, or not decided yet. */
-export type Seat = { kind: "roster"; id: string } | { kind: "new"; name: string } | null;
+/**
+ * Who a column goes to: a roster player, a new one by name, an anonymous
+ * guest (plays along as „Gast“, never added to the roster), or not decided yet.
+ */
+export type Seat = { kind: "roster"; id: string } | { kind: "new"; name: string } | { kind: "anon" } | null;
+
+/** The names the anonymous columns play under: „Gast“ alone, else „Gast 1“, „Gast 2“, … */
+export function guestNames(seats: Seat[]): (string | null)[] {
+  const total = seats.filter((s) => s?.kind === "anon").length;
+  let n = 0;
+  return seats.map((s) => (s?.kind === "anon" ? (total === 1 ? "Gast" : `Gast ${++n}`) : null));
+}
 
 /**
  * A first guess for every column. Written names go to the roster player they
