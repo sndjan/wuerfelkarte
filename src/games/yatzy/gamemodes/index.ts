@@ -86,6 +86,7 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       "• 3er- und 4er-Pasch: mindestens drei bzw. vier gleiche Würfel, gezählt wird die Summe aller Würfel.",
       "• Full House (25): drei gleiche und zwei gleiche. Kleine Straße (30): vier in Folge. Große Straße (40): fünf in Folge.",
       "• 5er-Pasch (50): fünf gleiche. Chance: die Summe aller Würfel, ohne Bedingung.",
+      "• Jeder weitere 5er-Pasch bringt 50 Punkte mehr: im 5er-Pasch-Feld 100, 150 usw. wählen.",
       "• Passt nichts, musst du ein freies Feld streichen – es zählt dann 0 Punkte.",
     ],
     fields: [
@@ -108,7 +109,8 @@ export const gamemodes: Record<string, GamemodeConfig> = {
       { key: "Full House", label: "Full House", options: [25] },
       { key: "Kleine Straße", label: "Kleine Straße", options: [30] },
       { key: "Große Straße", label: "Große Straße", options: [40] },
-      { key: "Wunder", label: "5er-Pasch", options: [50] },
+      // Every further 5er-Pasch adds 50 to the same field: 100, 150, …
+      { key: "Wunder", label: "5er-Pasch", options: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500] },
       { key: "Chance", label: "Chance", options: standardOptions },
     ],
     bonus: {
