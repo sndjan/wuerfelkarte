@@ -1,6 +1,6 @@
 "use client";
 
-import { Camera, Check, Plus, Printer, RotateCcw } from "lucide-react";
+import { Camera, Check, ImageUp, Plus, Printer, RotateCcw, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
@@ -11,7 +11,7 @@ import { EMOJI_OPTIONS, type RosterPlayer } from "@/games/shared/types";
 import { savePlayers, yatzyStorage } from "@/games/yatzy/storage";
 import { cardTarget, CARD_MM, findCorners, homography, toGray, warp, type Quad } from "../corners";
 import { saveScanCheck } from "../handoff";
-import { normalizeName, seatColumns, seatRoster, type Seat } from "../players";
+import { guestNames, normalizeName, seatColumns, seatRoster, type Seat } from "../players";
 import { ScanStage, stageMinMs } from "./ScanStage";
 import { cellsToCheck, playersFromRead, toPoints, type ReadSheet, type SheetPlayer } from "../sheet";
 
@@ -76,6 +76,7 @@ type Phase = "start" | "reading" | "assign";
 export function ScanPage() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
+  const upload = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("start");
   const [players, setPlayers] = useState<SheetPlayer[]>([]);
   const [unclear, setUnclear] = useState<string[]>([]);
@@ -124,8 +125,13 @@ export function ScanPage() {
     }
   }
 
-  const nameOf = (seat: Seat) =>
-    seat?.kind === "roster" ? (roster.find((r) => r.id === seat.id)?.name ?? "") : seat?.kind === "new" ? seat.name.trim() : "";
+  const guests = guestNames(seats);
+  const nameOf = (seat: Seat, i: number) =>
+    seat?.kind === "roster"
+      ? (roster.find((r) => r.id === seat.id)?.name ?? "")
+      : seat?.kind === "new"
+        ? seat.name.trim()
+        : (guests[i] ?? "");
   const names = seats.map(nameOf);
   const problems = seats.map((seat, i) => {
     if (!seat) return "Wähle aus, wem diese Spalte gehört.";
@@ -151,13 +157,15 @@ export function ScanPage() {
     const used = new Set(next.map((r) => r.emoji));
     const seated = seats.map((seat, i) => {
       if (seat?.kind === "roster") return next.find((r) => r.id === seat.id)!;
+      // A guest plays along on this sheet only: not added to the roster.
+      if (seat?.kind === "anon") return { name: names[i], emoji: "👻" };
       const emoji = EMOJI_OPTIONS.find((e) => !used.has(e)) ?? EMOJI_OPTIONS[i % EMOJI_OPTIONS.length];
       used.add(emoji);
       const created = createRosterPlayer(names[i], emoji, next);
       next = [...next, created];
       return created;
     });
-    saveRoster(seatRoster(next, seated.map((p) => p.name)));
+    saveRoster(seatRoster(next, seated.filter((_, i) => seats[i]?.kind !== "anon").map((p) => p.name)));
     savePlayers(seated.map(({ name, emoji }) => ({ name, emoji })));
 
     const id = crypto.randomUUID();
@@ -181,18 +189,22 @@ export function ScanPage() {
     <div className="wk min-h-full bg-background">
       <PageHeader title="Papierblock" />
       <main className="wk-page max-w-md">
-        <input
-          ref={input}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            e.target.value = "";
-            if (file) void read(file);
-          }}
-        />
+        {[input, upload].map((ref, i) => (
+          <input
+            key={i}
+            ref={ref}
+            type="file"
+            accept="image/*"
+            // The first opens the camera; the second picks a photo that is already on the device.
+            capture={i === 0 ? "environment" : undefined}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) void read(file);
+            }}
+          />
+        ))}
 
         {phase === "reading" && stage && (
           <section className="flex flex-col items-center gap-4">
@@ -223,6 +235,15 @@ export function ScanPage() {
                 <Camera className="size-5" aria-hidden="true" />
                 {phase === "reading" ? "Wird gelesen …" : "Blatt fotografieren"}
               </button>
+              <button
+                type="button"
+                className="wk-btn wk-btn-outline wk-btn-block"
+                disabled={phase === "reading"}
+                onClick={() => upload.current?.click()}
+              >
+                <ImageUp className="size-5" aria-hidden="true" />
+                Foto hochladen
+              </button>
               {error && <p className="text-sm font-semibold text-danger">{error}</p>}
             </section>
             <a href="/kniffelblock.pdf" target="_blank" rel="noopener" className="wk-listrow">
@@ -240,6 +261,7 @@ export function ScanPage() {
                 <li>Full House, Straßen, Kniffel: Zahl oder Haken.</li>
                 <li>Summen sind freiwillig, die App rechnet selbst.</li>
                 <li>Namen auch: ohne Namen gehen die Spalten an die Spieler aus der Lobby.</li>
+                <li>Wer nicht in deiner Spielerliste stehen soll, spielt als „Anonym“ mit.</li>
               </ul>
             </section>
           </>
@@ -278,10 +300,16 @@ export function ScanPage() {
                 <Check className="size-5" aria-hidden="true" />
                 In die Würfelkarte übernehmen
               </button>
-              <button type="button" className="wk-btn wk-btn-ghost wk-btn-block" onClick={() => input.current?.click()}>
-                <RotateCcw className="size-4" aria-hidden="true" />
-                Neu fotografieren
-              </button>
+              <div className="flex gap-2">
+                <button type="button" className="wk-btn wk-btn-ghost flex-1" onClick={() => input.current?.click()}>
+                  <RotateCcw className="size-4" aria-hidden="true" />
+                  Neu fotografieren
+                </button>
+                <button type="button" className="wk-btn wk-btn-ghost flex-1" onClick={() => upload.current?.click()}>
+                  <ImageUp className="size-4" aria-hidden="true" />
+                  Anderes Foto
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -338,6 +366,15 @@ function ColumnCard({
         })}
         <button
           type="button"
+          aria-pressed={seat?.kind === "anon"}
+          onClick={() => onSeat(seat?.kind === "anon" ? null : { kind: "anon" })}
+          className="wk-chip"
+        >
+          <UserRound className="size-4" aria-hidden="true" />
+          Anonym
+        </button>
+        <button
+          type="button"
           aria-pressed={seat?.kind === "new"}
           onClick={() => onSeat(seat?.kind === "new" ? null : { kind: "new", name: draft })}
           className="wk-chip"
@@ -360,6 +397,9 @@ function ColumnCard({
             }}
           />
         </div>
+      )}
+      {seat?.kind === "anon" && (
+        <p className="wk-caption">Spielt als Gast mit und kommt nicht in deine Spielerliste.</p>
       )}
       {problem && <p className="wk-caption text-danger">{problem}</p>}
     </section>

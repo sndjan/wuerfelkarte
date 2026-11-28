@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { RosterPlayer } from "@/games/shared/types";
-import { matchNames, normalizeName, seatColumns, seatRoster } from "./players";
+import { guestNames, matchNames, normalizeName, seatColumns, seatRoster } from "./players";
 
 const player = (id: string, name: string, extra: Partial<RosterPlayer> = {}): RosterPlayer => ({
   id,
@@ -92,5 +92,12 @@ describe("seatColumns", () => {
       { kind: "new", name: "Spieler 3" },
       { kind: "new", name: "Xaver" },
     ]);
+  });
+});
+
+describe("guestNames", () => {
+  it("names one guest Gast and several Gast 1, Gast 2", () => {
+    expect(guestNames([{ kind: "anon" }, null])).toEqual(["Gast", null]);
+    expect(guestNames([{ kind: "anon" }, { kind: "roster", id: "a" }, { kind: "anon" }])).toEqual(["Gast 1", null, "Gast 2"]);
   });
 });
