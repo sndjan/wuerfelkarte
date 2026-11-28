@@ -91,3 +91,43 @@ export function seatRoster(roster: RosterPlayer[], names: string[]): RosterPlaye
     return order ? { ...p, active: true, selectionOrder: order } : { ...p, active: false, selectionOrder: null };
   });
 }
+
+/** Who a column goes to: a roster player, a new one by name, or not decided yet. */
+export type Seat = { kind: "roster"; id: string } | { kind: "new"; name: string } | null;
+
+/**
+ * A first guess for every column. Written names go to the roster player they
+ * fit, or become a new player. Columns without a name (a block played without
+ * writing names in) take the players picked in the lobby, in seating order;
+ * when none are left, they are called "Spieler <column>" and can be renamed.
+ */
+export function seatColumns(
+  columns: { column: number; name: string }[],
+  roster: RosterPlayer[],
+): Seat[] {
+  const matched = matchNames(
+    columns.map((c) => c.name),
+    roster,
+  );
+  const taken = new Set(matched.filter((id): id is string => id !== null));
+  const lobby = roster
+    .filter((p) => p.active && !taken.has(p.id))
+    .sort((a, b) => (a.selectionOrder ?? Infinity) - (b.selectionOrder ?? Infinity));
+  const writtenNames = new Set(columns.map((c) => normalizeName(c.name)).filter(Boolean));
+  return columns.map((c, i): Seat => {
+    if (matched[i]) return { kind: "roster", id: matched[i] };
+    if (c.name.trim()) return { kind: "new", name: c.name };
+    const next = lobby.find((p) => !taken.has(p.id) && !writtenNames.has(normalizeName(p.name)));
+    if (next) {
+      taken.add(next.id);
+      return { kind: "roster", id: next.id };
+    }
+    const name = `Spieler ${c.column}`;
+    const existing = roster.find((p) => normalizeName(p.name) === normalizeName(name) && !taken.has(p.id));
+    if (existing) {
+      taken.add(existing.id);
+      return { kind: "roster", id: existing.id };
+    }
+    return { kind: "new", name };
+  });
+}
