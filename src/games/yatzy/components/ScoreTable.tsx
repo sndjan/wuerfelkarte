@@ -306,6 +306,7 @@ export function ScoreTable({
           </Fragment>
         ))}
 
+        {/* Like the upper sum, the lower one always shows; covering scores hides only the total. */}
         {config.bonus && (
           <div className={cn(row, "border-t border-hairline pt-2")}>
             <span className="text-[13px] font-bold md:hidden">Unten</span>
@@ -313,7 +314,7 @@ export function ScoreTable({
               <div key={player.id} className="flex items-baseline justify-center md:justify-between md:px-3">
                 <span className="hidden text-sm font-bold text-ink-muted md:inline">Unten</span>
                 <span className="wk-num text-[15px] leading-6 font-extrabold md:text-base">
-                  {hideScores ? "•••" : lowerOf(player)}
+                  {lowerOf(player)}
                 </span>
               </div>
             ))}

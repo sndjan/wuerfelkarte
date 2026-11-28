@@ -53,7 +53,7 @@ type YatzySettings = {
   balancedMode: boolean;
   /** Kept for stored settings; the score table has no separate compact layout any more. */
   compactMode: boolean;
-  /** Covers every total („•••“) until the scoreboard; the bonus stays visible. */
+  /** Covers the grand total („•••“) until the scoreboard; upper and lower sums stay visible. */
   hideScores: boolean;
 };
 

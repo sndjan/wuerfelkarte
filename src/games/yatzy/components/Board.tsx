@@ -358,7 +358,7 @@ export function Board() {
               size="icon"
               className="size-11 rounded-full bg-surface"
               aria-pressed={hideScores}
-              aria-label={hideScores ? "Summen zeigen" : "Summen verdecken"}
+              aria-label={hideScores ? "Gesamtsumme zeigen" : "Gesamtsumme verdecken"}
               onClick={toggleHideScores}
             >
               {hideScores ? <EyeOff /> : <Eye />}
@@ -426,7 +426,7 @@ export function Board() {
               Vom Papierblock übernommen.{" "}
               {toCheck > 0
                 ? `${toCheck === 1 ? "Ein Feld" : `${toCheck} Felder`} bitte prüfen.`
-                : "Die Summen bleiben bis zur Auswertung verdeckt."}
+                : "Die Gesamtsumme bleibt bis zur Auswertung verdeckt."}
             </p>
             {toCheck > 0 ? (
               <button
